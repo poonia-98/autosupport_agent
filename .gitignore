@@ -1,0 +1,70 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# virtual env
+venv/
+.env/
+.env.*
+.env.local
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# logs
+logs/
+*.log
+
+# =========================
+# Node / Frontend
+# =========================
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# Docker / runtime data
+# =========================
+redis_data/
+elastic_data/
+postgres_data/
+*.rdb
+
+# =========================
+# Misc
+# =========================
+*.zip
+*.tar
+*.gz
+*.sqlite3
+
+# uploads
+uploads/
+tmp/

@@ -1,0 +1,20 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY pyproject.toml ./
+RUN pip install --upgrade pip setuptools wheel
+
+RUN pip install --no-cache-dir .
+
+COPY . .
+
+RUN addgroup --system app && adduser --system --ingroup app app
+USER app
+
+# ARQ worker — separate process, no HTTP port
+CMD ["python", "-m", "arq", "tasks.worker.WorkerSettings"]

@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoSupport</title>
+<style>
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e;
+    --accent: #6c63ff; --accent2: #00d4aa;
+    --text: #e2e8f0; --muted: #8892a4; --danger: #f56565; --warn: #f6ad55; --ok: #68d391;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; overflow: hidden; }
+  #sidebar { width: 220px; min-width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 0; }
+  .logo { padding: 22px 20px 18px; font-size: 1.1rem; font-weight: 700; color: var(--accent); letter-spacing: -.3px; border-bottom: 1px solid var(--border); }
+  .logo span { color: var(--accent2); }
+  nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+  nav a { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: var(--muted); text-decoration: none; font-size: .875rem; cursor: pointer; transition: all .15s; border-left: 3px solid transparent; }
+  nav a:hover, nav a.active { color: var(--text); background: rgba(108,99,255,.08); border-left-color: var(--accent); }
+  .user-bar { padding: 14px 20px; border-top: 1px solid var(--border); font-size: .8rem; color: var(--muted); display: flex; align-items: center; justify-content: space-between; }
+  .user-bar button { background: none; border: none; color: var(--danger); cursor: pointer; font-size: .8rem; }
+  #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { height: 56px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 12px; background: var(--surface); }
+  .topbar h1 { font-size: 1rem; font-weight: 600; }
+  .topbar .spacer { flex: 1; }
+  .page { flex: 1; overflow-y: auto; padding: 24px; display: none; }
+  .page.active { display: block; }
+  /* cards */
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); margin-bottom: 24px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .card .label { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .card .value { font-size: 1.8rem; font-weight: 700; }
+  .card .sub { font-size: .8rem; color: var(--muted); margin-top: 4px; }
+  /* tables */
+  .tbl-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  th { text-align: left; padding: 10px 14px; background: rgba(255,255,255,.03); color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  /* badges */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: .75rem; font-weight: 500; }
+  .badge.critical { background: rgba(245,101,101,.15); color: #fc8181; }
+  .badge.high { background: rgba(246,173,85,.15); color: #f6ad55; }
+  .badge.medium { background: rgba(108,99,255,.15); color: #a78bfa; }
+  .badge.low { background: rgba(104,211,145,.15); color: #68d391; }
+  .badge.open { background: rgba(108,99,255,.15); color: #a78bfa; }
+  .badge.in_progress { background: rgba(246,173,85,.15); color: #f6ad55; }
+  .badge.resolved, .badge.closed { background: rgba(104,211,145,.15); color: #68d391; }
+  .badge.escalated, .badge.sla_breached { background: rgba(245,101,101,.15); color: #fc8181; }
+  /* forms */
+  .form-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; max-width: 540px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 6px; }
+  .field input, .field select, .field textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text); font-size: .875rem; outline: none; font-family: inherit; }
+  .field textarea { min-height: 80px; resize: vertical; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+  /* buttons */
+  .btn { padding: 8px 18px; border-radius: 6px; border: none; cursor: pointer; font-size: .875rem; font-weight: 500; transition: opacity .15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn:hover { opacity: .85; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  /* login */
+  #login-page { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 999; }
+  #login-page.hidden { display: none; }
+  .login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 40px; width: 360px; }
+  .login-box h2 { font-size: 1.4rem; margin-bottom: 24px; }
+  .alert { padding: 10px 14px; border-radius: 6px; font-size: .875rem; margin-bottom: 14px; }
+  .alert.error { background: rgba(245,101,101,.15); color: #fc8181; border: 1px solid rgba(245,101,101,.3); }
+  .alert.success { background: rgba(104,211,145,.15); color: #68d391; border: 1px solid rgba(104,211,145,.3); }
+  /* pagination */
+  .pagination { display: flex; gap: 8px; align-items: center; margin-top: 16px; justify-content: flex-end; }
+  .pagination button { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 5px 12px; border-radius: 5px; cursor: pointer; font-size: .85rem; }
+  .pagination button:disabled { opacity: .4; cursor: not-allowed; }
+  .pagination .page-info { color: var(--muted); font-size: .85rem; }
+  /* misc */
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .section-header h2 { font-size: 1rem; font-weight: 600; flex: 1; }
+  .empty { text-align: center; color: var(--muted); padding: 40px; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .dot.ok { background: var(--ok); }
+  .dot.error { background: var(--danger); }
+  .dot.warn { background: var(--warn); }
+  pre { font-size: .8rem; background: var(--bg); border-radius: 6px; padding: 10px; overflow-x: auto; color: var(--accent2); }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div id="login-page">
+  <div class="login-box">
+    <div class="logo" style="margin-bottom:20px;padding:0">Auto<span>Support</span></div>
+    <h2>Sign in</h2>
+    <div id="login-alert" style="display:none"></div>
+    <div class="field"><label>Email</label><input type="email" id="l-email" placeholder="admin@example.com" autofocus></div>
+    <div class="field"><label>Password</label><input type="password" id="l-password" placeholder="••••••••"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="doLogin()">Sign in</button>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="sidebar">
+  <div class="logo">Auto<span>Support</span></div>
+  <nav>
+    <a onclick="nav('dashboard')" id="nav-dashboard">📊 Dashboard</a>
+    <a onclick="nav('tickets')"   id="nav-tickets">🎫 Tickets</a>
+    <a onclick="nav('create')"    id="nav-create">➕ New Ticket</a>
+    <a onclick="nav('queue')"     id="nav-queue">⚙️ Queue</a>
+    <a onclick="nav('agents')"    id="nav-agents">🤖 Agents</a>
+    <a onclick="nav('integrations')" id="nav-integrations">🔌 Integrations</a>
+    <a onclick="nav('users')"     id="nav-users">👥 Users</a>
+    <a onclick="nav('system')"    id="nav-system">🖥️ System</a>
+  </nav>
+  <div class="user-bar">
+    <span id="user-email">—</span>
+    <button onclick="logout()">Sign out</button>
+  </div>
+</div>
+
+<div id="main">
+  <div class="topbar">
+    <h1 id="page-title">Dashboard</h1>
+    <div class="spacer"></div>
+    <div id="health-dot" class="dot warn" title="Checking..."></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="grid" id="stats-grid"></div>
+    <div class="section-header"><h2>Recent Tickets</h2></div>
+    <div class="tbl-wrap"><table id="recent-tbl"><thead><tr><th>Title</th><th>Priority</th><th>Status</th><th>Category</th><th>Created</th></tr></thead><tbody id="recent-body"></tbody></table></div>
+  </div>
+
+  <!-- TICKETS -->
+  <div class="page" id="page-tickets">
+    <div class="section-header">
+      <h2>All Tickets</h2>
+      <select id="filter-status" onchange="loadTickets()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:5px;font-size:.85rem">
+        <option value="">All statuses</option>
+        <option>open</option><option>in_progress</option><option>escalated</option>
+        <option>sla_breached</option><option>resolved</option><option>closed</option>
+      </select>
+      <select id="filter-priority" onchange="loadTickets()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:5px;font-size:.85rem">
+        <option value="">All priorities</option>
+        <option>critical</option><option>high</option><option>medium</option><option>low</option>
+      </select>
+      <input id="search-input" placeholder="Search..." onkeyup="debounceSearch()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:5px;font-size:.85rem;width:200px">
+    </div>
+    <div class="tbl-wrap"><table><thead><tr><th>Title</th><th>Priority</th><th>Status</th><th>Team</th><th>Created</th><th></th></tr></thead><tbody id="tickets-body"></tbody></table></div>
+    <div class="pagination">
+      <button onclick="ticketPage(-1)" id="prev-btn">← Prev</button>
+      <span class="page-info" id="page-info">—</span>
+      <button onclick="ticketPage(1)" id="next-btn">Next →</button>
+    </div>
+  </div>
+
+  <!-- CREATE TICKET -->
+  <div class="page" id="page-create">
+    <div class="form-box">
+      <h2 style="margin-bottom:20px">New Ticket</h2>
+      <div id="create-alert" style="display:none"></div>
+      <div class="field"><label>Title *</label><input id="c-title" placeholder="Brief summary of the issue"></div>
+      <div class="field"><label>Description</label><textarea id="c-desc" placeholder="Detailed description..."></textarea></div>
+      <div class="field"><label>Priority</label>
+        <select id="c-priority"><option>medium</option><option>low</option><option>high</option><option>critical</option></select>
+      </div>
+      <div class="field"><label>Category</label>
+        <select id="c-category"><option>general</option><option>billing</option><option>technical</option><option>bug</option><option>feature_request</option></select>
+      </div>
+      <button class="btn btn-primary" onclick="createTicket()">Submit Ticket</button>
+    </div>
+  </div>
+
+  <!-- TICKET DETAIL (virtual page) -->
+  <div class="page" id="page-ticket-detail">
+    <div id="ticket-detail-content"></div>
+  </div>
+
+  <!-- QUEUE -->
+  <div class="page" id="page-queue">
+    <div class="section-header"><h2>Job Queue</h2><button class="btn btn-ghost" onclick="loadQueue()">Refresh</button></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Job ID</th><th>Ticket</th><th>Status</th><th>Attempts</th><th>Updated</th><th></th></tr></thead><tbody id="queue-body"></tbody></table></div>
+  </div>
+
+  <!-- AGENTS -->
+  <div class="page" id="page-agents">
+    <div class="section-header"><h2>Agent Statistics (last 24h)</h2></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Agent</th><th>Runs</th><th>Avg ms</th><th>Last Run</th><th>Description</th></tr></thead><tbody id="agents-body"></tbody></table></div>
+  </div>
+
+  <!-- INTEGRATIONS -->
+  <div class="page" id="page-integrations">
+    <div class="section-header"><h2>Integrations</h2><button class="btn btn-primary" onclick="showCreateIntegration()">+ Add</button></div>
+    <div id="integration-form" style="display:none;margin-bottom:20px">
+      <div class="form-box">
+        <h3 style="margin-bottom:16px">Add Integration</h3>
+        <div class="field"><label>Name</label><input id="i-name" placeholder="My Webhook"></div>
+        <div class="field"><label>Type</label><select id="i-type"><option value="webhook">webhook</option></select></div>
+        <div class="field"><label>Notify URL (optional)</label><input id="i-notify-url" placeholder="https://hooks.example.com/..."></div>
+        <div class="field"><label>Secret (optional)</label><input id="i-secret" type="password" placeholder="HMAC signing secret"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="createIntegration()">Create</button>
+          <button class="btn btn-ghost" onclick="document.getElementById('integration-form').style.display='none'">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Events</th><th>Actions</th></tr></thead><tbody id="integrations-body"></tbody></table></div>
+  </div>
+
+  <!-- USERS -->
+  <div class="page" id="page-users">
+    <div class="section-header"><h2>Users</h2><button class="btn btn-primary" onclick="showCreateUser()">+ Add User</button></div>
+    <div id="user-form" style="display:none;margin-bottom:20px">
+      <div class="form-box">
+        <h3 style="margin-bottom:16px">Create User</h3>
+        <div id="user-form-alert" style="display:none"></div>
+        <div class="field"><label>Email</label><input id="u-email" type="email"></div>
+        <div class="field"><label>Name</label><input id="u-name"></div>
+        <div class="field"><label>Role</label><select id="u-role"><option>operator</option><option>admin</option><option>viewer</option></select></div>
+        <div class="field"><label>Password</label><input id="u-password" type="password" placeholder="Min 8 characters"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="createUser()">Create</button>
+          <button class="btn btn-ghost" onclick="document.getElementById('user-form').style.display='none'">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Active</th><th>Created</th></tr></thead><tbody id="users-body"></tbody></table></div>
+  </div>
+
+  <!-- SYSTEM -->
+  <div class="page" id="page-system">
+    <div class="grid" id="system-health-grid"></div>
+    <div class="section-header"><h2>System Log</h2><button class="btn btn-ghost" onclick="loadSystem()">Refresh</button></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Time</th><th>Level</th><th>Source</th><th>Message</th></tr></thead><tbody id="syslog-body"></tbody></table></div>
+  </div>
+</div>
+
+<script>
+const API = '';
+let token = localStorage.getItem('as_token') || '';
+let role  = localStorage.getItem('as_role') || '';
+let email = localStorage.getItem('as_email') || '';
+let currentPage = 0;
+const PAGE_SIZE = 50;
+let searchTimer = null;
+
+// ── auth ──────────────────────────────────────────────────────────────────────
+
+async function doLogin() {
+  const e = v('l-email'), p = v('l-password');
+  showAlert('login-alert', null);
+  try {
+    const r = await api('/api/auth/login', 'POST', {email: e, password: p}, false);
+    token = r.access_token; role = r.role;
+    const me = await api('/api/auth/me');
+    email = me.email;
+    localStorage.setItem('as_token', token);
+    localStorage.setItem('as_role', role);
+    localStorage.setItem('as_email', email);
+    document.getElementById('login-page').classList.add('hidden');
+    document.getElementById('user-email').textContent = email;
+    nav('dashboard');
+  } catch(err) {
+    showAlert('login-alert', err.message || 'Login failed', 'error');
+  }
+}
+
+function logout() {
+  token = role = email = '';
+  ['as_token','as_role','as_email'].forEach(k => localStorage.removeItem(k));
+  location.reload();
+}
+
+// ── navigation ────────────────────────────────────────────────────────────────
+
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  const pg = document.getElementById('page-'+page);
+  if (pg) pg.classList.add('active');
+  const ln = document.getElementById('nav-'+page);
+  if (ln) ln.classList.add('active');
+  const titles = { dashboard:'Dashboard', tickets:'Tickets', create:'New Ticket',
+    queue:'Queue', agents:'Agents', integrations:'Integrations', users:'Users', system:'System' };
+  document.getElementById('page-title').textContent = titles[page] || page;
+  if (page === 'dashboard')    loadDashboard();
+  if (page === 'tickets')      { currentPage = 0; loadTickets(); }
+  if (page === 'queue')        loadQueue();
+  if (page === 'agents')       loadAgents();
+  if (page === 'integrations') loadIntegrations();
+  if (page === 'users')        loadUsers();
+  if (page === 'system')       loadSystem();
+}
+
+// ── api helper ────────────────────────────────────────────────────────────────
+
+async function api(path, method='GET', body=null, auth=true) {
+  const headers = {'Content-Type': 'application/json'};
+  if (auth && token) headers['Authorization'] = 'Bearer ' + token;
+  const r = await fetch(API + path, { method, headers, body: body ? JSON.stringify(body) : null });
+  if (r.status === 401) { logout(); throw new Error('Session expired'); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || `HTTP ${r.status}`);
+  return data;
+}
+
+// ── dashboard ─────────────────────────────────────────────────────────────────
+
+async function loadDashboard() {
+  checkHealth();
+  try {
+    const a = await api('/api/analytics');
+    const stats = [
+      { label: 'Total Tickets',   value: a.total_tickets,  sub: 'all time' },
+      { label: 'Open Tickets',    value: a.open_tickets,   sub: 'unresolved', class: a.open_tickets > 10 ? 'warn' : '' },
+      { label: 'Resolved Today',  value: a.resolved_today, sub: 'last 24h' },
+      { label: 'SLA At Risk',     value: a.sla_at_risk,    sub: 'breached SLA', class: a.sla_at_risk > 0 ? 'crit' : '' },
+      { label: 'Pending Jobs',    value: a.pending_jobs,   sub: 'in queue' },
+      { label: 'Failed Jobs',     value: a.failed_jobs,    sub: 'need retry', class: a.failed_jobs > 0 ? 'crit' : '' },
+    ];
+    document.getElementById('stats-grid').innerHTML = stats.map(s =>
+      `<div class="card"><div class="label">${s.label}</div>
+       <div class="value" style="${s.class==='crit'?'color:var(--danger)':s.class==='warn'?'color:var(--warn)':''}">${s.value}</div>
+       <div class="sub">${s.sub}</div></div>`
+    ).join('');
+    const {items} = await api('/api/tickets?limit=8&offset=0');
+    document.getElementById('recent-body').innerHTML = (items||[]).map(t =>
+      `<tr onclick="showTicket('${t.id}')" style="cursor:pointer">
+        <td>${esc(t.title)}</td><td><span class="badge ${t.priority}">${t.priority}</span></td>
+        <td><span class="badge ${t.status}">${t.status}</span></td>
+        <td>${t.category||'—'}</td><td>${fmtDate(t.created_at)}</td></tr>`
+    ).join('') || '<tr><td colspan="5" class="empty">No tickets yet</td></tr>';
+  } catch(e) { console.error('dashboard error', e); }
+}
+
+async function checkHealth() {
+  try {
+    const h = await api('/health', 'GET', null, false);
+    const dot = document.getElementById('health-dot');
+    dot.className = 'dot ' + (h.status === 'ok' ? 'ok' : 'error');
+    dot.title = `API: ${h.status} | DB: ${h.db} | Redis: ${h.redis}`;
+  } catch(e) {
+    document.getElementById('health-dot').className = 'dot error';
+  }
+}
+
+// ── tickets ───────────────────────────────────────────────────────────────────
+
+function debounceSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { currentPage = 0; loadTickets(); }, 350);
+}
+
+async function loadTickets() {
+  const status   = v('filter-status');
+  const priority = v('filter-priority');
+  const search   = v('search-input');
+  let path = `/api/tickets?limit=${PAGE_SIZE}&offset=${currentPage * PAGE_SIZE}`;
+  if (status)   path += `&status=${status}`;
+  if (priority) path += `&priority=${priority}`;
+  if (search)   path += `&search=${encodeURIComponent(search)}`;
+  try {
+    const {items, total} = await api(path);
+    const tbody = document.getElementById('tickets-body');
+    tbody.innerHTML = (items||[]).map(t =>
+      `<tr>
+        <td><a style="color:var(--accent);cursor:pointer" onclick="showTicket('${t.id}')">${esc(t.title)}</a></td>
+        <td><span class="badge ${t.priority}">${t.priority}</span></td>
+        <td><span class="badge ${t.status}">${t.status}</span></td>
+        <td>${t.assigned_team||'—'}</td>
+        <td>${fmtDate(t.created_at)}</td>
+        <td><button class="btn btn-ghost" style="padding:3px 10px;font-size:.8rem" onclick="showTicket('${t.id}')">View</button></td>
+      </tr>`
+    ).join('') || '<tr><td colspan="6" class="empty">No tickets found</td></tr>';
+    const totalPages = Math.ceil((total||0) / PAGE_SIZE);
+    document.getElementById('page-info').textContent = `${currentPage+1} / ${Math.max(1,totalPages)}  (${total} total)`;
+    document.getElementById('prev-btn').disabled = currentPage === 0;
+    document.getElementById('next-btn').disabled = (currentPage + 1) >= totalPages;
+  } catch(e) {
+    document.getElementById('tickets-body').innerHTML = `<tr><td colspan="6" style="color:var(--danger);padding:16px">${esc(e.message)}</td></tr>`;
+  }
+}
+
+function ticketPage(dir) { currentPage = Math.max(0, currentPage + dir); loadTickets(); }
+
+async function showTicket(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-ticket-detail').classList.add('active');
+  document.getElementById('page-title').textContent = 'Ticket Detail';
+  const el = document.getElementById('ticket-detail-content');
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const t = await api(`/api/tickets/${id}`);
+    const sla = await api(`/api/analytics/sla/${id}`).catch(() => null);
+    el.innerHTML = `
+      <div style="max-width:720px">
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px">
+          <button class="btn btn-ghost" onclick="nav('tickets')">← Back</button>
+          <h2 style="flex:1;font-size:1.1rem">${esc(t.title)}</h2>
+          <span class="badge ${t.priority}">${t.priority}</span>
+          <span class="badge ${t.status}">${t.status}</span>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+            <div><div class="label">Category</div><div>${t.category||'—'}</div></div>
+            <div><div class="label">Assigned Team</div><div>${t.assigned_team||'—'}</div></div>
+            <div><div class="label">Assigned To</div><div>${t.assigned_to||'—'}</div></div>
+            <div><div class="label">Source</div><div>${t.source||'—'}</div></div>
+            <div><div class="label">Created</div><div>${fmtDate(t.created_at)}</div></div>
+            <div><div class="label">SLA Breached</div><div style="color:${t.response_sla_breached?'var(--danger)':'var(--ok)'}">${t.response_sla_breached?'Yes':'No'}</div></div>
+          </div>
+        </div>
+        ${t.description ? `<div class="card" style="margin-bottom:16px"><div class="label">Description</div><p style="margin-top:8px;line-height:1.6;color:var(--muted)">${esc(t.description)}</p></div>` : ''}
+        ${t.suggested_response ? `<div class="card" style="margin-bottom:16px"><div class="label">Suggested Response</div><p style="margin-top:8px;line-height:1.6">${esc(t.suggested_response)}</p></div>` : ''}
+        ${sla ? `<div class="card" style="margin-bottom:16px"><div class="label">SLA Metrics</div>
+          <div style="margin-top:8px;font-size:.875rem;color:var(--muted)">
+            Response remaining: <strong style="color:var(--text)">${sla.response_time_remaining_seconds != null ? Math.round(sla.response_time_remaining_seconds/60) + ' min' : '—'}</strong>
+            &nbsp;&nbsp; Resolution sla breached: <strong style="color:${sla.resolution_sla_breached?'var(--danger)':'var(--ok)'}">${sla.resolution_sla_breached?'Yes':'No'}</strong>
+          </div></div>` : ''}
+        <div style="display:flex;gap:10px">
+          ${t.status !== 'resolved' && t.status !== 'closed' ? `<button class="btn btn-primary" onclick="resolveTicket('${t.id}')">Mark Resolved</button>` : ''}
+          <button class="btn btn-ghost" onclick="retryJob('${t.id}')">Re-run Classification</button>
+        </div>
+      </div>`;
+  } catch(e) { el.innerHTML = `<div style="color:var(--danger)">${esc(e.message)}</div>`; }
+}
+
+async function resolveTicket(id) {
+  try {
+    await api(`/api/tickets/${id}/resolve`, 'POST');
+    showTicket(id);
+  } catch(e) { alert(e.message); }
+}
+
+async function retryJob(ticketId) {
+  try {
+    const r = await api(`/api/queue/${ticketId}/retry`, 'POST');
+    alert(`Job enqueued: ${r.job_id}`);
+  } catch(e) { alert(e.message); }
+}
+
+// ── create ticket ─────────────────────────────────────────────────────────────
+
+async function createTicket() {
+  showAlert('create-alert', null);
+  const title = v('c-title');
+  if (!title.trim()) { showAlert('create-alert', 'Title is required', 'error'); return; }
+  try {
+    const t = await api('/api/tickets', 'POST', {
+      title:       title,
+      description: v('c-desc'),
+      priority:    v('c-priority'),
+      category:    v('c-category'),
+    });
+    showAlert('create-alert', `Ticket created: ${t.id}`, 'success');
+    document.getElementById('c-title').value = '';
+    document.getElementById('c-desc').value = '';
+  } catch(e) { showAlert('create-alert', e.message, 'error'); }
+}
+
+// ── queue ─────────────────────────────────────────────────────────────────────
+
+async function loadQueue() {
+  const tbody = document.getElementById('queue-body');
+  try {
+    const jobs = await api('/api/queue?limit=100');
+    tbody.innerHTML = (jobs||[]).map(j =>
+      `<tr>
+        <td style="font-family:monospace;font-size:.8rem">${(j.job_id||'').slice(0,16)}…</td>
+        <td><a style="color:var(--accent);cursor:pointer" onclick="showTicket('${j.ticket_id}')">${esc(j.title||j.ticket_id)}</a></td>
+        <td><span class="badge ${j.status==='done'?'resolved':j.status==='failed'?'critical':'medium'}">${j.status}</span></td>
+        <td>${j.attempts||0}</td>
+        <td>${fmtDate(j.updated_at)}</td>
+        <td>${j.status==='failed'?`<button class="btn btn-ghost" style="padding:3px 10px;font-size:.8rem" onclick="retryJob('${j.ticket_id}')">Retry</button>`:''}</td>
+      </tr>`
+    ).join('') || '<tr><td colspan="6" class="empty">No jobs</td></tr>';
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger);padding:16px">${esc(e.message)}</td></tr>`; }
+}
+
+// ── agents ────────────────────────────────────────────────────────────────────
+
+async function loadAgents() {
+  const tbody = document.getElementById('agents-body');
+  try {
+    const agents = await api('/api/agents');
+    tbody.innerHTML = (agents||[]).map(a =>
+      `<tr>
+        <td><strong>${a.agent}</strong></td>
+        <td>${a.total_runs}</td>
+        <td>${a.avg_ms != null ? a.avg_ms+'ms' : '—'}</td>
+        <td>${a.last_run_ts ? fmtDate(a.last_run_ts) : '—'}</td>
+        <td style="color:var(--muted);font-size:.85rem">${esc(a.description)}</td>
+      </tr>`
+    ).join('');
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger);padding:16px">${esc(e.message)}</td></tr>`; }
+}
+
+// ── integrations ──────────────────────────────────────────────────────────────
+
+async function loadIntegrations() {
+  const tbody = document.getElementById('integrations-body');
+  try {
+    const list = await api('/api/integrations');
+    tbody.innerHTML = (list||[]).map(i =>
+      `<tr>
+        <td>${esc(i.name)}</td><td>${i.type}</td>
+        <td><span class="badge ${i.status==='active'?'resolved':'critical'}">${i.status}</span></td>
+        <td>${i.event_count||0}</td>
+        <td style="display:flex;gap:8px">
+          <button class="btn btn-ghost" style="padding:3px 10px;font-size:.8rem" onclick="testIntegration('${i.id}')">Test</button>
+          <button class="btn btn-danger" style="padding:3px 10px;font-size:.8rem" onclick="deleteIntegration('${i.id}')">Delete</button>
+        </td>
+      </tr>`
+    ).join('') || '<tr><td colspan="5" class="empty">No integrations</td></tr>';
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger);padding:16px">${esc(e.message)}</td></tr>`; }
+}
+
+function showCreateIntegration() {
+  document.getElementById('integration-form').style.display = 'block';
+}
+
+async function createIntegration() {
+  const name = v('i-name'), type = v('i-type');
+  const notifyUrl = v('i-notify-url'), secret = v('i-secret');
+  if (!name) { alert('Name required'); return; }
+  try {
+    await api('/api/integrations', 'POST', {name, type, config: notifyUrl ? {notify_url: notifyUrl} : {}, secret: secret||null});
+    document.getElementById('integration-form').style.display = 'none';
+    loadIntegrations();
+  } catch(e) { alert(e.message); }
+}
+
+async function testIntegration(id) {
+  try {
+    const r = await api(`/api/integrations/${id}/test`, 'POST');
+    alert(`${r.ok ? '✅' : '❌'} ${r.message}`);
+    loadIntegrations();
+  } catch(e) { alert(e.message); }
+}
+
+async function deleteIntegration(id) {
+  if (!confirm('Delete this integration?')) return;
+  try {
+    await api(`/api/integrations/${id}`, 'DELETE');
+    loadIntegrations();
+  } catch(e) { alert(e.message); }
+}
+
+// ── users ─────────────────────────────────────────────────────────────────────
+
+async function loadUsers() {
+  const tbody = document.getElementById('users-body');
+  try {
+    const users = await api('/api/users');
+    tbody.innerHTML = (users||[]).map(u =>
+      `<tr>
+        <td>${esc(u.email)}</td><td>${esc(u.name)}</td>
+        <td><span class="badge ${u.role==='admin'?'critical':'medium'}">${u.role}</span></td>
+        <td><span class="dot ${u.active?'ok':'error'}"></span>${u.active?'Active':'Disabled'}</td>
+        <td>${fmtDate(u.created_at)}</td>
+      </tr>`
+    ).join('') || '<tr><td colspan="5" class="empty">No users</td></tr>';
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger);padding:16px">${esc(e.message)}</td></tr>`; }
+}
+
+function showCreateUser() { document.getElementById('user-form').style.display = 'block'; }
+
+async function createUser() {
+  showAlert('user-form-alert', null);
+  const body = { email: v('u-email'), name: v('u-name'), role: v('u-role'), password: v('u-password') };
+  if (!body.email || !body.name || !body.password) { showAlert('user-form-alert', 'All fields required', 'error'); return; }
+  try {
+    await api('/api/users', 'POST', body);
+    document.getElementById('user-form').style.display = 'none';
+    loadUsers();
+  } catch(e) { showAlert('user-form-alert', e.message, 'error'); }
+}
+
+// ── system ────────────────────────────────────────────────────────────────────
+
+async function loadSystem() {
+  try {
+    const h = await api('/health', 'GET', null, false);
+    document.getElementById('system-health-grid').innerHTML = [
+      {label: 'API', val: h.status, ok: h.status==='ok'},
+      {label: 'Database', val: h.db, ok: h.db==='ok'},
+      {label: 'Redis', val: h.redis, ok: h.redis==='ok'},
+      {label: 'Version', val: h.version, ok: true},
+    ].map(c => `<div class="card"><div class="label">${c.label}</div>
+      <div class="value" style="font-size:1.2rem;color:${c.ok?'var(--ok)':'var(--danger)'}">${c.val}</div></div>`
+    ).join('');
+    const logs = await api('/api/system/log?limit=60');
+    document.getElementById('syslog-body').innerHTML = (logs||[]).map(l =>
+      `<tr>
+        <td style="font-size:.8rem;color:var(--muted);white-space:nowrap">${fmtDate(l.ts)}</td>
+        <td><span class="badge ${l.level==='ERROR'?'critical':l.level==='WARN'?'high':'low'}">${l.level}</span></td>
+        <td style="font-size:.8rem;color:var(--muted)">${esc(l.source)}</td>
+        <td style="font-size:.85rem">${esc(l.message)}</td>
+      </tr>`
+    ).join('') || '<tr><td colspan="4" class="empty">No logs</td></tr>';
+  } catch(e) { console.error(e); }
+}
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+function v(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+function fmtDate(ts) {
+  if (!ts) return '—';
+  const d = ts > 9999999999 ? new Date(ts) : new Date(ts * 1000);
+  return d.toLocaleString();
+}
+function showAlert(id, msg, type='error') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!msg) { el.style.display = 'none'; return; }
+  el.className = `alert ${type}`;
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ── init ──────────────────────────────────────────────────────────────────────
+
+(function init() {
+  if (token) {
+    document.getElementById('login-page').classList.add('hidden');
+    document.getElementById('user-email').textContent = email;
+    nav('dashboard');
+  }
+  // enter key on login
+  document.getElementById('l-password').addEventListener('keyup', e => { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('l-email').addEventListener('keyup', e => { if (e.key === 'Enter') doLogin(); });
+  // health check every 60s
+  setInterval(checkHealth, 60_000);
+})();
+</script>
+</body>
+</html>
