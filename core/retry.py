@@ -1,7 +1,7 @@
 import asyncio
 import logging
+from collections.abc import Callable
 from functools import wraps
-from typing import Callable, Tuple, Type
 
 logger = logging.getLogger("retry")
 
@@ -10,7 +10,7 @@ def with_retry(
     max_attempts: int = 3,
     delay: float = 0.5,
     backoff: float = 2.0,
-    exceptions: Tuple[Type[Exception], ...] = (Exception,),
+    exceptions: tuple[type[Exception], ...] = (Exception,),
 ) -> Callable:
     def decorator(fn: Callable) -> Callable:
         @wraps(fn)

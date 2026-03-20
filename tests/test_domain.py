@@ -3,6 +3,7 @@ Domain logic tests — no DB, no network, fast.
 """
 
 import pytest
+
 from core.exceptions import InvalidStateTransition
 from domain.ticket import can_transition, validate_transition
 
@@ -79,7 +80,7 @@ class TestRouter:
 
 class TestSecurity:
     def test_hash_and_verify(self):
-        from core.security import hash_password, _verify_password_sync
+        from core.security import _verify_password_sync, hash_password
         pw   = "S3cur3P@ss!"
         h    = hash_password(pw)
         assert _verify_password_sync(pw, h)

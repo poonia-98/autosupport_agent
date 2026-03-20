@@ -1,6 +1,6 @@
 import uuid
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 import asyncpg
 import structlog
@@ -17,7 +17,7 @@ async def create(
     name: str,
     int_type: str,
     config: dict[str, Any],
-    secret: Optional[str],
+    secret: str | None,
     actor: dict,
 ) -> dict[str, Any]:
     adapter = get_adapter(int_type)
@@ -51,7 +51,7 @@ async def ingest(
     arq: Any,
     integration_id: str,
     payload: dict[str, Any],
-) -> Optional[str]:
+) -> str | None:
     row = await store.get_integration(pool, integration_id)
     if not row:
         raise IntegrationError(f"Integration not found: {integration_id}")
@@ -71,7 +71,7 @@ async def ingest(
     ticket_id = ticket["id"]
 
     await store.record_integration_event(pool, integration_id, "inbound", "ok", ticket_id=ticket_id)
-    await store.update_integration(pool, integration_id, {"last_sync_at": datetime.now(timezone.utc)})
+    await store.update_integration(pool, integration_id, {"last_sync_at": datetime.now(UTC)})
     logger.info("integration.ingested", integration_id=integration_id, ticket_id=ticket_id)
     return ticket_id
 

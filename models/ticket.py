@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -32,16 +32,16 @@ class CreateTicketRequest(BaseModel):
     description:     str = Field(default="", max_length=10_000)
     priority:        TicketPriority = TicketPriority.MEDIUM
     category:        TicketCategory = TicketCategory.GENERAL
-    idempotency_key: Optional[str] = Field(default=None, max_length=64)
-    source:          Optional[str] = Field(default="api", max_length=32)
+    idempotency_key: str | None = Field(default=None, max_length=64)
+    source:          str | None = Field(default="api", max_length=32)
 
 
 class UpdateTicketRequest(BaseModel):
-    title:       Optional[str] = Field(default=None, min_length=3, max_length=255)
-    description: Optional[str] = Field(default=None, max_length=10_000)
-    priority:    Optional[TicketPriority] = None
-    category:    Optional[TicketCategory] = None
-    status:      Optional[TicketStatus]   = None
+    title:       str | None = Field(default=None, min_length=3, max_length=255)
+    description: str | None = Field(default=None, max_length=10_000)
+    priority:    TicketPriority | None = None
+    category:    TicketCategory | None = None
+    status:      TicketStatus | None   = None
 
 
 class BulkCloseRequest(BaseModel):

@@ -7,8 +7,6 @@ Run with:
 Or via the Makefile / docker-compose service.
 """
 
-import asyncio
-import signal
 
 import structlog
 from arq import cron

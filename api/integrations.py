@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
@@ -16,7 +16,7 @@ class CreateIntegrationRequest(BaseModel):
     name:   str
     type:   str
     config: dict[str, Any] = {}
-    secret: Optional[str] = None
+    secret: str | None = None
 
 
 @router.get("")

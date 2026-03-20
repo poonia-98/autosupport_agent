@@ -1,4 +1,4 @@
-from typing import Optional
+
 from pydantic import BaseModel, EmailStr, Field
 
 
@@ -10,9 +10,9 @@ class CreateUserRequest(BaseModel):
 
 
 class UpdateUserRequest(BaseModel):
-    name:   Optional[str] = Field(default=None, min_length=1, max_length=100)
-    role:   Optional[str] = Field(default=None, pattern="^(admin|operator|viewer)$")
-    active: Optional[bool] = None
+    name:   str | None = Field(default=None, min_length=1, max_length=100)
+    role:   str | None = Field(default=None, pattern="^(admin|operator|viewer)$")
+    active: bool | None = None
 
 
 class ChangePasswordRequest(BaseModel):

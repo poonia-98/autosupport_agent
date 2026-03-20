@@ -5,9 +5,10 @@ Run with: pytest tests/test_api.py -v
 """
 
 import os
+
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 
 def _has_infra() -> bool:

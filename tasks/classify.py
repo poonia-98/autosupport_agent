@@ -11,8 +11,8 @@ from typing import Any
 
 import structlog
 
-from core.metrics import ticket_processed
 from core.logging import bind_job_context, clear_context
+from core.metrics import ticket_processed
 from db import store
 from workflows.engine import StageExecutionError, run_pipeline
 

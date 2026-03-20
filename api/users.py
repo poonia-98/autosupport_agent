@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from core.security import require_admin, require_auth
+from core.security import require_admin
 from db import store
 from models.user import CreateUserRequest, UpdateUserRequest
 from services import user_service

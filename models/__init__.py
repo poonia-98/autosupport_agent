@@ -1,6 +1,13 @@
-from .ticket import CreateTicketRequest, UpdateTicketRequest, BulkCloseRequest, TicketStatus, TicketPriority, TicketCategory
-from .user import CreateUserRequest, UpdateUserRequest, ChangePasswordRequest, LoginRequest
-from .sla import SLAThresholds, SLAMetrics, DEFAULT_SLA, SLASeverity
+from .sla import DEFAULT_SLA, SLAMetrics, SLASeverity, SLAThresholds
+from .ticket import (
+    BulkCloseRequest,
+    CreateTicketRequest,
+    TicketCategory,
+    TicketPriority,
+    TicketStatus,
+    UpdateTicketRequest,
+)
+from .user import ChangePasswordRequest, CreateUserRequest, LoginRequest, UpdateUserRequest
 
 __all__ = [
     "CreateTicketRequest", "UpdateTicketRequest", "BulkCloseRequest",

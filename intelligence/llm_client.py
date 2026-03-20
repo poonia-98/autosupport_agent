@@ -2,7 +2,7 @@ import asyncio
 import hashlib
 import json
 import time
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 
@@ -33,7 +33,7 @@ def _cache_key(title: str, description: str) -> str:
     return hashlib.sha256(content.encode()).hexdigest()[:20]
 
 
-async def classify(ticket_id: str, title: str, description: str) -> Optional[dict[str, Any]]:
+async def classify(ticket_id: str, title: str, description: str) -> dict[str, Any] | None:
     settings = get_settings()
     if not settings.llm_enabled or not settings.llm_api_key:
         return None

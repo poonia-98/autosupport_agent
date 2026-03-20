@@ -2,7 +2,6 @@ import time
 from typing import Any
 
 import asyncpg
-import structlog
 
 from core.logging import get_logger
 from db import store

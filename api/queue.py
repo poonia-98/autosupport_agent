@@ -25,7 +25,9 @@ async def retry_job(
 ):
     """Re-enqueue classification for a ticket whose job failed."""
     import uuid
-    from fastapi import HTTPException, status as http_status
+
+    from fastapi import HTTPException
+    from fastapi import status as http_status
     pool = request.app.state.pool
     arq  = request.app.state.arq
 

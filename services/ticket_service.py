@@ -1,7 +1,7 @@
 import re
 import uuid
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 import asyncpg
 import structlog
@@ -11,7 +11,7 @@ from core.exceptions import InvalidStateTransition, TicketNotFound
 from core.metrics import ticket_created
 from db import store
 from domain.bus import bus
-from domain.events import TicketCreated, TicketResolved, TicketClosed
+from domain.events import TicketClosed, TicketCreated, TicketResolved
 from domain.ticket import validate_transition
 
 logger = structlog.get_logger("services.ticket")
@@ -142,7 +142,7 @@ async def resolve(
             ok = await store.transition_ticket_status(conn, ticket_id, ticket["status"], "resolved")
             if not ok:
                 raise InvalidStateTransition(ticket["status"], "resolved")
-            await store.update_ticket(conn, ticket_id, {"resolved_at": datetime.now(timezone.utc)})
+            await store.update_ticket(conn, ticket_id, {"resolved_at": datetime.now(UTC)})
             await store.audit(conn, actor["sub"], actor["email"], "ticket.resolve", "ticket", ticket_id)
 
     await bus.emit(TicketResolved(
@@ -178,13 +178,14 @@ async def get_page(
     pool: asyncpg.Pool,
     limit: int = 50,
     offset: int = 0,
-    status: Optional[str] = None,
-    priority: Optional[str] = None,
-    category: Optional[str] = None,
-    search: Optional[str] = None,
+    status: str | None = None,
+    priority: str | None = None,
+    category: str | None = None,
+    search: str | None = None,
 ) -> dict[str, Any]:
     if search and re.fullmatch(r"\s*(?i:(and|or|not)(?:\s+(and|or|not))*)\s*", search):
-        from fastapi import HTTPException, status as http_status
+        from fastapi import HTTPException
+        from fastapi import status as http_status
         raise HTTPException(http_status.HTTP_400_BAD_REQUEST, detail="Invalid search query.")
 
     try:
@@ -195,7 +196,8 @@ async def get_page(
     except Exception as exc:
         # FTS parse errors become 400 at the API layer
         if "syntax error" in str(exc).lower() or "unterminated" in str(exc).lower():
-            from fastapi import HTTPException, status as http_status
+            from fastapi import HTTPException
+            from fastapi import status as http_status
             raise HTTPException(http_status.HTTP_400_BAD_REQUEST, detail=f"Invalid search query: {exc}")
         raise
 

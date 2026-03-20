@@ -2,7 +2,8 @@ import contextlib
 from pathlib import Path
 
 import structlog
-from arq.connections import create_pool as arq_create_pool, RedisSettings
+from arq.connections import RedisSettings
+from arq.connections import create_pool as arq_create_pool
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse

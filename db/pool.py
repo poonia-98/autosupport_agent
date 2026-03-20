@@ -1,4 +1,3 @@
-from typing import Optional
 
 import asyncpg
 
@@ -7,7 +6,7 @@ from core.logging import get_logger
 
 logger = get_logger("db.pool")
 
-_pool: Optional[asyncpg.Pool] = None
+_pool: asyncpg.Pool | None = None
 
 
 async def init_pool() -> asyncpg.Pool:

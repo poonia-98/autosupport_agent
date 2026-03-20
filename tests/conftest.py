@@ -8,6 +8,7 @@ Without it, DB-dependent tests are skipped automatically.
 """
 
 import os
+
 import pytest
 import pytest_asyncio
 
@@ -27,8 +28,8 @@ async def app(settings):
     """Full ASGI app with lifespan — requires live Postgres + Redis."""
     if not os.getenv("TEST_DATABASE_URL"):
         pytest.skip("TEST_DATABASE_URL not set")
-    import asyncio
-    from httpx import AsyncClient, ASGITransport
+    from httpx import ASGITransport, AsyncClient
+
     from main import create_app
 
     _app = create_app()

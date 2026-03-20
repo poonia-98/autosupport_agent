@@ -1,8 +1,8 @@
-import hmac
 import hashlib
+import hmac
 import json
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 
@@ -18,7 +18,7 @@ class WebhookIntegration(BaseIntegration):
         # notify_url is optional; no required fields for inbound-only usage
         pass
 
-    async def test_connection(self, config: dict[str, Any], secret: Optional[str]) -> dict[str, Any]:
+    async def test_connection(self, config: dict[str, Any], secret: str | None) -> dict[str, Any]:
         notify_url = config.get("notify_url", "").strip()
         if not notify_url:
             return {"ok": True, "message": "Webhook ready. No outbound notify_url configured."}
@@ -31,7 +31,7 @@ class WebhookIntegration(BaseIntegration):
         except Exception as exc:
             return {"ok": False, "message": str(exc)}
 
-    def parse_inbound(self, payload: dict[str, Any], secret: Optional[str]) -> Optional[dict[str, Any]]:
+    def parse_inbound(self, payload: dict[str, Any], secret: str | None) -> dict[str, Any] | None:
         if payload.get("event") in ("ping", "health_check", "test"):
             return None
 
@@ -61,7 +61,7 @@ class WebhookIntegration(BaseIntegration):
         notify_url: str,
         event: str,
         ticket: dict[str, Any],
-        secret: Optional[str] = None,
+        secret: str | None = None,
     ) -> bool:
         body = {
             "event":     event,

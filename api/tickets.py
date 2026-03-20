@@ -1,4 +1,3 @@
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
@@ -26,10 +25,10 @@ async def list_tickets(
     request:  Request,
     limit:    int           = Query(default=50, ge=1, le=200),
     offset:   int           = Query(default=0, ge=0),
-    status:   Optional[str] = Query(default=None),
-    priority: Optional[str] = Query(default=None),
-    category: Optional[str] = Query(default=None),
-    search:   Optional[str] = Query(default=None, max_length=200),
+    status:   str | None = Query(default=None),
+    priority: str | None = Query(default=None),
+    category: str | None = Query(default=None),
+    search:   str | None = Query(default=None, max_length=200),
     identity: dict          = Depends(require_auth),
 ):
     pool = request.app.state.pool

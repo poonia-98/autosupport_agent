@@ -3,9 +3,7 @@ Pipeline integration test — runs the full 5-agent workflow against a fake tick
 No DB or network required.
 """
 
-import asyncio
 import pytest
-from unittest.mock import patch, AsyncMock
 
 
 @pytest.mark.asyncio
@@ -110,9 +108,9 @@ async def test_pipeline_llm_disabled_still_works():
 @pytest.mark.asyncio
 async def test_bus_events_emitted():
     """TicketClassified event must be emitted from the pipeline."""
-    from workflows.engine import run_pipeline
     from domain.bus import bus
     from domain.events import TicketClassified
+    from workflows.engine import run_pipeline
 
     received: list = []
     bus.subscribe(TicketClassified, lambda e: received.append(e))
