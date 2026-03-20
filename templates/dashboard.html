@@ -49,37 +49,78 @@ html,body{height:100%;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Sego
   visibility:hidden;   /* hides but keeps layout; swapped to visible after login */
   background:var(--bg);
   z-index:10;
+  --sb-expanded:250px;
+  --sb-collapsed:76px;
 }
 #app-shell.visible{visibility:visible}
 
 /* sidebar */
-#sidebar{width:228px;min-width:228px;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-.sb-logo{padding:18px 16px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+#sidebar{width:var(--sb-expanded);min-width:var(--sb-expanded);background:linear-gradient(180deg,#0d141b 0%,#0f161f 100%);border-right:1px solid rgba(70,84,100,.42);display:flex;flex-direction:column;overflow:hidden;will-change:auto;transform:translateZ(0);backface-visibility:hidden;transition:border-color .18s ease,box-shadow .18s ease}
+.sb-top{padding:14px 12px 12px;border-bottom:1px solid rgba(70,84,100,.32);display:flex;flex-direction:column;gap:12px;background:linear-gradient(180deg,rgba(34,211,238,.06),transparent)}
+.sb-logo{display:flex;align-items:center;gap:10px;min-height:34px}
 .sb-logo-ic{width:28px;height:28px;background:linear-gradient(135deg,#7c3aed,#a78bfa);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
 .sb-logo-tx{font-size:14px;font-weight:650;letter-spacing:-.2px}.sb-logo-tx span{color:var(--accent-ll)}
-.sb-nav{flex:1;padding:8px 8px 0;overflow-y:auto}
-.sb-sec-lbl{font-size:10px;font-weight:600;color:var(--faint);letter-spacing:.09em;text-transform:uppercase;padding:14px 10px 5px}
-.nav-btn{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;color:var(--muted);cursor:pointer;font-size:13px;font-weight:450;border:none;background:none;width:100%;text-align:left;position:relative;transition:color .1s,background .1s;font-family:inherit}
-.nav-btn:hover{color:var(--text);background:var(--s3)}
-.nav-btn.on{color:var(--text);background:var(--s4)}
+.sb-toggle{margin-left:auto;width:30px;height:30px;border-radius:9px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03);color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:12px;transition:background .16s ease,color .16s ease,transform .2s ease}
+.sb-toggle:hover{background:rgba(255,255,255,.07);color:var(--text)}
+.sb-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.sb-metric{padding:9px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.03)}
+.sb-metric-l{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#708593;margin-bottom:5px}
+.sb-metric-v{font-size:18px;font-weight:700;line-height:1}
+.sb-metric-s{margin-top:5px;font-size:11px;color:#91a6b1}
+.sb-nav{flex:1;padding:10px 10px 0;overflow-y:auto}
+.sb-sec-lbl{font-size:10px;font-weight:600;color:#617482;letter-spacing:.11em;text-transform:uppercase;padding:16px 10px 8px}
+.sb-logo-tx,.sb-metrics,.sb-sec-lbl,.nav-copy,.sb-uinfo,.sb-out{transition:opacity .16s ease,transform .16s ease,max-height .16s ease,width .16s ease,padding .16s ease,margin .16s ease;will-change:opacity,transform}
+.sb-logo-tx,.nav-copy,.sb-uinfo{white-space:nowrap;overflow:hidden}
+.sb-metrics,.sb-sec-lbl{overflow:hidden}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;color:var(--muted);cursor:pointer;font-size:13px;font-weight:450;border:none;background:none;width:100%;text-align:left;position:relative;transition:color .14s ease,background .14s ease,border-color .14s ease; font-family:inherit;border:1px solid transparent}
+.nav-btn:hover{color:var(--text);background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.05)}
+.nav-btn.on{color:var(--text);background:rgba(255,255,255,.06);border-color:rgba(74,222,255,.18)}
 .nav-btn.on::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:16px;background:var(--accent-ll);border-radius:0 2px 2px 0}
-.nav-btn .ic{font-size:14px;width:17px;text-align:center;flex-shrink:0;opacity:.85}
-.nav-badge{margin-left:auto;background:var(--red-bg);color:var(--red);font-size:10px;font-weight:600;padding:1px 6px;border-radius:20px;display:none}
-.sb-footer{padding:10px 8px;border-top:1px solid var(--border)}
-.sb-user{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px}
+.nav-btn .ic{font-size:14px;width:18px;text-align:center;flex-shrink:0;opacity:.88}
+.nav-copy{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.nav-main{font-size:13px;font-weight:600;line-height:1.2}
+.nav-sub{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#657987;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-side{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.nav-ind{width:8px;height:8px;border-radius:50%;background:#4b5563;box-shadow:0 0 0 3px rgba(75,85,99,.18)}
+.nav-ind.ok{background:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.16)}
+.nav-ind.warn{background:#facc15;box-shadow:0 0 0 3px rgba(250,204,21,.12)}
+.nav-ind.err{background:#fb7185;box-shadow:0 0 0 3px rgba(251,113,133,.14)}
+.nav-ind.idle{background:#64748b;box-shadow:0 0 0 3px rgba(100,116,139,.12)}
+.nav-badge{background:rgba(239,68,68,.15);color:#fecdd3;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;display:none;min-width:20px;text-align:center}
+.nav-badge.ok{background:rgba(74,222,128,.14);color:#bbf7d0}
+.nav-badge.warn{background:rgba(250,204,21,.14);color:#fde68a}
+.nav-badge.err{background:rgba(251,113,133,.16);color:#fecdd3}
+.nav-badge.info{background:rgba(34,211,238,.13);color:#bae6fd}
+.sb-footer{padding:10px;border-top:1px solid rgba(70,84,100,.32);background:rgba(255,255,255,.015)}
+.sb-user{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.03);min-height:46px}
 .sb-av{width:26px;height:26px;background:linear-gradient(135deg,var(--accent),var(--accent-ll));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
 .sb-uinfo{flex:1;min-width:0}
 .sb-uemail{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sb-urole{font-size:10px;color:var(--faint)}
-.sb-out{font-size:11px;color:var(--faint);background:none;border:none;cursor:pointer;padding:3px 7px;border-radius:4px;font-family:inherit}
-.sb-out:hover{color:var(--red)}
+.sb-urole{font-size:10px;color:#6f8290;letter-spacing:.08em;text-transform:uppercase}
+.sb-out{font-size:11px;color:var(--faint);background:none;border:none;cursor:pointer;padding:5px 7px;border-radius:8px;font-family:inherit}
+.sb-out:hover{color:var(--red);background:rgba(239,68,68,.08)}
+
+#app-shell.sb-collapsed #sidebar{width:var(--sb-collapsed);min-width:var(--sb-collapsed)}
+#app-shell.sb-collapsed .sb-logo-tx,
+#app-shell.sb-collapsed .nav-copy,
+#app-shell.sb-collapsed .sb-uinfo{opacity:0;width:0;min-width:0;transform:translateX(-8px);pointer-events:none}
+#app-shell.sb-collapsed .sb-metrics{opacity:0;max-height:0;margin:0;transform:translateY(-8px);pointer-events:none}
+#app-shell.sb-collapsed .sb-sec-lbl{opacity:0;max-height:0;padding-top:0;padding-bottom:0;margin:0;transform:translateY(-6px);pointer-events:none}
+#app-shell.sb-collapsed .sb-top{padding-inline:10px}
+#app-shell.sb-collapsed .sb-logo{justify-content:center}
+#app-shell.sb-collapsed .nav-btn{justify-content:center;padding-inline:0;min-height:46px}
+#app-shell.sb-collapsed .nav-btn .ic{width:auto;font-size:15px}
+#app-shell.sb-collapsed .nav-side{position:absolute;right:8px;top:7px}
+#app-shell.sb-collapsed .sb-user{justify-content:center}
+#app-shell.sb-collapsed .sb-out{opacity:0;width:0;padding:0;overflow:hidden;pointer-events:none}
 
 /* main area */
-#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;transform:translateZ(0);backface-visibility:hidden}
 
 /* topbar */
-.topbar{height:50px;flex-shrink:0;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:12px;background:var(--s1)}
+.topbar{height:52px;flex-shrink:0;border-bottom:1px solid rgba(70,84,100,.32);display:flex;align-items:center;padding:0 18px;gap:12px;background:rgba(11,17,24,.94)}
 .tb-title{font-size:14px;font-weight:600}
+.tb-shell{display:flex;align-items:center;gap:8px;min-width:0}
 .flex1{flex:1}
 .hp{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);background:var(--s3);border:1px solid var(--border);padding:4px 10px;border-radius:20px}
 .hd{width:6px;height:6px;border-radius:50%;background:var(--faint)}
@@ -87,7 +128,7 @@ html,body{height:100%;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Sego
 .hd.err{background:var(--red)}.hd.warn{background:var(--amber)}
 
 /* pages */
-.pg{flex:1;overflow-y:auto;padding:28px 32px;display:none}
+.pg{flex:1;overflow-y:auto;padding:18px 20px 22px;display:none;scroll-behavior:auto;min-width:0;contain:paint}
 .pg.on{display:block}
 
 /* ══════════════════════════════════════ FORMS */
@@ -182,7 +223,9 @@ canvas{display:block;width:100%!important}
 .ops-meta strong{color:#dbe9ef;font-weight:600}
 .ops-hero-right{display:grid;gap:10px;min-width:260px;max-width:320px;position:relative;z-index:1}
 .ops-live{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(74,222,255,.25);background:rgba(4,22,30,.66)}
+.ops-live.stale{border-color:rgba(250,204,21,.26);background:rgba(30,22,4,.28)}
 .ops-live-dot{width:10px;height:10px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 0 rgba(74,222,128,.45);animation:ops-pulse 1.8s infinite}
+.ops-live.stale .ops-live-dot{background:#facc15;box-shadow:0 0 0 0 rgba(250,204,21,.35)}
 .ops-live-text{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#a4d7c2}
 .ops-live-detail{font-size:12px;color:#dbe9ef}
 .ops-clock{padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03)}
@@ -279,6 +322,55 @@ canvas{display:block;width:100%!important}
 .ops-mini{font-size:11px;color:#90a4af}
 .ops-mini strong{color:#f5fbff;font-weight:600}
 .ops-panel-foot{margin-top:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+#d-agent-perf,#d-pipeline,#d-stream,#d-slowest,#d-failing,#d-recent{max-height:360px;overflow:auto;padding-right:4px}
+#d-heatmap{overflow:auto}
+.ops-page{display:flex;flex-direction:column;gap:14px}
+.page-hero{position:relative;overflow:hidden;padding:18px 20px;border-radius:18px;border:1px solid rgba(45,66,82,.9);background:
+  radial-gradient(circle at top left,rgba(34,211,238,.12),transparent 28%),
+  linear-gradient(160deg,#08121a 0%,#0a1720 52%,#09141c 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+.page-hero::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,rgba(34,211,238,.5),rgba(250,204,21,.28),transparent)}
+.page-hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;position:relative;z-index:1}
+.page-copy{max-width:760px}
+.page-eyebrow{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#89bfd0;margin-bottom:7px}
+.page-title{font-size:26px;line-height:1.04;letter-spacing:-.035em;font-weight:740;margin-bottom:8px}
+.page-sub{max-width:680px;color:#91a6b1;font-size:13px;line-height:1.65}
+.page-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.page-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.page-chip{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);font-size:11px;color:#a2b8c3}
+.page-chip strong{color:#f5fbff;font-weight:600}
+.ops-toolbar-panel{padding:0}
+.ops-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 14px}
+.ops-toolbar .inp{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.07)}
+.ops-toolbar .inp:focus{border-color:rgba(34,211,238,.46);box-shadow:0 0 0 3px rgba(34,211,238,.12)}
+.ops-toolbar-note{font-size:11px;color:#7e95a1}
+.ops-table-panel{padding:0}
+.ops-table-panel .tc{background:transparent;border:none;border-radius:18px}
+.ops-table-panel .tc-bar,.ops-table-panel .tc-foot{background:rgba(255,255,255,.015)}
+.ops-scroll{max-height:360px;overflow:auto;padding-right:4px}
+.ops-scroll-lg{max-height:420px;overflow:auto;padding-right:4px}
+.signal-list,.alert-list,.coverage-list,.runtime-list,.segment-list,.queue-watch-list,.activity-list,.integration-list{display:flex;flex-direction:column;gap:10px}
+.signal-item,.alert-item,.coverage-item,.runtime-item,.segment-item,.queue-watch-item,.activity-item,.integration-item{padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.02)}
+.signal-top,.alert-top,.coverage-top,.runtime-top,.segment-top,.queue-watch-top,.activity-top,.integration-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.signal-title,.alert-title,.coverage-title,.runtime-title,.segment-title,.queue-watch-title,.activity-title,.integration-title{font-size:13px;font-weight:620;line-height:1.4}
+.signal-meta,.alert-meta,.coverage-meta,.runtime-meta,.segment-meta,.queue-watch-meta,.activity-meta,.integration-meta{font-size:11px;color:#90a4af;line-height:1.5}
+.metric-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.metric-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:rgba(255,255,255,.04);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#9fb4be}
+.metric-pill strong{color:#f5fbff;font-weight:600;letter-spacing:normal;text-transform:none}
+.value-bar{height:6px;border-radius:999px;background:rgba(255,255,255,.05);overflow:hidden;margin-top:10px}
+.value-bar > span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#22d3ee,#38bdf8)}
+.value-bar.warn > span{background:linear-gradient(90deg,#facc15,#f97316)}
+.value-bar.err > span{background:linear-gradient(90deg,#fb7185,#ef4444)}
+.page-note{font-size:11px;color:#7e95a1}
+.ops-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.ops-stat-card{padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.02)}
+.ops-stat-label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#7e95a1;margin-bottom:6px}
+.ops-stat-value{font-size:20px;font-weight:720;line-height:1}
+.ops-stat-sub{margin-top:6px;font-size:11px;color:#90a4af}
+.table-actions{display:flex;gap:5px;flex-wrap:wrap}
+.ops-grid-tight{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ops-divider{height:1px;background:rgba(255,255,255,.06);margin:10px 0}
+.ops-caption{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#7e95a1}
 @keyframes ops-pulse{0%{box-shadow:0 0 0 0 rgba(74,222,128,.45)}70%{box-shadow:0 0 0 10px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
 @media(max-width:1180px){
   .ops-span-8,.ops-span-7,.ops-span-6,.ops-span-5,.ops-span-4,.ops-span-3{grid-column:span 6}
@@ -286,10 +378,13 @@ canvas{display:block;width:100%!important}
 }
 @media(max-width:860px){
   .ops-title{font-size:27px}
+  .page-title{font-size:22px}
   .ops-grid{grid-template-columns:1fr}
   .ops-span-12,.ops-span-8,.ops-span-7,.ops-span-6,.ops-span-5,.ops-span-4,.ops-span-3{grid-column:1 / -1}
   .heat-grid{grid-template-columns:100px repeat(5,minmax(0,1fr))}
   .timeline-track{grid-template-columns:1fr}
+  #app-shell.sb-collapsed #sidebar{width:70px;min-width:70px}
+  .ops-grid-tight{grid-template-columns:1fr}
 }
 
 /* detail meta grid */
@@ -356,21 +451,64 @@ canvas{display:block;width:100%!important}
 
   <!-- SIDEBAR -->
   <div id="sidebar">
-    <div class="sb-logo">
-      <div class="sb-logo-ic">AS</div>
-      <div class="sb-logo-tx">Auto<span>Support</span></div>
+    <div class="sb-top">
+      <div class="sb-logo">
+        <div class="sb-logo-ic">AS</div>
+        <div class="sb-logo-tx">Auto<span>Support</span></div>
+        <button class="sb-toggle" id="sb-toggle" type="button" onclick="toggleSidebar()" title="Collapse navigation" aria-label="Toggle sidebar">◧</button>
+      </div>
+      <div class="sb-metrics">
+        <div class="sb-metric">
+          <div class="sb-metric-l">Open</div>
+          <div class="sb-metric-v" id="sbm-open">—</div>
+          <div class="sb-metric-s" id="sbm-open-sub">Triage load</div>
+        </div>
+        <div class="sb-metric">
+          <div class="sb-metric-l">Queue</div>
+          <div class="sb-metric-v" id="sbm-queue">—</div>
+          <div class="sb-metric-s" id="sbm-queue-sub">Runtime pressure</div>
+        </div>
+      </div>
     </div>
     <nav class="sb-nav" role="navigation">
       <div class="sb-sec-lbl">Overview</div>
-      <button class="nav-btn on" id="nb-dashboard" type="button" onclick="goTo('dashboard')"><span class="ic">◉</span>Dashboard</button>
-      <button class="nav-btn" id="nb-tickets" type="button" onclick="goTo('tickets')"><span class="ic">🎫</span>Tickets<span class="nav-badge" id="nbg-tickets"></span></button>
+      <button class="nav-btn on" id="nb-dashboard" type="button" onclick="goTo('dashboard')" title="Dashboard">
+        <span class="ic">◉</span>
+        <span class="nav-copy"><span class="nav-main">Dashboard</span><span class="nav-sub">Control room</span></span>
+        <span class="nav-side"><span class="nav-ind ok" id="nbi-dashboard"></span><span class="nav-badge info" id="nbg-dashboard"></span></span>
+      </button>
+      <button class="nav-btn" id="nb-tickets" type="button" onclick="goTo('tickets')" title="Tickets">
+        <span class="ic">🎫</span>
+        <span class="nav-copy"><span class="nav-main">Tickets</span><span class="nav-sub">Triage workload</span></span>
+        <span class="nav-side"><span class="nav-ind idle" id="nbi-tickets"></span><span class="nav-badge info" id="nbg-tickets"></span></span>
+      </button>
       <div class="sb-sec-lbl">Tools</div>
-      <button class="nav-btn" id="nb-queue" type="button" onclick="goTo('queue')"><span class="ic">⚡</span>Queue<span class="nav-badge" id="nbg-queue"></span></button>
-      <button class="nav-btn" id="nb-agents" type="button" onclick="goTo('agents')"><span class="ic">🤖</span>Agents</button>
+      <button class="nav-btn" id="nb-queue" type="button" onclick="goTo('queue')" title="Queue">
+        <span class="ic">⚡</span>
+        <span class="nav-copy"><span class="nav-main">Queue</span><span class="nav-sub">Runtime pressure</span></span>
+        <span class="nav-side"><span class="nav-ind idle" id="nbi-queue"></span><span class="nav-badge warn" id="nbg-queue"></span></span>
+      </button>
+      <button class="nav-btn" id="nb-agents" type="button" onclick="goTo('agents')" title="Agents">
+        <span class="ic">🤖</span>
+        <span class="nav-copy"><span class="nav-main">Agents</span><span class="nav-sub">Latency and flow</span></span>
+        <span class="nav-side"><span class="nav-ind idle" id="nbi-agents"></span><span class="nav-badge info" id="nbg-agents"></span></span>
+      </button>
       <div class="sb-sec-lbl">Config</div>
-      <button class="nav-btn" id="nb-integrations" type="button" onclick="goTo('integrations')"><span class="ic">🔌</span>Integrations</button>
-      <button class="nav-btn" id="nb-users" type="button" onclick="goTo('users')"><span class="ic">👥</span>Users</button>
-      <button class="nav-btn" id="nb-system" type="button" onclick="goTo('system')"><span class="ic">⚙</span>System</button>
+      <button class="nav-btn" id="nb-integrations" type="button" onclick="goTo('integrations')" title="Integrations">
+        <span class="ic">🔌</span>
+        <span class="nav-copy"><span class="nav-main">Integrations</span><span class="nav-sub">Ingress channels</span></span>
+        <span class="nav-side"><span class="nav-ind idle" id="nbi-integrations"></span><span class="nav-badge info" id="nbg-integrations"></span></span>
+      </button>
+      <button class="nav-btn" id="nb-users" type="button" onclick="goTo('users')" title="Users">
+        <span class="ic">👥</span>
+        <span class="nav-copy"><span class="nav-main">Users</span><span class="nav-sub">Workspace access</span></span>
+        <span class="nav-side"><span class="nav-ind idle" id="nbi-users"></span><span class="nav-badge info" id="nbg-users"></span></span>
+      </button>
+      <button class="nav-btn" id="nb-system" type="button" onclick="goTo('system')" title="System">
+        <span class="ic">⚙</span>
+        <span class="nav-copy"><span class="nav-main">System</span><span class="nav-sub">Health and audit</span></span>
+        <span class="nav-side"><span class="nav-ind idle" id="nbi-system"></span><span class="nav-badge warn" id="nbg-system"></span></span>
+      </button>
     </nav>
     <div class="sb-footer">
       <div class="sb-user">
@@ -385,9 +523,11 @@ canvas{display:block;width:100%!important}
   </div>
 
   <!-- MAIN -->
-  <div id="main">
+    <div id="main">
     <div class="topbar">
-      <span class="tb-title" id="pg-title">Dashboard</span>
+      <div class="tb-shell">
+        <span class="tb-title" id="pg-title">Dashboard</span>
+      </div>
       <span class="flex1"></span>
       <button class="btn btn-g btn-sm" id="tb-btn" type="button" style="display:none" onclick="tbClick()"></button>
       <div class="hp"><div class="hd warn" id="hd"></div><span id="ht" style="font-size:12px">Checking…</span></div>
@@ -409,7 +549,7 @@ canvas{display:block;width:100%!important}
               </div>
             </div>
             <div class="ops-hero-right">
-              <div class="ops-live">
+              <div class="ops-live" id="d-live-card">
                 <span class="ops-live-dot"></span>
                 <div>
                   <div class="ops-live-text">Live Telemetry</div>
@@ -569,37 +709,120 @@ canvas{display:block;width:100%!important}
 
     <!-- TICKETS -->
     <div class="pg" id="pg-tickets">
-      <div class="tc">
-        <div class="tc-bar">
-          <input class="inp inp-sm" style="width:210px" id="t-search" type="text" placeholder="🔍  Search tickets…" autocomplete="off" oninput="tSearchDelay()">
-          <select class="inp inp-sm" id="t-status" onchange="tLoad()">
-            <option value="">All statuses</option><option>open</option><option>in_progress</option>
-            <option>escalated</option><option>sla_breached</option><option>resolved</option><option>closed</option>
-          </select>
-          <select class="inp inp-sm" id="t-priority" onchange="tLoad()">
-            <option value="">All priorities</option><option>critical</option><option>high</option><option>medium</option><option>low</option>
-          </select>
-          <select class="inp inp-sm" id="t-category" onchange="tLoad()">
-            <option value="">All categories</option><option>billing</option><option>technical</option><option>bug</option><option>feature_request</option><option>general</option>
-          </select>
-          <span class="flex1"></span>
-          <button class="btn btn-p btn-sm" type="button" onclick="openM('m-create')">+ New Ticket</button>
-        </div>
-        <div class="tc-scroll">
-          <table><thead><tr>
-            <th><input type="checkbox" id="sel-all" onchange="selAll()"></th>
-            <th>Title</th><th>Priority</th><th>Status</th><th>Category</th><th>Team</th><th>Created</th><th></th>
-          </tr></thead><tbody id="t-body"></tbody></table>
-        </div>
-        <div class="tc-foot">
-          <div class="tc-info" id="t-info"></div>
-          <div id="bulk-bar" style="display:none;align-items:center;gap:8px">
-            <span style="font-size:12px;color:var(--muted)" id="sel-cnt"></span>
-            <button class="btn btn-d btn-sm" type="button" onclick="bulkClose()">Close selected</button>
+      <div class="ops-page">
+        <section class="page-hero">
+          <div class="page-hero-top">
+            <div class="page-copy">
+              <div class="page-eyebrow">Ticket Operations</div>
+              <h2 class="page-title">Triage Command</h2>
+              <p class="page-sub">Operational visibility across ticket aging, SLA pressure, workload segmentation, and live pipeline progression.</p>
+              <div class="page-meta">
+                <span class="page-chip">Focus <strong>Backlog control</strong></span>
+                <span class="page-chip">Signals <strong>SLA, status, priority</strong></span>
+                <span class="page-chip">Refresh <strong>Live when active</strong></span>
+              </div>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-p" type="button" onclick="openM('m-create')">+ New Ticket</button>
+            </div>
           </div>
-          <span class="flex1"></span>
-          <button class="btn btn-g btn-sm" type="button" id="t-prev" onclick="tPage(-1)">← Prev</button>
-          <button class="btn btn-g btn-sm" type="button" id="t-next" onclick="tPage(1)">Next →</button>
+          <div class="ops-kpis" id="t-kpis"></div>
+        </section>
+
+        <section class="ops-panel ops-toolbar-panel">
+          <div class="ops-toolbar">
+            <input class="inp inp-sm" style="width:220px" id="t-search" type="text" placeholder="Search title or content…" autocomplete="off" oninput="tSearchDelay()">
+            <select class="inp inp-sm" id="t-status" onchange="tLoad()">
+              <option value="">All statuses</option><option>open</option><option>in_progress</option>
+              <option>escalated</option><option>sla_breached</option><option>resolved</option><option>closed</option>
+            </select>
+            <select class="inp inp-sm" id="t-priority" onchange="tLoad()">
+              <option value="">All priorities</option><option>critical</option><option>high</option><option>medium</option><option>low</option>
+            </select>
+            <select class="inp inp-sm" id="t-category" onchange="tLoad()">
+              <option value="">All categories</option><option>billing</option><option>technical</option><option>bug</option><option>feature_request</option><option>general</option>
+            </select>
+            <span class="flex1"></span>
+            <span class="ops-toolbar-note" id="t-toolbar-note">Awaiting ticket telemetry.</span>
+          </div>
+        </section>
+
+        <div class="ops-grid">
+          <section class="ops-panel ops-span-5">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Aging</div>
+                <div class="ops-panel-title">Open Workload Distribution</div>
+                <div class="ops-panel-note">Open tickets segmented by age bucket to reveal backlog concentration.</div>
+              </div>
+            </div>
+            <canvas id="c-ticket-aging" height="172"></canvas>
+          </section>
+
+          <section class="ops-panel ops-span-3">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Segmentation</div>
+                <div class="ops-panel-title">Priority and Status Mix</div>
+                <div class="ops-panel-note">Current operational shape of the ticket estate.</div>
+              </div>
+            </div>
+            <canvas id="c-ticket-mix" height="172"></canvas>
+          </section>
+
+          <section class="ops-panel ops-span-4">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Exposure</div>
+                <div class="ops-panel-title">SLA Risk Surface</div>
+                <div class="ops-panel-note">Where response pressure is building in the live backlog.</div>
+              </div>
+            </div>
+            <div id="t-sla" class="ops-scroll"></div>
+          </section>
+
+          <section class="ops-panel ops-span-6">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Pipeline</div>
+                <div class="ops-panel-title">Recent Ticket Timelines</div>
+                <div class="ops-panel-note">Stage-level visibility into tickets currently moving through automation.</div>
+              </div>
+            </div>
+            <div id="t-pipeline" class="ops-scroll"></div>
+          </section>
+
+          <section class="ops-panel ops-span-6">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Workload</div>
+                <div class="ops-panel-title">Status and Category Focus</div>
+                <div class="ops-panel-note">Operational hotspots across category, team routing, and escalation posture.</div>
+              </div>
+            </div>
+            <div id="t-segmentation" class="ops-scroll"></div>
+          </section>
+
+          <section class="ops-panel ops-span-12 ops-table-panel">
+            <div class="tc">
+              <div class="tc-bar">
+                <div class="tc-info" id="t-info"></div>
+                <div id="bulk-bar" style="display:none;align-items:center;gap:8px">
+                  <span style="font-size:12px;color:var(--muted)" id="sel-cnt"></span>
+                  <button class="btn btn-d btn-sm" type="button" onclick="bulkClose()">Close selected</button>
+                </div>
+                <span class="flex1"></span>
+                <button class="btn btn-g btn-sm" type="button" id="t-prev" onclick="tPage(-1)">← Prev</button>
+                <button class="btn btn-g btn-sm" type="button" id="t-next" onclick="tPage(1)">Next →</button>
+              </div>
+              <div class="tc-scroll">
+                <table><thead><tr>
+                  <th><input type="checkbox" id="sel-all" onchange="selAll()"></th>
+                  <th>Title</th><th>Priority</th><th>Status</th><th>Category</th><th>Team</th><th>Created</th><th></th>
+                </tr></thead><tbody id="t-body"></tbody></table>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </div>
@@ -609,54 +832,438 @@ canvas{display:block;width:100%!important}
 
     <!-- QUEUE -->
     <div class="pg" id="pg-queue">
-      <div class="tc">
-        <div class="tc-bar">
-          <select class="inp inp-sm" id="q-status" onchange="qLoad()">
-            <option value="">All statuses</option><option>enqueued</option><option>running</option><option>done</option><option>failed</option><option>skipped</option>
-          </select>
-          <span class="flex1"></span>
-          <button class="btn btn-g btn-sm" type="button" onclick="qLoad()">↺ Refresh</button>
+      <div class="ops-page">
+        <section class="page-hero">
+          <div class="page-hero-top">
+            <div class="page-copy">
+              <div class="page-eyebrow">Queue Runtime</div>
+              <h2 class="page-title">Execution Pressure Console</h2>
+              <p class="page-sub">Live visibility into queue depth, retry pressure, active job age, and runtime state distribution.</p>
+              <div class="page-meta">
+                <span class="page-chip">Trend <strong>Session-sampled depth</strong></span>
+                <span class="page-chip">States <strong>Queued, running, failed</strong></span>
+                <span class="page-chip">Retries <strong>Visible in-line</strong></span>
+              </div>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-g" type="button" onclick="qLoad()">↺ Refresh</button>
+            </div>
+          </div>
+          <div class="ops-kpis" id="q-kpis"></div>
+        </section>
+
+        <section class="ops-panel ops-toolbar-panel">
+          <div class="ops-toolbar">
+            <select class="inp inp-sm" id="q-status" onchange="qLoad()">
+              <option value="">All statuses</option><option>enqueued</option><option>running</option><option>done</option><option>failed</option><option>skipped</option>
+            </select>
+            <span class="ops-toolbar-note" id="q-toolbar-note">Monitoring live queue state.</span>
+            <span class="flex1"></span>
+            <span class="page-chip">Scope <strong>Last 100 jobs</strong></span>
+          </div>
+        </section>
+
+        <div class="ops-grid">
+          <section class="ops-panel ops-span-7">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Trend</div>
+                <div class="ops-panel-title">Queue Depth Session Trend</div>
+                <div class="ops-panel-note">Rolling samples captured while this console remains open.</div>
+              </div>
+            </div>
+            <canvas id="c-queue-trend" height="176"></canvas>
+          </section>
+
+          <section class="ops-panel ops-span-5">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Distribution</div>
+                <div class="ops-panel-title">State Split and Retry Load</div>
+                <div class="ops-panel-note">Current job state breakdown with retry visibility.</div>
+              </div>
+            </div>
+            <div id="q-dist"></div>
+          </section>
+
+          <section class="ops-panel ops-span-4">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Hotspots</div>
+                <div class="ops-panel-title">Retry and Failure Focus</div>
+                <div class="ops-panel-note">Jobs needing attention because of retries or terminal failure.</div>
+              </div>
+            </div>
+            <div id="q-retry" class="ops-scroll"></div>
+          </section>
+
+          <section class="ops-panel ops-span-8">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Live Watch</div>
+                <div class="ops-panel-title">Oldest Active Jobs</div>
+                <div class="ops-panel-note">Queue entries with the highest current wait or processing age.</div>
+              </div>
+            </div>
+            <div id="q-watch" class="ops-scroll"></div>
+          </section>
+
+          <section class="ops-panel ops-span-12 ops-table-panel">
+            <div class="tc">
+              <div class="tc-bar">
+                <div class="tc-info" id="q-info"></div>
+                <span class="flex1"></span>
+                <span class="ops-toolbar-note">Manual retry remains available for failed jobs.</span>
+              </div>
+              <div class="tc-scroll">
+                <table><thead><tr><th>Job ID</th><th>Ticket</th><th>Priority</th><th>Status</th><th>Attempts</th><th>Updated</th><th></th></tr></thead><tbody id="q-body"></tbody></table>
+              </div>
+            </div>
+          </section>
         </div>
-        <table><thead><tr><th>Job ID</th><th>Ticket</th><th>Priority</th><th>Status</th><th>Attempts</th><th>Updated</th><th></th></tr></thead><tbody id="q-body"></tbody></table>
-        <div class="tc-foot"><div class="tc-info" id="q-info"></div></div>
       </div>
     </div>
 
     <!-- AGENTS -->
     <div class="pg" id="pg-agents">
-      <div class="sgrid" id="ag-stats"></div>
-      <div class="sh"><span class="sh-t">Pipeline Events</span><span class="flex1"></span><button class="btn btn-g btn-sm" type="button" onclick="agLoad()">↺ Refresh</button></div>
-      <div class="tc"><table><thead><tr><th>Ticket</th><th>Agent</th><th>Duration</th><th>Time</th></tr></thead><tbody id="ag-body"></tbody></table></div>
+      <div class="ops-page">
+        <section class="page-hero">
+          <div class="page-hero-top">
+            <div class="page-copy">
+              <div class="page-eyebrow">Agent Runtime</div>
+              <h2 class="page-title">Autonomy Performance Grid</h2>
+              <p class="page-sub">Latency, throughput, reliability, and anomaly visibility across the full five-stage support pipeline.</p>
+              <div class="page-meta">
+                <span class="page-chip">Stages <strong>5 autonomous agents</strong></span>
+                <span class="page-chip">Metrics <strong>avg, p95, failures</strong></span>
+                <span class="page-chip">View <strong>Recent event flow</strong></span>
+              </div>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-g" type="button" onclick="agLoad()">↺ Refresh</button>
+            </div>
+          </div>
+          <div class="ops-kpis" id="ag-kpis"></div>
+        </section>
+
+        <div class="ops-grid">
+          <section class="ops-panel ops-span-7">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Latency</div>
+                <div class="ops-panel-title">Average vs P95 Stage Duration</div>
+                <div class="ops-panel-note">Per-agent latency distribution from recent executions.</div>
+              </div>
+            </div>
+            <canvas id="c-agent-latency" height="176"></canvas>
+          </section>
+
+          <section class="ops-panel ops-span-5">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Throughput</div>
+                <div class="ops-panel-title">Executions per Minute</div>
+                <div class="ops-panel-note">Observed activity rate across agents in the live window.</div>
+              </div>
+            </div>
+            <canvas id="c-agent-throughput" height="176"></canvas>
+          </section>
+
+          <section class="ops-panel ops-span-4">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Reliability</div>
+                <div class="ops-panel-title">Health Surface</div>
+                <div class="ops-panel-note">Error rate and max latency by agent.</div>
+              </div>
+            </div>
+            <div id="ag-reliability" class="ops-scroll"></div>
+          </section>
+
+          <section class="ops-panel ops-span-8">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Anomalies</div>
+                <div class="ops-panel-title">Recent Outliers</div>
+                <div class="ops-panel-note">Failed stages and latency spikes from the latest observed runs.</div>
+              </div>
+            </div>
+            <div id="ag-anomalies" class="ops-scroll"></div>
+          </section>
+
+          <section class="ops-panel ops-span-12 ops-table-panel">
+            <div class="tc">
+              <div class="tc-bar">
+                <div class="tc-info" id="ag-info">Latest stage-level events across the autonomous pipeline.</div>
+                <span class="flex1"></span>
+                <span class="ops-toolbar-note">Click a ticket to open its pipeline detail.</span>
+              </div>
+              <div class="tc-scroll">
+                <table><thead><tr><th>Ticket</th><th>Agent</th><th>Duration</th><th>Status</th><th>Time</th></tr></thead><tbody id="ag-body"></tbody></table>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
 
     <!-- INTEGRATIONS -->
     <div class="pg" id="pg-integrations">
-      <div class="tc">
-        <div class="tc-bar"><span class="flex1"></span><button class="btn btn-p btn-sm" type="button" onclick="openM('m-int')">+ Add Integration</button></div>
-        <table><thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Events</th><th>Last Sync</th><th></th></tr></thead><tbody id="int-body"></tbody></table>
-        <div class="tc-foot"><div class="tc-info" id="int-info"></div></div>
+      <div class="ops-page">
+        <section class="page-hero">
+          <div class="page-hero-top">
+            <div class="page-copy">
+              <div class="page-eyebrow">Ingress Network</div>
+              <h2 class="page-title">Integration Activity Console</h2>
+              <p class="page-sub">Connectivity, webhook activity, failure signals, and recent ingestion flow across inbound integrations.</p>
+              <div class="page-meta">
+                <span class="page-chip">Focus <strong>Connectivity and failures</strong></span>
+                <span class="page-chip">Signals <strong>Events, sync recency, errors</strong></span>
+                <span class="page-chip">Flow <strong>Webhook stream</strong></span>
+              </div>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-p" type="button" onclick="openM('m-int')">+ Add Integration</button>
+            </div>
+          </div>
+          <div class="ops-kpis" id="int-kpis"></div>
+        </section>
+
+        <div class="ops-grid">
+          <section class="ops-panel ops-span-7">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Ingress</div>
+                <div class="ops-panel-title">Webhook Activity Trend</div>
+                <div class="ops-panel-note">Recent integration events aggregated into a bounded operational timeline.</div>
+              </div>
+            </div>
+            <canvas id="c-int-activity" height="176"></canvas>
+          </section>
+
+          <section class="ops-panel ops-span-5">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Connectivity</div>
+                <div class="ops-panel-title">Status and Sync Recency</div>
+                <div class="ops-panel-note">Which integrations are healthy, stale, or in error.</div>
+              </div>
+            </div>
+            <div id="int-connectivity" class="ops-scroll"></div>
+          </section>
+
+          <section class="ops-panel ops-span-6">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Stream</div>
+                <div class="ops-panel-title">Recent Webhook Activity</div>
+                <div class="ops-panel-note">Inbound and test events with payload size and ticket linkage.</div>
+              </div>
+            </div>
+            <div id="int-stream" class="ops-scroll"></div>
+          </section>
+
+          <section class="ops-panel ops-span-6">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Failures</div>
+                <div class="ops-panel-title">Error and Retry Surface</div>
+                <div class="ops-panel-note">Integrations most likely to need intervention right now.</div>
+              </div>
+            </div>
+            <div id="int-failures" class="ops-scroll"></div>
+          </section>
+
+          <section class="ops-panel ops-span-12 ops-table-panel">
+            <div class="tc">
+              <div class="tc-bar">
+                <div class="tc-info" id="int-info"></div>
+                <span class="flex1"></span>
+                <span class="ops-toolbar-note">Test, copy ingest URL, or delete directly from the control plane.</span>
+              </div>
+              <div class="tc-scroll">
+                <table><thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Events</th><th>Last Sync</th><th></th></tr></thead><tbody id="int-body"></tbody></table>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
 
     <!-- USERS -->
     <div class="pg" id="pg-users">
-      <div class="tc">
-        <div class="tc-bar"><span class="flex1"></span><button class="btn btn-p btn-sm" type="button" onclick="openM('m-user')">+ Add User</button></div>
-        <table><thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Active</th><th>Created</th><th></th></tr></thead><tbody id="usr-body"></tbody></table>
-        <div class="tc-foot"><div class="tc-info" id="usr-info"></div></div>
+      <div class="ops-page">
+        <section class="page-hero">
+          <div class="page-hero-top">
+            <div class="page-copy">
+              <div class="page-eyebrow">Workforce Signals</div>
+              <h2 class="page-title">Operator Coverage Console</h2>
+              <p class="page-sub">Activity density, assignment balance, escalation exposure, and workspace access posture across the human side of AutoSupport.</p>
+              <div class="page-meta">
+                <span class="page-chip">Signals <strong>Audit activity</strong></span>
+                <span class="page-chip">Balance <strong>Assignments and escalations</strong></span>
+                <span class="page-chip">Coverage <strong>Role and active state</strong></span>
+              </div>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-p" type="button" onclick="openM('m-user')">+ Add User</button>
+            </div>
+          </div>
+          <div class="ops-kpis" id="usr-kpis"></div>
+        </section>
+
+        <div class="ops-grid">
+          <section class="ops-panel ops-span-4">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Roles</div>
+                <div class="ops-panel-title">Role Distribution</div>
+                <div class="ops-panel-note">Workspace access mix across admins, operators, and viewers.</div>
+              </div>
+            </div>
+            <canvas id="c-user-roles" height="176"></canvas>
+          </section>
+
+          <section class="ops-panel ops-span-4">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Balance</div>
+                <div class="ops-panel-title">Assignment Load</div>
+                <div class="ops-panel-note">Current workload and action density by user identity.</div>
+              </div>
+            </div>
+            <div id="usr-balance" class="ops-scroll"></div>
+          </section>
+
+          <section class="ops-panel ops-span-4">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Escalations</div>
+                <div class="ops-panel-title">Escalation Patterns</div>
+                <div class="ops-panel-note">Where difficult or escalated tickets are concentrating.</div>
+              </div>
+            </div>
+            <div id="usr-escalations" class="ops-scroll"></div>
+          </section>
+
+          <section class="ops-panel ops-span-6">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Activity</div>
+                <div class="ops-panel-title">Recent Operator Activity</div>
+                <div class="ops-panel-note">Live audit-style stream of the latest human-initiated actions.</div>
+              </div>
+            </div>
+            <div id="usr-activity" class="ops-scroll-lg"></div>
+          </section>
+
+          <section class="ops-panel ops-span-6">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Coverage</div>
+                <div class="ops-panel-title">Access and Utilisation Snapshot</div>
+                <div class="ops-panel-note">Active users, dormant accounts, and operator coverage posture.</div>
+              </div>
+            </div>
+            <div id="usr-coverage" class="ops-scroll"></div>
+          </section>
+
+          <section class="ops-panel ops-span-12 ops-table-panel">
+            <div class="tc">
+              <div class="tc-bar">
+                <div class="tc-info" id="usr-info"></div>
+                <span class="flex1"></span>
+                <span class="ops-toolbar-note">Enable or disable users without leaving the console.</span>
+              </div>
+              <div class="tc-scroll">
+                <table><thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Active</th><th>Created</th><th></th></tr></thead><tbody id="usr-body"></tbody></table>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
 
     <!-- SYSTEM -->
     <div class="pg" id="pg-system">
-      <div class="sgrid" id="sys-stats"></div>
-      <div class="sh"><span class="sh-t">System Log</span><span class="flex1"></span>
-        <select class="inp inp-sm" id="log-lv" onchange="sysLoad()"><option value="">All levels</option><option>INFO</option><option>WARN</option><option>ERROR</option></select>
-        <button class="btn btn-g btn-sm" type="button" onclick="sysLoad()">↺ Refresh</button>
+      <div class="ops-page">
+        <section class="page-hero">
+          <div class="page-hero-top">
+            <div class="page-copy">
+              <div class="page-eyebrow">Runtime Health</div>
+              <h2 class="page-title">System Oversight Console</h2>
+              <p class="page-sub">Infrastructure state, runtime load, warning surfaces, and human audit flow across the live AutoSupport environment.</p>
+              <div class="page-meta">
+                <span class="page-chip">Infra <strong>API, DB, Redis</strong></span>
+                <span class="page-chip">Runtime <strong>Queue and logs</strong></span>
+                <span class="page-chip">Oversight <strong>Audit stream</strong></span>
+              </div>
+            </div>
+            <div class="page-actions">
+              <select class="inp inp-sm" id="log-lv" onchange="sysLoad()"><option value="">All levels</option><option>INFO</option><option>WARN</option><option>ERROR</option></select>
+              <button class="btn btn-g" type="button" onclick="sysLoad()">↺ Refresh</button>
+            </div>
+          </div>
+          <div class="ops-kpis" id="sys-kpis"></div>
+        </section>
+
+        <div class="ops-grid">
+          <section class="ops-panel ops-span-8">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Load</div>
+                <div class="ops-panel-title">Runtime Pressure Trend</div>
+                <div class="ops-panel-note">Session-bounded view of system load, warnings, and errors while this page stays open.</div>
+              </div>
+            </div>
+            <canvas id="c-system-load" height="176"></canvas>
+          </section>
+
+          <section class="ops-panel ops-span-4">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Runtime</div>
+                <div class="ops-panel-title">Worker and Queue Activity</div>
+                <div class="ops-panel-note">Live runtime execution share and infrastructure posture.</div>
+              </div>
+            </div>
+            <div id="sys-runtime"></div>
+          </section>
+
+          <section class="ops-panel ops-span-6">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Events</div>
+                <div class="ops-panel-title">System Event Stream</div>
+                <div class="ops-panel-note">Recent log flow ordered by severity and recency.</div>
+              </div>
+            </div>
+            <div id="sys-log-stream" class="ops-scroll-lg"></div>
+          </section>
+
+          <section class="ops-panel ops-span-6">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Warnings</div>
+                <div class="ops-panel-title">Error and Source Surface</div>
+                <div class="ops-panel-note">Top warning and error sources with live operational impact.</div>
+              </div>
+            </div>
+            <div id="sys-alerts" class="ops-scroll"></div>
+          </section>
+
+          <section class="ops-panel ops-span-12">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Audit</div>
+                <div class="ops-panel-title">Human Change Stream</div>
+                <div class="ops-panel-note">Recent user actions across tickets, integrations, and identity management.</div>
+              </div>
+            </div>
+            <div id="sys-audit-stream" class="ops-scroll-lg"></div>
+          </section>
+        </div>
       </div>
-      <div class="tc" style="margin-bottom:22px"><table><thead><tr><th>Time</th><th>Level</th><th>Source</th><th>Message</th></tr></thead><tbody id="log-body"></tbody></table></div>
-      <div class="sh"><span class="sh-t">Audit Log</span><span class="flex1"></span><button class="btn btn-g btn-sm" type="button" onclick="auditLoad()">↺ Refresh</button></div>
-      <div class="tc"><table><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Resource</th><th>ID</th></tr></thead><tbody id="audit-body"></tbody></table></div>
     </div>
 
     <!-- SETTINGS -->
@@ -746,7 +1353,13 @@ canvas{display:block;width:100%!important}
 var TOK   = localStorage.getItem('as_tok')   || '';
 var ROLE  = localStorage.getItem('as_role')  || '';
 var UMAIL = localStorage.getItem('as_mail')  || '';
-var tOff=0, tTotal=0, selIds=new Set(), editId='', stimer=null, dashBusy=false, dashCache=null, dashResizeTimer=null;
+var SIDEBAR_COLLAPSED = localStorage.getItem('as_sidebar_collapsed') === '1';
+var DASH_LIMITS = {throughput:18, backlog:18, events:60, stream:10, tickets:6, slow:6, pipeline:4};
+var DASH_CANVAS_HEIGHTS = {'c-throughput':180,'c-backlog':146,'c-automation':176};
+var PAGE_CACHE = {tickets:null,queue:null,agents:null,integrations:null,users:null,system:null};
+var LIVE_HISTORY = {queue:[],system:[]};
+var PAGE_SAMPLE_LIMITS = {queue:18,system:18};
+var tOff=0, tTotal=0, selIds=new Set(), editId='', stimer=null, dashBusy=false, dashCache=null, dashLastGood=null, dashResizeTimer=null, dashRenderQueued=false, dashPendingRender=null, sidebarSyncTimer=null;
 var DASH_STAGE_ORDER=['ticket_classifier','priority_predictor','escalation_detector','response_suggester','auto_router'];
 var DASH_STAGE_META={
   ticket_classifier:{label:'Classify',color:'rgba(56,189,248,.34)'},
@@ -776,19 +1389,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
   setInterval(pingHealth, 60000);
   setInterval(function(){
+    if(document.hidden)return;
     if(TOK && document.getElementById('pg-dashboard') && document.getElementById('pg-dashboard').classList.contains('on')){
       dashLoad(true);
     }
   }, 15000);
+  setInterval(function(){
+    if(!TOK || shouldPauseLiveRefresh())return;
+    var page=getCurrentPage();
+    if(page && page!=='dashboard' && page!=='detail' && page!=='settings'){
+      loadOperationalPage(page,true);
+    }
+  }, 20000);
   setInterval(updateDashClock, 1000);
   updateDashClock();
+  applySidebarState();
   window.addEventListener('resize', function(){
     clearTimeout(dashResizeTimer);
     dashResizeTimer=setTimeout(function(){
-      if(dashCache && document.getElementById('pg-dashboard') && document.getElementById('pg-dashboard').classList.contains('on')){
-        renderDashboard(dashCache);
-      }
+      rerenderVisiblePageFromCache();
     }, 140);
+  });
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden && TOK){
+      loadOperationalPage(getCurrentPage(),true);
+    }
   });
 });
 
@@ -848,11 +1473,32 @@ function showApp(){
   document.getElementById('sb-email').textContent = UMAIL;
   document.getElementById('sb-role').textContent  = ROLE;
   document.getElementById('sb-av').textContent    = (UMAIL||'?')[0].toUpperCase();
+  applySidebarState();
   pingHealth();
 }
 
 /* ── navigation ──────────────────────────────────────────────────────── */
 var TITLES={dashboard:'Dashboard',tickets:'Tickets',detail:'Ticket Detail',queue:'Queue',agents:'Agents',integrations:'Integrations',users:'Users',system:'System',settings:'Settings'};
+
+function applySidebarState(){
+  var shell=document.getElementById('app-shell');
+  if(!shell)return;
+  shell.classList.toggle('sb-collapsed',SIDEBAR_COLLAPSED);
+  var btn=document.getElementById('sb-toggle');
+  if(btn){
+    btn.setAttribute('aria-pressed',SIDEBAR_COLLAPSED?'true':'false');
+    btn.setAttribute('title',SIDEBAR_COLLAPSED?'Expand navigation':'Collapse navigation');
+    btn.textContent=SIDEBAR_COLLAPSED?'▣':'◧';
+  }
+}
+
+function toggleSidebar(){
+  SIDEBAR_COLLAPSED=!SIDEBAR_COLLAPSED;
+  localStorage.setItem('as_sidebar_collapsed',SIDEBAR_COLLAPSED?'1':'0');
+  applySidebarState();
+  clearTimeout(sidebarSyncTimer);
+  sidebarSyncTimer=setTimeout(rerenderVisiblePageFromCache,70);
+}
 
 function goTo(page){
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
@@ -864,9 +1510,59 @@ function goTo(page){
   if(page==='tickets'){tb.style.display='';tb.textContent='+ New Ticket';tb._p='tickets';}
   else if(page==='detail'){tb.style.display='';tb.textContent='← All Tickets';tb._p='detail';}
   else tb.style.display='none';
-  ({dashboard:dashLoad,tickets:function(){tOff=0;tLoad();},queue:qLoad,agents:agLoad,integrations:intLoad,users:usrLoad,system:function(){sysLoad();auditLoad();}})[page]&&({dashboard:dashLoad,tickets:function(){tOff=0;tLoad();},queue:qLoad,agents:agLoad,integrations:intLoad,users:usrLoad,system:function(){sysLoad();auditLoad();}})[page]();
+  if(page==='tickets') tOff=0;
+  loadOperationalPage(page,false);
 }
 function tbClick(){var p=document.getElementById('tb-btn')._p;if(p==='tickets')openM('m-create');else if(p==='detail')goTo('tickets');}
+
+function getCurrentPage(){
+  var active=document.querySelector('.pg.on');
+  return active ? active.id.replace('pg-','') : 'dashboard';
+}
+
+function shouldPauseLiveRefresh(){
+  if(document.hidden || document.querySelector('.mo.on'))return true;
+  var ae=document.activeElement;
+  return !!(ae && ae!==document.body && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName));
+}
+
+function loadOperationalPage(page,silent){
+  if(page==='dashboard') return dashLoad(silent);
+  if(page==='tickets') return tLoad(silent);
+  if(page==='queue') return qLoad(silent);
+  if(page==='agents') return agLoad(silent);
+  if(page==='integrations') return intLoad(silent);
+  if(page==='users') return usrLoad(silent);
+  if(page==='system') return sysLoad(silent);
+}
+
+function rerenderVisiblePageFromCache(){
+  var page=getCurrentPage();
+  var el=document.getElementById('pg-'+page);
+  var scrollState=captureScrollState(el);
+  if(page==='dashboard' && dashCache){
+    queueDashboardRender(dashCache,scrollState);
+    return;
+  }
+  if(page==='queue' && PAGE_CACHE.queue) renderQueuePage(PAGE_CACHE.queue);
+  if(page==='agents' && PAGE_CACHE.agents) renderAgentsPage(PAGE_CACHE.agents);
+  if(page==='tickets' && PAGE_CACHE.tickets) renderTicketsPage(PAGE_CACHE.tickets);
+  if(page==='integrations' && PAGE_CACHE.integrations) renderIntegrationsPage(PAGE_CACHE.integrations);
+  if(page==='users' && PAGE_CACHE.users) renderUsersPage(PAGE_CACHE.users);
+  if(page==='system' && PAGE_CACHE.system) renderSystemPage(PAGE_CACHE.system);
+  requestAnimationFrame(function(){restoreScrollState(el,scrollState);});
+}
+
+function pushLiveSample(bucketName,sample,limit){
+  var list=LIVE_HISTORY[bucketName] || (LIVE_HISTORY[bucketName]=[]);
+  if(list.length && Math.abs((sample.bucket||0)-(list[list.length-1].bucket||0)) < 20){
+    list[list.length-1]=sample;
+  }else{
+    list.push(sample);
+    while(list.length > limit) list.shift();
+  }
+  return list.slice();
+}
 
 /* ── api ─────────────────────────────────────────────────────────────── */
 function apiFetch(path,method,body,auth){
@@ -901,6 +1597,7 @@ function pingHealth(){
 /* ── dashboard ───────────────────────────────────────────────────────── */
 function dashLoad(silent){
   if(dashBusy)return;
+  var scrollState=captureScrollState(document.getElementById('pg-dashboard'));
   dashBusy=true;
   Promise.all([
     apiFetch('/api/analytics'),
@@ -910,14 +1607,52 @@ function dashLoad(silent){
     apiFetch('/health','GET',null,false)
   ])
     .then(function(res){
-      dashCache={analytics:res[0],ops:res[1],events:res[2]||[],tickets:res[3]||{items:[]},health:res[4]||{}};
-      renderDashboard(dashCache);
+      dashCache=normalizeDashboardPayload({analytics:res[0],ops:res[1],events:res[2]||[],tickets:res[3]||{items:[]},health:res[4]||{}});
+      dashLastGood=dashCache;
+      queueDashboardRender(dashCache,scrollState);
     })
     .catch(function(e){
-      document.getElementById('d-live').textContent='Telemetry feed interrupted';
+      setTelemetryStale(true,dashLastGood?'Live telemetry paused — showing last good snapshot':'Telemetry feed interrupted');
       if(!silent) toast(e.message,'err');
     })
     .finally(function(){dashBusy=false;});
+}
+
+function normalizeDashboardPayload(payload){
+  var ops=payload.ops||{};
+  return {
+    analytics: payload.analytics||{},
+    health: payload.health||{},
+    events: recentWindow(payload.events||[],'ts',DASH_LIMITS.events),
+    tickets: {items: recentWindow((payload.tickets&&payload.tickets.items)||[],'created_at',DASH_LIMITS.tickets)},
+    ops: {
+      generated_at: ops.generated_at,
+      summary: ops.summary||{},
+      throughput: boundedWindow(ops.throughput||[],'bucket',DASH_LIMITS.throughput),
+      backlog: boundedWindow(ops.backlog||[],'bucket',DASH_LIMITS.backlog),
+      agent_performance: (ops.agent_performance||[]).slice(0),
+      slow_tickets: (ops.slow_tickets||[]).slice(0,DASH_LIMITS.slow),
+      failing_agents: (ops.failing_agents||[]).slice(0,6),
+      sla_heatmap: ops.sla_heatmap||[],
+      age_buckets: ops.age_buckets||[]
+    }
+  };
+}
+
+function queueDashboardRender(data,scrollState){
+  dashPendingRender={data:data,scrollState:scrollState};
+  if(dashRenderQueued)return;
+  dashRenderQueued=true;
+  requestAnimationFrame(function(){
+    dashRenderQueued=false;
+    var pending=dashPendingRender;
+    dashPendingRender=null;
+    if(!pending)return;
+    renderDashboard(pending.data);
+    requestAnimationFrame(function(){
+      restoreScrollState(document.getElementById('pg-dashboard'),pending.scrollState);
+    });
+  });
 }
 
 function renderDashboard(data){
@@ -929,8 +1664,11 @@ function renderDashboard(data){
   var tickets=(data.tickets&&data.tickets.items)||[];
   var health=data.health||{};
 
+  setTelemetryStale(false);
   setBadge('nbg-tickets',analytics.open_tickets||summary.open_tickets||0);
   setBadge('nbg-queue',analytics.failed_jobs||summary.queue_failed||0);
+  updateNavTelemetry(analytics,summary,ops,health);
+  updateSidebarMetrics(summary,health);
 
   renderControlStatus(health,summary,throughput);
   renderDashKpis(analytics,summary,throughput);
@@ -958,8 +1696,84 @@ function renderDashboard(data){
     {label:'Escalated',value:summary.human_escalations||0,color:'#f97316'}
   ],summary.automation_ratio);
 
-  document.getElementById('d-generated').textContent='Refreshed '+fd(ops.generated_at)+' · '+throughput.length+' samples';
-  document.getElementById('d-forecast-chip').textContent=summary.forecast_hours_to_clear!=null?fmtHours(summary.forecast_hours_to_clear):'No positive drain';
+  setText('d-generated','Refreshed '+fd(ops.generated_at)+' · '+throughput.length+' samples');
+  setText('d-forecast-chip',summary.forecast_hours_to_clear!=null?fmtHours(summary.forecast_hours_to_clear):'No positive drain');
+}
+
+function captureScrollState(el){
+  if(!el)return null;
+  return {
+    top: el.scrollTop,
+    height: el.scrollHeight,
+    pinnedBottom: (el.scrollHeight - el.clientHeight - el.scrollTop) < 28
+  };
+}
+
+function restoreScrollState(el,state){
+  if(!el||!state)return;
+  if(state.pinnedBottom){
+    el.scrollTop=Math.max(0,el.scrollHeight-el.clientHeight);
+    return;
+  }
+  el.scrollTop=Math.min(state.top,Math.max(0,el.scrollHeight-el.clientHeight));
+}
+
+function boundedWindow(rows,key,limit){
+  return (rows||[])
+    .slice()
+    .sort(function(a,b){return Number(a&&a[key]||0)-Number(b&&b[key]||0);})
+    .slice(-limit);
+}
+
+function recentWindow(rows,key,limit){
+  return (rows||[])
+    .slice()
+    .sort(function(a,b){return Number(b&&b[key]||0)-Number(a&&a[key]||0);})
+    .slice(0,limit);
+}
+
+function setTelemetryStale(isStale,msg){
+  var card=document.getElementById('d-live-card');
+  if(card) card.classList.toggle('stale',!!isStale);
+  if(msg) setText('d-live',msg);
+}
+
+function updateSidebarMetrics(summary,health){
+  setText('sbm-open',fmtNum(summary.open_tickets));
+  setText('sbm-open-sub',(summary.sla_risk_open||0)>0?(summary.sla_risk_open+' at risk'):'Nominal backlog');
+  setText('sbm-queue',fmtNum((summary.queue_depth||0)+(summary.queue_running||0)));
+  setText('sbm-queue-sub',(health.status==='ok'?'Live queue pressure':'Infra degraded'));
+}
+
+function updateNavTelemetry(analytics,summary,ops,health){
+  setNavIndicator('dashboard',health.status==='ok'?'ok':'err');
+  setNavIndicator('tickets',(summary.sla_risk_open||0)>0?'warn':'ok');
+  setNavIndicator('queue',(summary.queue_failed||0)>0?'err':((summary.queue_depth||0)+(summary.queue_running||0)>0?'warn':'ok'));
+  setNavIndicator('agents',(ops.failing_agents||[]).length?'err':((ops.agent_performance||[]).length?'ok':'idle'));
+  setNavIndicator('system',health.status==='ok'?'ok':'err');
+  setNavBadgeTone('nbg-dashboard',analytics.resolved_today||0,'info');
+  setNavBadgeTone('nbg-tickets',summary.open_tickets||analytics.open_tickets||0,'info');
+  setNavBadgeTone('nbg-queue',(summary.queue_failed||0)||((summary.queue_depth||0)+(summary.queue_running||0)),'warn');
+  setNavBadgeTone('nbg-agents',(ops.failing_agents||[]).length || (ops.agent_performance||[]).length,'info');
+  setNavBadgeTone('nbg-system',(summary.sla_risk_open||0) + (health.status==='ok'?0:1),'warn');
+}
+
+function setNavIndicator(section,state){
+  var el=document.getElementById('nbi-'+section);
+  if(!el)return;
+  el.className='nav-ind '+(state||'idle');
+}
+
+function setNavBadgeTone(id,value,tone){
+  var el=document.getElementById(id);
+  if(!el)return;
+  if(value>0){
+    el.textContent=value;
+    el.className='nav-badge '+(tone||'info');
+    el.style.display='inline-flex';
+  }else{
+    el.style.display='none';
+  }
 }
 
 function renderControlStatus(health,summary,throughput){
@@ -992,7 +1806,7 @@ function renderControlStatus(health,summary,throughput){
   }else{
     liveText+=' · queue and agents nominal';
   }
-  document.getElementById('d-live').textContent=liveText;
+  setText('d-live',liveText);
 }
 
 function renderDashKpis(analytics,summary,throughput){
@@ -1010,12 +1824,13 @@ function renderDashKpis(analytics,summary,throughput){
     {label:'Automation Ratio',value:ratio!=null?ratio.toFixed(1)+'%':'—',sub:(summary.automation_success||0)+' automated · '+(summary.human_escalations||0)+' escalated',tone:ratio!=null&&ratio>=85?'good':ratio!=null&&ratio>=60?'warn':'hot'},
     {label:'Clearance Forecast',value:summary.forecast_hours_to_clear!=null?fmtHours(summary.forecast_hours_to_clear):'—',sub:summary.forecast_hours_to_clear!=null?'Estimated time to clear open backlog':'No net drain advantage yet',tone:summary.forecast_hours_to_clear!=null&&summary.forecast_hours_to_clear<=4?'good':summary.forecast_hours_to_clear!=null?'warn':''}
   ];
-  document.getElementById('d-kpis').innerHTML=kpis.map(function(k){
+  setHtml('d-kpis',kpis.map(function(k){
     return '<div class="ops-kpi '+(k.tone||'')+'"><div class="ops-kpi-label">'+k.label+'</div><div class="ops-kpi-value '+(k.tone||'')+'">'+k.value+'</div><div class="ops-kpi-sub">'+k.sub+'</div></div>';
-  }).join('');
+  }).join(''));
 }
 
-function renderQueue(summary,throughput){
+function renderQueue(summary,throughput,targetId){
+  targetId=targetId||'d-queue';
   var enqueued=summary.queue_depth||0;
   var running=summary.queue_running||0;
   var failed=summary.queue_failed||0;
@@ -1042,12 +1857,13 @@ function renderQueue(summary,throughput){
     +queueCellHtml('Completed total',summary.queue_done||0,'Historical completed jobs retained in queue log')
     +'</div>';
   html+='</div>';
-  document.getElementById('d-queue').innerHTML=html;
+  setHtml(targetId,html);
 }
 
-function renderHeatmap(rows,buckets){
+function renderHeatmap(rows,buckets,targetId,emptyText){
+  targetId=targetId||'d-heatmap';
   if(!rows.length){
-    document.getElementById('d-heatmap').innerHTML='<div class="ops-empty">No open-ticket SLA exposure detected in the current dataset.</div>';
+    setHtml(targetId,'<div class="ops-empty">'+(emptyText||'No open-ticket SLA exposure detected in the current dataset.')+'</div>');
     return;
   }
   var maxCount=1;
@@ -1062,17 +1878,17 @@ function renderHeatmap(rows,buckets){
     });
   });
   html+='</div></div>';
-  document.getElementById('d-heatmap').innerHTML=html;
+  setHtml(targetId,html);
 }
 
 function renderAgentPerformance(list){
   if(!list.length){
-    document.getElementById('d-agent-perf').innerHTML='<div class="ops-empty">Agent latency will appear here once recent pipeline runs are recorded.</div>';
+    setHtml('d-agent-perf','<div class="ops-empty">Agent latency will appear here once recent pipeline runs are recorded.</div>');
     return;
   }
   var sorted=list.slice().sort(function(a,b){return (b.p95_ms||0)-(a.p95_ms||0) || (b.executions_per_min||0)-(a.executions_per_min||0);});
   var cap=Math.max.apply(null,sorted.map(function(a){return Math.max(a.p95_ms||0,a.avg_ms||0,1);}).concat([1]));
-  document.getElementById('d-agent-perf').innerHTML='<div class="agent-list">'+sorted.map(function(agent){
+  setHtml('d-agent-perf','<div class="agent-list">'+sorted.map(function(agent){
     var errorRate=agent.error_rate||0;
     var tone=errorRate>0?'hot':(agent.executions_per_min||0)>0?'good':'';
     var width=Math.max(14,Math.round((Math.max(agent.p95_ms||0,agent.avg_ms||0,1)/cap)*100));
@@ -1086,7 +1902,7 @@ function renderAgentPerformance(list){
       +'</div>'
       +'<div class="agent-bar"><span style="width:'+width+'%;background:'+(tone==='hot'?'linear-gradient(90deg,#fb7185,#f97316)':'linear-gradient(90deg,#22d3ee,#38bdf8)')+'"></span></div>'
       +'</div>';
-  }).join('')+'</div>';
+  }).join('')+'</div>');
 }
 
 function renderAutomation(summary,throughput){
@@ -1100,84 +1916,88 @@ function renderAutomation(summary,throughput){
     autoStatHtml('Automation ratio',summary.automation_ratio!=null?summary.automation_ratio.toFixed(1)+'%':'—',summary.automation_ratio!=null?'Share of autonomous handling in the observed window':'No comparable flow yet'),
     autoStatHtml('Processed 4h',fmtNum(processed4),'Recent pipeline completions feeding the automation surface')
   ];
-  document.getElementById('d-automation').innerHTML='<div class="auto-list">'+items.join('')+'</div>';
+  setHtml('d-automation','<div class="auto-list">'+items.join('')+'</div>');
 }
 
-function renderPipeline(events){
-  var groups=buildPipelineGroups(events);
+function renderPipeline(events,targetId,limit,emptyText){
+  targetId=targetId||'d-pipeline';
+  var groups=buildPipelineGroups(events,limit);
   if(!groups.length){
-    document.getElementById('d-pipeline').innerHTML='<div class="ops-empty">Recent ticket timelines will appear once agent events stream through the pipeline.</div>';
+    setHtml(targetId,'<div class="ops-empty">'+(emptyText||'Recent ticket timelines will appear once agent events stream through the pipeline.')+'</div>');
     return;
   }
-  document.getElementById('d-pipeline').innerHTML='<div class="timeline-list">'+groups.map(function(group){
+  setHtml(targetId,'<div class="timeline-list">'+groups.map(function(group){
     return '<div class="timeline-item">'
       +'<div class="timeline-top"><div><div class="timeline-name"><span class="ops-link" onclick="viewTicket(\''+group.ticket_id+'\')">'+esc(group.title||group.ticket_id)+'</span></div><div class="timeline-meta">'+fd(group.last_ts)+' · '+group.present+'/'+DASH_STAGE_ORDER.length+' stages captured</div></div><div class="ops-inline"><span class="b '+(group.priority||'medium')+'">'+(group.priority||'medium')+'</span><span class="ops-tag">'+fmtMs(group.total_ms)+'</span></div></div>'
       +'<div class="timeline-track">'+group.stages.map(function(stage){
         return '<div class="timeline-stage'+(stage.failed?' fail':'')+'" style="--stage-color:'+stage.color+';--fill:'+stage.fill+'%"><div class="timeline-stage-l">'+stage.label+'</div><div class="timeline-stage-v">'+stage.display+'</div><div class="timeline-stage-s">'+stage.note+'</div></div>';
       }).join('')+'</div>'
       +'</div>';
-  }).join('')+'</div>';
+  }).join('')+'</div>');
 }
 
-function renderStream(events){
+function renderStream(events,targetId,limit,emptyText){
+  targetId=targetId||'d-stream';
+  limit=limit||DASH_LIMITS.stream;
   if(!events.length){
-    document.getElementById('d-stream').innerHTML='<div class="ops-empty">No agent events available for the live stream yet.</div>';
+    setHtml(targetId,'<div class="ops-empty">'+(emptyText||'No agent events available for the live stream yet.')+'</div>');
     return;
   }
-  document.getElementById('d-stream').innerHTML='<div class="stream-list">'+events.slice(0,10).map(function(evt){
+  setHtml(targetId,'<div class="stream-list">'+events.slice(0,limit).map(function(evt){
     var failed=!!(evt.result&&evt.result.status==='failed');
     return '<div class="stream-item">'
       +'<div class="stream-top"><div><div class="stream-name"><span class="ops-link" onclick="viewTicket(\''+evt.ticket_id+'\')">'+esc(evt.title||evt.ticket_id)+'</span></div><div class="stream-meta">'+prettyAgent(evt.agent)+' · '+fd(evt.ts)+'</div></div><div class="ops-inline"><span class="b '+(evt.priority||'medium')+'">'+(evt.priority||'medium')+'</span><span class="ops-tag">'+durationLabel(evt.duration_ms)+'</span></div></div>'
       +'<div class="stream-status"><span>'+(failed?'Stage failure':'Stage latency')+'</span><strong>'+(failed?'Investigate agent output':'Captured '+durationLabel(evt.duration_ms))+'</strong></div>'
       +'</div>';
-  }).join('')+'</div>';
+  }).join('')+'</div>');
 }
 
 function renderSlowTickets(list){
   if(!list.length){
-    document.getElementById('d-slowest').innerHTML='<div class="ops-empty">No slow tickets detected yet in the recent telemetry window.</div>';
+    setHtml('d-slowest','<div class="ops-empty">No slow tickets detected yet in the recent telemetry window.</div>');
     return;
   }
-  document.getElementById('d-slowest').innerHTML='<div class="slow-list">'+list.slice(0,6).map(function(ticket){
+  setHtml('d-slowest','<div class="slow-list">'+list.slice(0,DASH_LIMITS.slow).map(function(ticket){
     return '<div class="slow-item">'
       +'<div class="slow-top"><div><div class="slow-name"><span class="ops-link" onclick="viewTicket(\''+ticket.ticket_id+'\')">'+esc(ticket.title||ticket.ticket_id)+'</span></div><div class="slow-meta">'+fd(ticket.last_event_ts)+' · '+(ticket.assigned_team||'unassigned')+'</div></div><div class="ops-inline"><span class="b '+(ticket.priority||'medium')+'">'+(ticket.priority||'medium')+'</span><span class="ops-tag">'+fmtMs(ticket.total_ms)+'</span></div></div>'
       +'<div class="ops-inline"><span class="ops-mini"><strong>'+fmtNum(ticket.stages||0)+'</strong> stages</span><span class="ops-sep"></span><span class="ops-mini">slowest stage <strong>'+fmtMs(ticket.slowest_stage_ms)+'</strong></span><span class="ops-sep"></span><span class="ops-mini">status <strong>'+esc((ticket.status||'open').replace(/_/g,' '))+'</strong></span></div>'
       +'</div>';
-  }).join('')+'</div>';
+  }).join('')+'</div>');
 }
 
 function renderFailingAgents(list,summary){
   if(!list.length){
-    document.getElementById('d-failing').innerHTML='<div class="ops-empty">No failing agents in the recent window. Retry count currently at '+fmtNum(summary.retry_count||0)+'.</div>';
+    setHtml('d-failing','<div class="ops-empty">No failing agents in the recent window. Retry count currently at '+fmtNum(summary.retry_count||0)+'.</div>');
     return;
   }
-  document.getElementById('d-failing').innerHTML='<div class="failing-list">'+list.map(function(agent){
+  setHtml('d-failing','<div class="failing-list">'+list.map(function(agent){
     return '<div class="failing-item">'
       +'<div class="failing-top"><div><div class="failing-name">'+prettyAgent(agent.agent)+'</div><div class="failing-meta">'+(agent.total_runs||0)+' runs · last seen '+fd(agent.last_run_ts)+'</div></div><span class="b failed">'+(agent.error_rate||0).toFixed(1)+'% error</span></div>'
       +'<div class="ops-inline"><span class="ops-mini"><strong>'+fmtNum(agent.failures||0)+'</strong> failed runs</span><span class="ops-sep"></span><span class="ops-mini">p95 <strong>'+fmtMs(agent.p95_ms)+'</strong></span><span class="ops-sep"></span><span class="ops-mini">exec/min <strong>'+(agent.executions_per_min!=null?agent.executions_per_min.toFixed(2):'—')+'</strong></span></div>'
       +'</div>';
-  }).join('')+'</div>';
+  }).join('')+'</div>');
 }
 
 function renderRecentTickets(list){
   if(!list.length){
-    document.getElementById('d-recent').innerHTML='<div class="ops-empty">No recent tickets are available to display.</div>';
+    setHtml('d-recent','<div class="ops-empty">No recent tickets are available to display.</div>');
     return;
   }
-  document.getElementById('d-recent').innerHTML='<div class="recent-list">'+list.slice(0,6).map(function(ticket){
+  setHtml('d-recent','<div class="recent-list">'+list.slice(0,DASH_LIMITS.tickets).map(function(ticket){
     return '<div class="recent-item">'
       +'<div class="recent-top"><div><div class="recent-name"><span class="ops-link" onclick="viewTicket(\''+ticket.id+'\')">'+esc(ticket.title)+'</span></div><div class="recent-meta">'+fd(ticket.created_at)+'</div></div><span class="b '+ticket.priority+'">'+ticket.priority+'</span></div>'
       +'<div class="ops-inline"><span class="ops-mini">status <strong>'+esc((ticket.status||'open').replace(/_/g,' '))+'</strong></span><span class="ops-sep"></span><span class="ops-mini">'+(ticket.assigned_team?('team <strong>'+esc(ticket.assigned_team)+'</strong>'):'<strong>Awaiting routing</strong>')+'</span></div>'
       +'</div>';
-  }).join('')+'</div>';
+  }).join('')+'</div>');
 }
 
-function buildPipelineGroups(events){
+function buildPipelineGroups(events,limit){
+  var maxItems=limit||DASH_LIMITS.pipeline;
   var groups={}, order=[];
   events.forEach(function(evt){
     if(!evt || !evt.ticket_id)return;
     if(!groups[evt.ticket_id]){
-      if(order.length>=4)return;
+      if(order.length>=maxItems)return;
       groups[evt.ticket_id]={ticket_id:evt.ticket_id,title:evt.title||evt.ticket_id,priority:evt.priority||'medium',last_ts:evt.ts,stagesByName:{}};
       order.push(evt.ticket_id);
     }
@@ -1292,11 +2112,315 @@ function updateDashClock(){
   el.textContent=new Date().toLocaleTimeString('en-US',{hour12:false});
 }
 
+function renderOpsKpis(targetId,items){
+  setHtml(targetId,(items||[]).map(function(k){
+    return '<div class="ops-kpi '+(k.tone||'')+'"><div class="ops-kpi-label">'+k.label+'</div><div class="ops-kpi-value '+(k.tone||'')+'">'+k.value+'</div><div class="ops-kpi-sub">'+k.sub+'</div></div>';
+  }).join(''));
+}
+
+function toMs(ts){
+  if(!ts)return 0;
+  return ts>1e12 ? Number(ts) : Number(ts)*1000;
+}
+
+function ageMs(ts){
+  var ms=toMs(ts);
+  return ms ? Math.max(Date.now()-ms,0) : 0;
+}
+
+function ageLabel(ts){
+  var ms=ageMs(ts);
+  if(!ms)return 'just now';
+  if(ms<60000)return Math.round(ms/1000)+'s';
+  if(ms<3600000)return Math.round(ms/60000)+'m';
+  if(ms<86400000)return Math.round(ms/3600000)+'h';
+  return Math.round(ms/86400000)+'d';
+}
+
+function prettyKey(key){
+  return esc((key||'—').replace(/_/g,' '));
+}
+
+function buildTimeBucketSeries(rows,getTs,series,stepMs,count){
+  var now=Date.now();
+  var buckets=[];
+  for(var i=count-1;i>=0;i--){
+    var start=now-(i*stepMs);
+    var bucket={bucket:start/1000};
+    (series||[]).forEach(function(def){bucket[def.key]=0;});
+    buckets.push(bucket);
+  }
+  (rows||[]).forEach(function(row){
+    var tsMs=toMs(getTs(row));
+    if(!tsMs)return;
+    var diff=now-tsMs;
+    if(diff<0 || diff>=stepMs*count)return;
+    var idx=buckets.length-1-Math.floor(diff/stepMs);
+    var bucket=buckets[idx];
+    if(!bucket)return;
+    (series||[]).forEach(function(def){
+      if(def.when && !def.when(row))return;
+      var add=def.valueFn ? Number(def.valueFn(row)||0) : Number(def.value!=null ? def.value : 1);
+      bucket[def.key]+=add;
+    });
+  });
+  return buckets;
+}
+
+function mapEntries(obj,colors){
+  return Object.keys(obj||{}).map(function(key){
+    return {
+      label: prettyKey(key),
+      rawLabel: key,
+      value: Number(obj[key]||0),
+      color: colors && colors[key] ? colors[key] : '#22d3ee'
+    };
+  }).filter(function(item){return item.value>0;}).sort(function(a,b){return b.value-a.value;});
+}
+
+function inferUserHandles(user){
+  var email=(user.email||'').toLowerCase();
+  var local=email.split('@')[0]||'';
+  var dotted=(user.name||'').toLowerCase().trim().replace(/\s+/g,'.');
+  return [local,dotted].filter(Boolean);
+}
+
+function matchUserAssignment(user,ticket){
+  var assigned=(ticket.assigned_to||'').toLowerCase();
+  if(!assigned)return false;
+  return inferUserHandles(user).some(function(handle){return handle===assigned;});
+}
+
+function renderQueuePage(data){
+  var jobs=data.jobs||[];
+  var summary=data.summary||{};
+  var activeJobs=data.activeJobs||[];
+  var retryHotspots=data.retryHotspots||[];
+  var oldestActive=activeJobs.length?activeJobs[0]:null;
+  renderOpsKpis('q-kpis',[
+    {label:'Active Queue',value:fmtNum((summary.queue_depth||0)+(summary.queue_running||0)),sub:(summary.queue_running||0)+' running · '+(summary.queue_failed||0)+' failed',tone:(summary.queue_failed||0)>0?'hot':(summary.queue_depth||0)>0?'warn':'good'},
+    {label:'Retry Loops',value:fmtNum(summary.retry_count||0),sub:retryHotspots.length?retryHotspots.length+' jobs need attention':'No repeated attempts visible',tone:(summary.retry_count||0)>0?'warn':'good'},
+    {label:'Completed Total',value:fmtNum(summary.queue_done||0),sub:'Historical completed jobs retained in queue visibility',tone:'good'},
+    {label:'Oldest Active',value:oldestActive?ageLabel(oldestActive.updated_at):'—',sub:oldestActive?(oldestActive.title||oldestActive.ticket_id):'No active queue wait',tone:oldestActive&&ageMs(oldestActive.updated_at)>3600000?'warn':'good'}
+  ]);
+  setText('q-toolbar-note',jobs.length+' visible jobs · live session trend bounded to '+PAGE_SAMPLE_LIMITS.queue+' samples');
+  drawSeriesChart('c-queue-trend',data.trend||[],[
+    {key:'queued',label:'Queued',color:'#38bdf8',fill:'rgba(56,189,248,.08)'},
+    {key:'running',label:'Running',color:'#22d3ee',fill:'rgba(34,211,238,.06)'},
+    {key:'failed',label:'Failed',color:'#fb7185',fill:'rgba(251,113,133,.05)'}
+  ]);
+  renderQueue(summary,data.throughput||[],'q-dist');
+  setHtml('q-retry',retryHotspots.length ? '<div class="signal-list">'+retryHotspots.slice(0,6).map(function(job){
+    var failed=job.status==='failed';
+    return '<div class="signal-item"><div class="signal-top"><div><div class="signal-title"><span class="ops-link" onclick="viewTicket(\''+job.ticket_id+'\')">'+esc(job.title||job.ticket_id)+'</span></div><div class="signal-meta">'+prettyKey(job.status)+' · updated '+fd(job.updated_at)+'</div></div><span class="b '+(failed?'failed':'high')+'">'+(job.attempts||0)+' attempts</span></div><div class="metric-row"><span class="metric-pill">priority <strong>'+(job.priority||'—')+'</strong></span><span class="metric-pill">age <strong>'+ageLabel(job.updated_at)+'</strong></span></div></div>';
+  }).join('')+'</div>' : '<div class="ops-empty">No retries or failed jobs need intervention right now.</div>');
+  setHtml('q-watch',activeJobs.length ? '<div class="queue-watch-list">'+activeJobs.slice(0,8).map(function(job){
+    var tone=job.status==='running'?'done':'open';
+    return '<div class="queue-watch-item"><div class="queue-watch-top"><div><div class="queue-watch-title"><span class="ops-link" onclick="viewTicket(\''+job.ticket_id+'\')">'+esc(job.title||job.ticket_id)+'</span></div><div class="queue-watch-meta">'+(job.job_id||'').slice(0,16)+'…</div></div><div class="ops-inline"><span class="b '+tone+'">'+job.status+'</span><span class="ops-tag">'+ageLabel(job.updated_at)+'</span></div></div><div class="metric-row"><span class="metric-pill">attempts <strong>'+(job.attempts||0)+'</strong></span><span class="metric-pill">priority <strong>'+(job.priority||'—')+'</strong></span></div></div>';
+  }).join('')+'</div>' : '<div class="ops-empty">No active queue entries are currently waiting or running.</div>');
+  setText('q-info',jobs.length+' jobs visible · '+(summary.queue_failed||0)+' failed · '+(summary.retry_count||0)+' retries');
+  setHtml('q-body',(jobs||[]).map(function(j){
+    return '<tr><td class="mono trunc" style="max-width:130px;color:var(--faint)">'+(j.job_id||'').slice(0,16)+'…</td><td><span class="lnk" onclick="viewTicket(\''+j.ticket_id+'\')">'+esc(j.title||j.ticket_id)+'</span></td><td>'+(j.priority?'<span class="b '+j.priority+'">'+j.priority+'</span>':'—')+'</td><td><span class="b '+j.status+'">'+j.status+'</span></td><td style="color:var(--muted)">'+(j.attempts||0)+'</td><td style="color:var(--faint);white-space:nowrap">'+fd(j.updated_at)+'</td><td>'+(j.status==='failed'?'<button class="btn btn-g btn-sm" type="button" onclick="retryJob(\''+j.ticket_id+'\')">↺ Retry</button>':'')+'</td></tr>';
+  }).join('')||'<tr><td colspan="7" class="tc-empty">Queue is empty.</td></tr>');
+}
+
+function renderAgentsPage(data){
+  var performance=data.performance||[];
+  var events=data.events||[];
+  var anomalies=data.anomalies||[];
+  var aggregateExec=performance.reduce(function(sum,row){return sum+Number(row.exec_per_min||0);},0);
+  var maxP95=performance.reduce(function(max,row){return Math.max(max,Number(row.p95_ms||0));},0);
+  renderOpsKpis('ag-kpis',[
+    {label:'Active Agents',value:fmtNum(performance.length),sub:performance.length?'All pipeline stages reporting':'Awaiting recent runs',tone:performance.length?'good':''},
+    {label:'Exec / Min',value:aggregateExec?aggregateExec.toFixed(2):'—',sub:'Aggregate observed execution rate in the live window',tone:aggregateExec?'good':''},
+    {label:'Max P95',value:maxP95?fmtMs(maxP95):'—',sub:'Highest p95 latency currently observed',tone:maxP95>1500?'warn':'good'},
+    {label:'Anomalies',value:fmtNum(anomalies.length),sub:anomalies.length?'Recent failures or latency spikes detected':'No active anomalies in recent events',tone:anomalies.length?'hot':'good'}
+  ]);
+  drawGroupedBarChart('c-agent-latency',performance.slice(0,5).map(function(agent){
+    return {label:agent.label||prettyAgent(agent.agent),avg_ms:agent.avg_ms||0,p95_ms:agent.p95_ms||0};
+  }),[
+    {key:'avg_ms',label:'avg',color:'#22d3ee'},
+    {key:'p95_ms',label:'p95',color:'#facc15'}
+  ]);
+  drawGroupedBarChart('c-agent-throughput',performance.slice(0,5).map(function(agent){
+    return {label:agent.label||prettyAgent(agent.agent),rate:agent.exec_per_min||0};
+  }),[
+    {key:'rate',label:'exec/min',color:'#4ade80'}
+  ]);
+  setHtml('ag-reliability',performance.length ? '<div class="signal-list">'+performance.map(function(agent){
+    var rate=Number(agent.error_rate||0);
+    var width=Math.max(10,Math.round((Math.max(agent.p95_ms||0,agent.avg_ms||1)/Math.max(maxP95,1))*100));
+    return '<div class="signal-item"><div class="signal-top"><div><div class="signal-title">'+esc(agent.label||prettyAgent(agent.agent))+'</div><div class="signal-meta">'+esc(agent.description||'Operational stage')+'</div></div><span class="b '+(rate>0?'failed':'done')+'">'+(rate>0?rate.toFixed(1)+'% error':'stable')+'</span></div><div class="metric-row"><span class="metric-pill">avg <strong>'+fmtMs(agent.avg_ms)+'</strong></span><span class="metric-pill">p95 <strong>'+fmtMs(agent.p95_ms)+'</strong></span><span class="metric-pill">exec/min <strong>'+(agent.exec_per_min||0).toFixed(2)+'</strong></span></div><div class="value-bar '+(rate>0?'err':(agent.p95_ms||0)>1500?'warn':'')+'"><span style="width:'+width+'%"></span></div></div>';
+  }).join('')+'</div>' : '<div class="ops-empty">Agent reliability will appear once recent pipeline runs are available.</div>');
+  setHtml('ag-anomalies',anomalies.length ? '<div class="alert-list">'+anomalies.map(function(evt){
+    return '<div class="alert-item"><div class="alert-top"><div><div class="alert-title"><span class="ops-link" onclick="viewTicket(\''+evt.ticket_id+'\')">'+esc(evt.title||evt.ticket_id)+'</span></div><div class="alert-meta">'+prettyAgent(evt.agent)+' · '+fd(evt.ts)+'</div></div><span class="b '+(evt.result&&evt.result.status==='failed'?'failed':'high')+'">'+durationLabel(evt.duration_ms)+'</span></div><div class="metric-row"><span class="metric-pill">status <strong>'+esc(((evt.result&&evt.result.status)||'ok').replace(/_/g,' '))+'</strong></span><span class="metric-pill">priority <strong>'+(evt.priority||'—')+'</strong></span></div></div>';
+  }).join('')+'</div>' : '<div class="ops-empty">No failed stages or latency spikes are currently visible.</div>');
+  setText('ag-info',events.length+' recent events · '+anomalies.length+' anomalies highlighted');
+  setHtml('ag-body',(events||[]).map(function(e){
+    var status=(e.result&&e.result.status)||'ok';
+    return '<tr><td class="trunc" style="max-width:220px"><span class="lnk" onclick="viewTicket(\''+e.ticket_id+'\')">'+esc(e.title||e.ticket_id)+'</span></td><td><span class="ops-tag">'+prettyAgent(e.agent)+'</span></td><td style="color:var(--muted)">'+durationLabel(e.duration_ms)+'</td><td><span class="b '+(status==='failed'?'failed':'done')+'">'+prettyKey(status)+'</span></td><td style="color:var(--faint);white-space:nowrap">'+fd(e.ts)+'</td></tr>';
+  }).join('')||'<tr><td colspan="5" class="tc-empty">No pipeline events yet.</td></tr>');
+}
+
+function renderTicketsPage(data){
+  var analytics=data.analytics||{};
+  var ops=data.ops||{};
+  var summary=ops.summary||{};
+  var events=data.events||[];
+  var page=data.page||{items:[],total:0};
+  var items=page.items||[];
+  var byStatus=analytics.by_status||{};
+  var byCategory=analytics.by_category||{};
+  var aging=(ops.age_buckets||[]).map(function(label,idx){
+    var total=0;
+    (ops.sla_heatmap||[]).forEach(function(row){total+=Number((((row.cells||[])[idx]||{}).count)||0);});
+    return {label:label,total:total};
+  });
+  renderOpsKpis('t-kpis',[
+    {label:'Open Backlog',value:fmtNum(summary.open_tickets||analytics.open_tickets||0),sub:'Current unresolved ticket load',tone:(summary.open_tickets||analytics.open_tickets||0)>10?'warn':'good'},
+    {label:'SLA Exposure',value:fmtNum(summary.sla_risk_open||analytics.sla_at_risk||0),sub:'Tickets at response risk right now',tone:(summary.sla_risk_open||analytics.sla_at_risk||0)>0?'hot':'good'},
+    {label:'Created 24h',value:fmtNum(summary.tickets_created_in_window||0),sub:'Recent ingress in the live operational window',tone:''},
+    {label:'Resolved Today',value:fmtNum(analytics.resolved_today||0),sub:'Tickets resolved since local midnight',tone:'good'}
+  ]);
+  setText('t-toolbar-note',(page.total||0)+' tickets matched current filters');
+  drawGroupedBarChart('c-ticket-aging',aging,[{key:'total',label:'open',color:'#facc15'}]);
+  var mixParts=mapEntries(analytics.by_priority||{},{critical:'#fb7185',high:'#f97316',medium:'#38bdf8',low:'#4ade80'}).slice(0,4);
+  if(!mixParts.length) mixParts=mapEntries(byStatus,{open:'#38bdf8',in_progress:'#22d3ee',escalated:'#fb7185',resolved:'#4ade80'}).slice(0,4);
+  drawRatioRing('c-ticket-mix',mixParts,null,'No ticket mix is available for the current scope');
+  renderHeatmap(ops.sla_heatmap||[],ops.age_buckets||[],'t-sla','No SLA pressure is currently visible in open tickets.');
+  renderPipeline(events,'t-pipeline',4,'Recent ticket timelines will appear once the pipeline records fresh stages.');
+  var segmentRows=mapEntries(byStatus,{open:'#38bdf8',in_progress:'#8b5cf6',escalated:'#fb7185',resolved:'#4ade80',closed:'#64748b'})
+    .concat(mapEntries(byCategory,{billing:'#f97316',technical:'#22d3ee',bug:'#fb7185',feature_request:'#a78bfa',general:'#94a3b8'}))
+    .slice(0,8);
+  setHtml('t-segmentation',segmentRows.length ? '<div class="segment-list">'+segmentRows.map(function(segment){
+    var base=Math.max.apply(null,segmentRows.map(function(row){return row.value;}).concat([1]));
+    return '<div class="segment-item"><div class="segment-top"><div><div class="segment-title">'+segment.label+'</div><div class="segment-meta">'+(byStatus[segment.rawLabel]!=null?'Status concentration':'Category concentration')+'</div></div><span class="ops-tag">'+fmtNum(segment.value)+'</span></div><div class="value-bar"><span style="width:'+Math.max(10,Math.round((segment.value/base)*100))+'%;background:'+segment.color+'"></span></div></div>';
+  }).join('')+'</div>' : '<div class="ops-empty">No segmentation data is currently available.</div>');
+  document.getElementById('t-info').textContent=(page.total?((tOff+1)+'–'+Math.min(tOff+PSZ,page.total)+' of '+page.total+' tickets'):'0 tickets');
+  document.getElementById('t-prev').disabled=tOff===0;
+  document.getElementById('t-next').disabled=tOff+PSZ>=(page.total||0);
+  setHtml('t-body',items.map(function(t){
+    return '<tr><td><input type="checkbox" value="'+t.id+'" onchange="togSel(this)"></td><td class="trunc" style="max-width:240px"><span class="lnk" onclick="viewTicket(\''+t.id+'\')">'+esc(t.title)+'</span></td><td><span class="b '+t.priority+'">'+t.priority+'</span></td><td><span class="b '+t.status+'">'+t.status.replace(/_/g,' ')+'</span></td><td style="color:var(--muted)">'+(t.category||'—')+'</td><td style="color:var(--muted)">'+(t.assigned_team||'—')+'</td><td style="color:var(--faint);white-space:nowrap">'+fd(t.created_at)+'</td><td><button class="btn btn-g btn-sm" type="button" onclick="viewTicket(\''+t.id+'\')">View →</button></td></tr>';
+  }).join('')||'<tr><td colspan="8" class="tc-empty">No tickets match your filters.</td></tr>');
+}
+
+function renderUsersPage(data){
+  var users=data.users||[];
+  var auditRows=data.auditRows||[];
+  var userStats=data.userStats||[];
+  var rolesCount=data.rolesCount||{};
+  renderOpsKpis('usr-kpis',[
+    {label:'Active Users',value:fmtNum(data.activeCount||0),sub:(data.disabledCount||0)+' disabled accounts',tone:(data.disabledCount||0)>0?'warn':'good'},
+    {label:'Operators',value:fmtNum(rolesCount.operator||0),sub:'Primary human execution coverage',tone:(rolesCount.operator||0)>0?'good':''},
+    {label:'Audit Actions',value:fmtNum(auditRows.length),sub:'Recent human-origin actions in the visible activity window',tone:''},
+    {label:'Assigned Tickets',value:fmtNum(data.assignedCount||0),sub:(data.escalatedAssigned||0)+' escalated tickets currently mapped to users',tone:(data.escalatedAssigned||0)>0?'warn':''}
+  ]);
+  drawRatioRing('c-user-roles',mapEntries(rolesCount,{admin:'#22d3ee',operator:'#4ade80',viewer:'#94a3b8'}),null,'No role distribution is available');
+  setHtml('usr-balance',userStats.length ? '<div class="coverage-list">'+userStats.slice(0,8).map(function(user){
+    var maxAssigned=Math.max.apply(null,userStats.map(function(row){return row.assigned;}).concat([1]));
+    return '<div class="coverage-item"><div class="coverage-top"><div><div class="coverage-title">'+esc(user.name||user.email)+'</div><div class="coverage-meta">'+esc(user.email)+' · last action '+(user.lastAction?fd(user.lastAction):'none')+'</div></div><span class="b '+(user.active?'active':'inactive')+'">'+(user.active?'active':'disabled')+'</span></div><div class="metric-row"><span class="metric-pill">assigned <strong>'+fmtNum(user.assigned)+'</strong></span><span class="metric-pill">actions <strong>'+fmtNum(user.actions)+'</strong></span><span class="metric-pill">escalated <strong>'+fmtNum(user.escalated)+'</strong></span></div><div class="value-bar '+(user.escalated>0?'warn':'')+'"><span style="width:'+Math.max(10,Math.round((user.assigned/Math.max(maxAssigned,1))*100))+'%"></span></div></div>';
+  }).join('')+'</div>' : '<div class="ops-empty">No user activity data is currently available.</div>');
+  setHtml('usr-escalations',userStats.filter(function(user){return user.escalated>0 || user.assigned>0;}).length ? '<div class="alert-list">'+userStats.filter(function(user){return user.escalated>0 || user.assigned>0;}).sort(function(a,b){return b.escalated-a.escalated || b.assigned-a.assigned;}).slice(0,6).map(function(user){
+    return '<div class="alert-item"><div class="alert-top"><div><div class="alert-title">'+esc(user.name||user.email)+'</div><div class="alert-meta">'+esc(user.email)+'</div></div><span class="b '+(user.escalated>0?'high':'done')+'">'+fmtNum(user.escalated)+' escalated</span></div><div class="metric-row"><span class="metric-pill">assigned <strong>'+fmtNum(user.assigned)+'</strong></span><span class="metric-pill">open <strong>'+fmtNum(user.openAssigned)+'</strong></span></div></div>';
+  }).join('')+'</div>' : '<div class="ops-empty">No current escalation patterns are mapped to known users.</div>');
+  setHtml('usr-activity',auditRows.length ? '<div class="activity-list">'+auditRows.slice(0,12).map(function(row){
+    return '<div class="activity-item"><div class="activity-top"><div><div class="activity-title">'+esc(row.user_email||'system')+'</div><div class="activity-meta">'+fd(row.ts)+' · '+esc(row.resource_type||'resource')+'</div></div><span class="ops-tag">'+esc(row.action||'action')+'</span></div><div class="metric-row">'+(row.resource_id?'<span class="metric-pill">id <strong>'+esc((row.resource_id||'').slice(0,12))+'</strong></span>':'')+'</div></div>';
+  }).join('')+'</div>' : '<div class="ops-empty">No recent human activity has been recorded.</div>');
+  setHtml('usr-coverage','<div class="ops-stat-grid">'
+    +opsStatCardHtml('Admins',fmtNum(rolesCount.admin||0),'Control-plane administrators')
+    +opsStatCardHtml('Operators',fmtNum(rolesCount.operator||0),'Operational responders')
+    +opsStatCardHtml('Viewers',fmtNum(rolesCount.viewer||0),'Read-only observers')
+    +opsStatCardHtml('Disabled',fmtNum(data.disabledCount||0),'Accounts currently inactive')
+  +'</div>');
+  document.getElementById('usr-info').textContent=users.length+' user'+(users.length===1?'':'s');
+  setHtml('usr-body',(users||[]).map(function(u){
+    return '<tr><td style="font-weight:500">'+esc(u.email)+'</td><td>'+esc(u.name)+'</td><td><span class="b '+u.role+'">'+u.role+'</span></td><td><span class="b '+(u.active?'active':'inactive')+'">'+(u.active?'Active':'Disabled')+'</span></td><td style="color:var(--faint);white-space:nowrap">'+fd(u.created_at)+'</td><td>'+(u.active?'<button class="btn btn-d btn-sm" type="button" onclick="toggleUsr(\''+u.id+'\',false)">Disable</button>':'<button class="btn btn-g btn-sm" type="button" onclick="toggleUsr(\''+u.id+'\',true)">Enable</button>')+'</td></tr>';
+  }).join('')||'<tr><td colspan="6" class="tc-empty">No users found.</td></tr>');
+}
+
+function renderIntegrationsPage(data){
+  var list=data.list||[];
+  var mergedEvents=data.mergedEvents||[];
+  var staleCount=data.staleCount||0;
+  renderOpsKpis('int-kpis',[
+    {label:'Active',value:fmtNum(data.activeCount||0),sub:(data.errorCount||0)+' integration errors',tone:(data.errorCount||0)>0?'warn':'good'},
+    {label:'Webhook Events',value:fmtNum(mergedEvents.length),sub:'Recent inbound and test activity merged across integrations',tone:''},
+    {label:'Stale Links',value:fmtNum(staleCount),sub:'Integrations without recent successful sync',tone:staleCount>0?'warn':'good'},
+    {label:'Failures',value:fmtNum(data.failedEventCount||0),sub:'Recent integration events marked ignored or error',tone:(data.failedEventCount||0)>0?'hot':'good'}
+  ]);
+  drawSeriesChart('c-int-activity',data.trend||[],[
+    {key:'ok',label:'OK',color:'#4ade80',fill:'rgba(74,222,128,.08)'},
+    {key:'ignored',label:'Ignored',color:'#facc15',fill:'rgba(250,204,21,.05)'},
+    {key:'error',label:'Error',color:'#fb7185',fill:'rgba(251,113,133,.05)'}
+  ]);
+  setHtml('int-connectivity',list.length ? '<div class="integration-list">'+list.map(function(item){
+    var stale=!item.last_sync_at || ageMs(item.last_sync_at) > 86400000;
+    return '<div class="integration-item"><div class="integration-top"><div><div class="integration-title">'+esc(item.name)+'</div><div class="integration-meta">'+esc(item.type)+' · last sync '+(item.last_sync_at?fd(item.last_sync_at):'never')+'</div></div><span class="b '+(item.status==='active' && !stale ?'done':'high')+'">'+(stale && item.status==='active'?'stale':item.status)+'</span></div><div class="metric-row"><span class="metric-pill">events <strong>'+fmtNum(item.event_count||0)+'</strong></span>'+(item.sync_error?'<span class="metric-pill">error <strong>'+esc(item.sync_error)+'</strong></span>':'')+'</div></div>';
+  }).join('')+'</div>' : '<div class="ops-empty">No integrations have been configured yet.</div>');
+  setHtml('int-stream',mergedEvents.length ? '<div class="stream-list">'+mergedEvents.slice(0,10).map(function(evt){
+    return '<div class="stream-item"><div class="stream-top"><div><div class="stream-name">'+esc(evt.integration_name||'integration')+'</div><div class="stream-meta">'+fd(evt.ts)+' · '+esc(evt.direction||'inbound')+'</div></div><div class="ops-inline"><span class="b '+(evt.status==='ok'?'done':evt.status==='ignored'?'high':'failed')+'">'+evt.status+'</span><span class="ops-tag">'+(evt.payload_size?fmtNum(evt.payload_size)+'b':'—')+'</span></div></div><div class="stream-status"><span>'+(evt.ticket_id?'<span class="ops-link" onclick="viewTicket(\''+evt.ticket_id+'\')">'+esc(evt.ticket_title||evt.ticket_id)+'</span>':'No ticket generated')+'</span><strong>'+(evt.error?esc(evt.error):'event recorded')+'</strong></div></div>';
+  }).join('')+'</div>' : '<div class="ops-empty">No recent integration events are available.</div>');
+  setHtml('int-failures',data.failureFocus.length ? '<div class="alert-list">'+data.failureFocus.map(function(item){
+    return '<div class="alert-item"><div class="alert-top"><div><div class="alert-title">'+esc(item.name)+'</div><div class="alert-meta">'+(item.sync_error?esc(item.sync_error):'No sync error recorded')+'</div></div><span class="b '+(item.status==='error'?'failed':'high')+'">'+(item.status==='error'?'error':'attention')+'</span></div><div class="metric-row"><span class="metric-pill">events <strong>'+fmtNum(item.event_count||0)+'</strong></span><span class="metric-pill">last sync <strong>'+(item.last_sync_at?fd(item.last_sync_at):'never')+'</strong></span></div></div>';
+  }).join('')+'</div>' : '<div class="ops-empty">No failing or stale integrations require intervention right now.</div>');
+  document.getElementById('int-info').textContent=list.length+' integration'+(list.length===1?'':'s');
+  setHtml('int-body',(list||[]).map(function(i){
+    return '<tr><td style="font-weight:500">'+esc(i.name)+'</td><td style="color:var(--muted)">'+i.type+'</td><td><span class="b '+i.status+'">'+i.status+'</span></td><td style="color:var(--muted)">'+(i.event_count||0)+'</td><td style="color:var(--faint);white-space:nowrap">'+(i.last_sync_at?fd(i.last_sync_at):'never')+'</td><td><div class="table-actions"><button class="btn btn-g btn-sm" type="button" onclick="testInt(\''+i.id+'\')">Test</button><button class="btn btn-g btn-sm" type="button" onclick="copyIngest(\''+i.id+'\')">Copy URL</button><button class="btn btn-d btn-sm" type="button" onclick="delInt(\''+i.id+'\')">Delete</button></div></td></tr>';
+  }).join('')||'<tr><td colspan="6" class="tc-empty">No integrations configured yet.</td></tr>');
+}
+
+function renderSystemPage(data){
+  var health=data.health||{};
+  var sla=data.sla||{};
+  var logs=data.logs||[];
+  var auditRows=data.auditRows||[];
+  var summary=data.summary||{};
+  var throughput=data.throughput||[];
+  var warnCount=logs.filter(function(row){return row.level==='WARN';}).length;
+  var errorCount=logs.filter(function(row){return row.level==='ERROR';}).length;
+  var loadScore=calcLoadScore(health,summary,throughput);
+  renderOpsKpis('sys-kpis',[
+    {label:'API',value:health.status||'unknown',sub:'Application health probe',tone:health.status==='ok'?'good':'hot'},
+    {label:'Database',value:health.db||'unknown',sub:'Persistence layer status',tone:health.db==='ok'?'good':'hot'},
+    {label:'Redis',value:health.redis||'unknown',sub:'Queue and cache connectivity',tone:health.redis==='ok'?'good':'hot'},
+    {label:'SLA Compliance',value:sla.compliance_rate!=null?sla.compliance_rate+'%':'—',sub:sla.avg_resolution_seconds?('avg '+fmtHours(Number(sla.avg_resolution_seconds)/3600)):'Awaiting resolved tickets',tone:sla.compliance_rate>=95?'good':sla.compliance_rate>=80?'warn':'hot'}
+  ]);
+  drawSeriesChart('c-system-load',data.trend||[],[
+    {key:'load',label:'Load',color:'#22d3ee',fill:'rgba(34,211,238,.08)'},
+    {key:'warn',label:'Warn',color:'#facc15',fill:'rgba(250,204,21,.05)'},
+    {key:'error',label:'Error',color:'#fb7185',fill:'rgba(251,113,133,.05)'}
+  ]);
+  setHtml('sys-runtime','<div class="ops-stat-grid">'
+    +opsStatCardHtml('Load Score',fmtNum(loadScore),loadScore>=72?'Hot runtime pressure':loadScore>=38?'Elevated runtime pressure':'Nominal system load')
+    +opsStatCardHtml('Running Jobs',fmtNum(summary.queue_running||0),(summary.queue_depth||0)+' queued behind active work')
+    +opsStatCardHtml('Retry Count',fmtNum(summary.retry_count||0),(summary.queue_failed||0)+' failed jobs currently visible')
+    +opsStatCardHtml('Version',esc(health.version||'—'),'Current deployed application version')
+  +'</div>');
+  setHtml('sys-log-stream',logs.length ? '<div class="alert-list">'+logs.slice(0,14).map(function(log){
+    return '<div class="alert-item"><div class="alert-top"><div><div class="alert-title">'+esc(log.source||'system')+'</div><div class="alert-meta">'+fd(log.ts)+'</div></div><span class="b '+(log.level==='ERROR'?'failed':log.level==='WARN'?'high':'done')+'">'+log.level+'</span></div><div class="alert-meta" style="margin-top:8px">'+esc(log.message||'')+'</div></div>';
+  }).join('')+'</div>' : '<div class="ops-empty">No system log entries are available.</div>');
+  var bySource={};
+  logs.forEach(function(log){var key=log.source||'system'; if(!bySource[key]) bySource[key]={warn:0,error:0}; if(log.level==='WARN')bySource[key].warn+=1; if(log.level==='ERROR')bySource[key].error+=1;});
+  var alertSources=Object.keys(bySource).map(function(source){return {source:source,warn:bySource[source].warn,error:bySource[source].error};}).sort(function(a,b){return b.error-a.error || b.warn-a.warn;});
+  setHtml('sys-alerts',alertSources.length ? '<div class="alert-list">'+alertSources.map(function(row){
+    var total=row.error+row.warn;
+    return '<div class="alert-item"><div class="alert-top"><div><div class="alert-title">'+esc(row.source)+'</div><div class="alert-meta">'+fmtNum(total)+' warning/error signals in the visible log window</div></div><span class="b '+(row.error>0?'failed':'high')+'">'+(row.error>0?row.error+' errors':row.warn+' warns')+'</span></div><div class="metric-row"><span class="metric-pill">warn <strong>'+fmtNum(row.warn)+'</strong></span><span class="metric-pill">error <strong>'+fmtNum(row.error)+'</strong></span></div></div>';
+  }).join('')+'</div>' : '<div class="ops-empty">No warning or error sources are currently visible.</div>');
+  setHtml('sys-audit-stream',auditRows.length ? '<div class="activity-list">'+auditRows.slice(0,16).map(function(row){
+    return '<div class="activity-item"><div class="activity-top"><div><div class="activity-title">'+esc(row.user_email||'system')+'</div><div class="activity-meta">'+fd(row.ts)+' · '+esc(row.resource_type||'resource')+'</div></div><span class="ops-tag">'+esc(row.action||'action')+'</span></div><div class="metric-row">'+(row.resource_id?'<span class="metric-pill">id <strong>'+esc((row.resource_id||'').slice(0,12))+'</strong></span>':'')+'</div></div>';
+  }).join('')+'</div>' : '<div class="ops-empty">No recent audit entries are available.</div>');
+}
+
+function opsStatCardHtml(label,value,sub){
+  return '<div class="ops-stat-card"><div class="ops-stat-label">'+label+'</div><div class="ops-stat-value">'+value+'</div><div class="ops-stat-sub">'+sub+'</div></div>';
+}
+
 /* ── tickets ─────────────────────────────────────────────────────────── */
 var PSZ=50;
 function tSearchDelay(){clearTimeout(stimer);stimer=setTimeout(function(){tOff=0;tLoad();},320);}
-function tLoad(){
+function tLoad(silent){
   selIds.clear();updBulk();
+  document.getElementById('sel-all').checked=false;
   var st=document.getElementById('t-status').value,
       pr=document.getElementById('t-priority').value,
       ca=document.getElementById('t-category').value,
@@ -1304,15 +2428,25 @@ function tLoad(){
   var url='/api/tickets?limit='+PSZ+'&offset='+tOff;
   if(st)url+='&status='+st; if(pr)url+='&priority='+pr;
   if(ca)url+='&category='+ca; if(se)url+='&search='+encodeURIComponent(se);
-  apiFetch(url).then(function(d){
-    tTotal=d.total||0;
-    document.getElementById('t-info').textContent=(tOff+1)+'–'+Math.min(tOff+PSZ,tTotal)+' of '+tTotal+' tickets';
-    document.getElementById('t-prev').disabled=tOff===0;
-    document.getElementById('t-next').disabled=tOff+PSZ>=tTotal;
-    document.getElementById('t-body').innerHTML=(d.items||[]).map(function(t){
-      return '<tr><td><input type="checkbox" value="'+t.id+'" onchange="togSel(this)"></td><td class="trunc" style="max-width:240px"><span class="lnk" onclick="viewTicket(\''+t.id+'\')">'+esc(t.title)+'</span></td><td><span class="b '+t.priority+'">'+t.priority+'</span></td><td><span class="b '+t.status+'">'+t.status.replace(/_/g,' ')+'</span></td><td style="color:var(--muted)">'+(t.category||'—')+'</td><td style="color:var(--muted)">'+(t.assigned_team||'—')+'</td><td style="color:var(--faint);white-space:nowrap">'+fd(t.created_at)+'</td><td><button class="btn btn-g btn-sm" type="button" onclick="viewTicket(\''+t.id+'\')">View →</button></td></tr>';
-    }).join('')||'<tr><td colspan="8" class="tc-empty">No tickets match your filters.</td></tr>';
-  }).catch(function(e){document.getElementById('t-body').innerHTML='<tr><td colspan="8" class="tc-empty" style="color:var(--red)">'+esc(e.message)+'</td></tr>';});
+  Promise.all([
+    apiFetch(url),
+    apiFetch('/api/analytics'),
+    apiFetch('/api/analytics/ops?hours=24&agent_window_minutes=60'),
+    apiFetch('/api/agents/events?limit=60')
+  ]).then(function(res){
+    var page=res[0]||{items:[],total:0};
+    var analytics=res[1]||{};
+    var ops=res[2]||{};
+    var events=res[3]||[];
+    tTotal=page.total||0;
+    PAGE_CACHE.tickets={page:page,analytics:analytics,ops:ops,events:events};
+    setNavBadgeTone('nbg-tickets',(ops.summary&&ops.summary.open_tickets)||analytics.open_tickets||0,'info');
+    setNavIndicator('tickets',((ops.summary&&ops.summary.sla_risk_open)||0)>0?'warn':'ok');
+    renderTicketsPage(PAGE_CACHE.tickets);
+  }).catch(function(e){
+    setHtml('t-body','<tr><td colspan="8" class="tc-empty" style="color:var(--red)">'+esc(e.message)+'</td></tr>');
+    if(!silent) toast(e.message,'err');
+  });
 }
 function tPage(d){tOff=Math.max(0,tOff+d*PSZ);tLoad();}
 function togSel(cb){if(cb.checked)selIds.add(cb.value);else selIds.delete(cb.value);updBulk();}
@@ -1374,41 +2508,137 @@ function createTicket(){
 }
 
 /* ── queue ───────────────────────────────────────────────────────────── */
-function qLoad(){
+function qLoad(silent){
   var st=document.getElementById('q-status').value;
-  apiFetch('/api/queue?limit=100'+(st?'&status='+st:''))
-    .then(function(jobs){
-      setBadge('nbg-queue',jobs.filter(function(j){return j.status==='failed';}).length);
-      document.getElementById('q-info').textContent=jobs.length+' jobs';
-      document.getElementById('q-body').innerHTML=(jobs||[]).map(function(j){
-        return '<tr><td class="mono trunc" style="max-width:130px;color:var(--faint)">'+(j.job_id||'').slice(0,16)+'…</td><td><span class="lnk" onclick="viewTicket(\''+j.ticket_id+'\')">'+esc(j.title||j.ticket_id)+'</span></td><td>'+(j.priority?'<span class="b '+j.priority+'">'+j.priority+'</span>':'—')+'</td><td><span class="b '+j.status+'">'+j.status+'</span></td><td style="color:var(--muted)">'+(j.attempts||0)+'</td><td style="color:var(--faint);white-space:nowrap">'+fd(j.updated_at)+'</td><td>'+(j.status==='failed'?'<button class="btn btn-g btn-sm" type="button" onclick="retryJob(\''+j.ticket_id+'\')">↺ Retry</button>':'')+'</td></tr>';
-      }).join('')||'<tr><td colspan="7" class="tc-empty">Queue is empty.</td></tr>';
-    }).catch(function(e){toast(e.message,'err');});
+  Promise.all([
+    apiFetch('/api/queue?limit=100'+(st?'&status='+st:'')),
+    apiFetch('/api/analytics/ops?hours=24&agent_window_minutes=60')
+  ])
+    .then(function(res){
+      var jobs=(res[0]||[]).slice().sort(function(a,b){return Number(b.updated_at||0)-Number(a.updated_at||0);});
+      var ops=res[1]||{};
+      var summary=ops.summary||{};
+      var activeJobs=jobs.filter(function(job){return job.status==='running'||job.status==='enqueued';}).sort(function(a,b){return Number(a.updated_at||0)-Number(b.updated_at||0);});
+      var retryHotspots=jobs.filter(function(job){return (job.attempts||0)>1 || job.status==='failed';}).sort(function(a,b){return (b.attempts||0)-(a.attempts||0) || Number(a.updated_at||0)-Number(b.updated_at||0);});
+      var trend=pushLiveSample('queue',{
+        bucket:Date.now()/1000,
+        queued:Number(summary.queue_depth||0),
+        running:Number(summary.queue_running||0),
+        failed:Number(summary.queue_failed||0)
+      },PAGE_SAMPLE_LIMITS.queue);
+      PAGE_CACHE.queue={
+        jobs:jobs,
+        ops:ops,
+        summary:summary,
+        throughput:ops.throughput||[],
+        activeJobs:activeJobs,
+        retryHotspots:retryHotspots,
+        trend:trend
+      };
+      setNavBadgeTone('nbg-queue',(summary.queue_failed||0)||((summary.queue_depth||0)+(summary.queue_running||0)),'warn');
+      setNavIndicator('queue',(summary.queue_failed||0)>0?'err':((summary.queue_depth||0)+(summary.queue_running||0)>0?'warn':'ok'));
+      renderQueuePage(PAGE_CACHE.queue);
+    }).catch(function(e){
+      setHtml('q-body','<tr><td colspan="7" class="tc-empty" style="color:var(--red)">'+esc(e.message)+'</td></tr>');
+      if(!silent) toast(e.message,'err');
+    });
 }
 
 /* ── agents ──────────────────────────────────────────────────────────── */
-function agLoad(){
-  Promise.all([apiFetch('/api/agents'),apiFetch('/api/agents/events')])
+function agLoad(silent){
+  Promise.all([apiFetch('/api/agents'),apiFetch('/api/agents/events?limit=60'),apiFetch('/api/analytics/ops?hours=24&agent_window_minutes=60')])
     .then(function(res){
-      var agents=res[0],events=res[1];
-      var mx=Math.max.apply(null,agents.map(function(a){return a.total_runs||0;}).concat([1]));
-      document.getElementById('ag-stats').innerHTML=agents.map(function(a){
-        return '<div class="sc"><div class="sc-lbl">'+a.agent.replace(/_/g,' ')+'</div><div class="sc-val" style="font-size:20px">'+a.total_runs+'</div><div class="sc-sub">'+(a.avg_ms!=null?'avg '+a.avg_ms+'ms':'no data')+' · '+(a.last_run_ts?fd(a.last_run_ts):'never')+'</div><div class="spark-t"><div class="spark-f" style="width:'+Math.round(((a.total_runs||0)/mx)*100)+'%"></div></div></div>';
-      }).join('');
-      document.getElementById('ag-body').innerHTML=(events||[]).map(function(e){
-        return '<tr><td class="trunc" style="max-width:220px"><span class="lnk" onclick="viewTicket(\''+e.ticket_id+'\')">'+esc(e.title||e.ticket_id)+'</span></td><td><span style="background:var(--purple-bg);color:var(--purple);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">'+e.agent.replace(/_/g,' ')+'</span></td><td style="color:var(--muted)">'+(e.duration_ms!=null?e.duration_ms+'ms':'—')+'</td><td style="color:var(--faint);white-space:nowrap">'+fd(e.ts)+'</td></tr>';
-      }).join('')||'<tr><td colspan="4" class="tc-empty">No pipeline events yet.</td></tr>';
-    }).catch(function(e){toast(e.message,'err');});
+      var agents=res[0]||[],events=res[1]||[],ops=res[2]||{};
+      var perfIndex={};
+      (ops.agent_performance||[]).forEach(function(row){perfIndex[row.agent]=row;});
+      var performance=agents.map(function(agent){
+        var perf=perfIndex[agent.agent]||{};
+        return {
+          agent:agent.agent,
+          label:prettyAgent(agent.agent),
+          description:agent.description||'',
+          total_runs:Number(perf.total_runs!=null?perf.total_runs:agent.total_runs||0),
+          avg_ms:Number(perf.avg_ms!=null?perf.avg_ms:agent.avg_ms||0),
+          p95_ms:Number(perf.p95_ms||0),
+          max_ms:Number(perf.max_ms||0),
+          exec_per_min:Number(perf.executions_per_min||0),
+          error_rate:Number(perf.error_rate||0),
+          failures:Number(perf.failures||0),
+          last_run_ts:perf.last_run_ts||agent.last_run_ts
+        };
+      }).sort(function(a,b){return (b.p95_ms||0)-(a.p95_ms||0) || (b.exec_per_min||0)-(a.exec_per_min||0);});
+      var anomalyThresholds={};
+      performance.forEach(function(agent){anomalyThresholds[agent.agent]=Math.max(agent.p95_ms||0,agent.avg_ms||0,1);});
+      var anomalies=events.filter(function(evt){
+        return (evt.result&&evt.result.status==='failed') || Number(evt.duration_ms||0) > Math.max((anomalyThresholds[evt.agent]||0)*1.15,1600);
+      }).slice(0,8);
+      PAGE_CACHE.agents={performance:performance,events:events,anomalies:anomalies};
+      setNavBadgeTone('nbg-agents',performance.length,'info');
+      setNavIndicator('agents',anomalies.some(function(evt){return evt.result&&evt.result.status==='failed';})?'err':performance.length?'ok':'idle');
+      renderAgentsPage(PAGE_CACHE.agents);
+    }).catch(function(e){
+      setHtml('ag-body','<tr><td colspan="5" class="tc-empty" style="color:var(--red)">'+esc(e.message)+'</td></tr>');
+      if(!silent) toast(e.message,'err');
+    });
 }
 
 /* ── integrations ────────────────────────────────────────────────────── */
-function intLoad(){
+function intLoad(silent){
   apiFetch('/api/integrations').then(function(list){
-    document.getElementById('int-info').textContent=list.length+' integration'+(list.length===1?'':'s');
-    document.getElementById('int-body').innerHTML=(list||[]).map(function(i){
-      return '<tr><td style="font-weight:500">'+esc(i.name)+'</td><td style="color:var(--muted)">'+i.type+'</td><td><span class="b '+i.status+'">'+i.status+'</span></td><td style="color:var(--muted)">'+(i.event_count||0)+'</td><td style="color:var(--faint);white-space:nowrap">'+(i.last_sync_at?fd(i.last_sync_at):'never')+'</td><td style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn btn-g btn-sm" type="button" onclick="testInt(\''+i.id+'\')">Test</button><button class="btn btn-g btn-sm" type="button" onclick="copyIngest(\''+i.id+'\')">Copy URL</button><button class="btn btn-d btn-sm" type="button" onclick="delInt(\''+i.id+'\')">Delete</button></td></tr>';
-    }).join('')||'<tr><td colspan="6" class="tc-empty">No integrations configured yet.</td></tr>';
-  }).catch(function(e){toast(e.message,'err');});
+    list=list||[];
+    return Promise.all((list||[]).map(function(item){
+      return apiFetch('/api/integrations/'+item.id+'/events').catch(function(){return [];}).then(function(events){
+        return {integration:item,events:events||[]};
+      });
+    })).then(function(groups){
+      var mergedEvents=[];
+      var activeCount=0,errorCount=0,failedEventCount=0,staleCount=0;
+      groups.forEach(function(group){
+        if(group.integration.status==='active') activeCount+=1;
+        if(group.integration.status==='error') errorCount+=1;
+        if(!group.integration.last_sync_at || ageMs(group.integration.last_sync_at)>86400000) staleCount+=1;
+        (group.events||[]).forEach(function(evt){
+          if(evt.status!=='ok') failedEventCount+=1;
+          mergedEvents.push({
+            integration_id:group.integration.id,
+            integration_name:group.integration.name,
+            ts:evt.ts,
+            status:evt.status,
+            direction:evt.direction,
+            payload_size:evt.payload_size,
+            ticket_id:evt.ticket_id,
+            ticket_title:evt.ticket_title,
+            error:evt.error
+          });
+        });
+      });
+      mergedEvents.sort(function(a,b){return Number(b.ts||0)-Number(a.ts||0);});
+      var trend=buildTimeBucketSeries(mergedEvents,function(row){return row.ts;},[
+        {key:'ok',when:function(row){return row.status==='ok';}},
+        {key:'ignored',when:function(row){return row.status==='ignored';}},
+        {key:'error',when:function(row){return row.status!=='ok' && row.status!=='ignored';}}
+      ],60*60*1000,18);
+      var failureFocus=list.filter(function(item){
+        return item.status==='error' || item.sync_error || !item.last_sync_at || ageMs(item.last_sync_at)>86400000;
+      }).sort(function(a,b){return (b.status==='error')-(a.status==='error') || Number(b.event_count||0)-Number(a.event_count||0);}).slice(0,6);
+      PAGE_CACHE.integrations={
+        list:list,
+        mergedEvents:mergedEvents,
+        trend:trend,
+        activeCount:activeCount,
+        errorCount:errorCount,
+        failedEventCount:failedEventCount,
+        staleCount:staleCount,
+        failureFocus:failureFocus
+      };
+      setNavBadgeTone('nbg-integrations',list.length,'info');
+      setNavIndicator('integrations',errorCount>0?'err':list.length?'ok':'idle');
+      renderIntegrationsPage(PAGE_CACHE.integrations);
+    });
+  }).catch(function(e){
+    setHtml('int-body','<tr><td colspan="6" class="tc-empty" style="color:var(--red)">'+esc(e.message)+'</td></tr>');
+    if(!silent) toast(e.message,'err');
+  });
 }
 function createInt(){
   var name=document.getElementById('im-name').value.trim();
@@ -1423,13 +2653,52 @@ function delInt(id){if(!confirm('Delete this integration?'))return;apiFetch('/ap
 function copyIngest(id){var u=location.origin+'/api/integrations/'+id+'/ingest';if(navigator.clipboard)navigator.clipboard.writeText(u).then(function(){toast('Ingest URL copied','info');});else toast(u,'info');}
 
 /* ── users ───────────────────────────────────────────────────────────── */
-function usrLoad(){
-  apiFetch('/api/users').then(function(users){
-    document.getElementById('usr-info').textContent=users.length+' user'+(users.length===1?'':'s');
-    document.getElementById('usr-body').innerHTML=(users||[]).map(function(u){
-      return '<tr><td style="font-weight:500">'+esc(u.email)+'</td><td>'+esc(u.name)+'</td><td><span class="b '+u.role+'">'+u.role+'</span></td><td><span class="b '+(u.active?'active':'inactive')+'">'+(u.active?'Active':'Disabled')+'</span></td><td style="color:var(--faint);white-space:nowrap">'+fd(u.created_at)+'</td><td>'+(u.active?'<button class="btn btn-d btn-sm" type="button" onclick="toggleUsr(\''+u.id+'\',false)">Disable</button>':'<button class="btn btn-g btn-sm" type="button" onclick="toggleUsr(\''+u.id+'\',true)">Enable</button>')+'</td></tr>';
-    }).join('')||'<tr><td colspan="6" class="tc-empty">No users found.</td></tr>';
-  }).catch(function(e){toast(e.message,'err');});
+function usrLoad(silent){
+  Promise.all([apiFetch('/api/users'),apiFetch('/api/audit?limit=120'),apiFetch('/api/tickets?limit=200&offset=0')]).then(function(res){
+    var users=res[0]||[],auditRows=res[1]||[],ticketPage=res[2]||{items:[]},tickets=ticketPage.items||[];
+    var rolesCount={admin:0,operator:0,viewer:0};
+    var activeCount=0,disabledCount=0,assignedCount=0,escalatedAssigned=0;
+    users.forEach(function(user){
+      rolesCount[user.role]=(rolesCount[user.role]||0)+1;
+      if(user.active) activeCount+=1; else disabledCount+=1;
+    });
+    var userStats=users.map(function(user){
+      var actions=auditRows.filter(function(row){return (row.user_email||'').toLowerCase()===(user.email||'').toLowerCase();});
+      var assigned=tickets.filter(function(ticket){return matchUserAssignment(user,ticket);});
+      var openAssigned=assigned.filter(function(ticket){return !['resolved','closed'].includes(ticket.status);}).length;
+      var escalated=assigned.filter(function(ticket){return ticket.status==='escalated' || ticket.response_sla_breached;}).length;
+      assignedCount+=assigned.length;
+      escalatedAssigned+=escalated;
+      return {
+        id:user.id,
+        email:user.email,
+        name:user.name,
+        role:user.role,
+        active:user.active,
+        actions:actions.length,
+        lastAction:actions.length?actions[0].ts:null,
+        assigned:assigned.length,
+        openAssigned:openAssigned,
+        escalated:escalated
+      };
+    }).sort(function(a,b){return b.assigned-a.assigned || b.actions-a.actions;});
+    PAGE_CACHE.users={
+      users:users,
+      auditRows:auditRows,
+      userStats:userStats,
+      rolesCount:rolesCount,
+      activeCount:activeCount,
+      disabledCount:disabledCount,
+      assignedCount:assignedCount,
+      escalatedAssigned:escalatedAssigned
+    };
+    setNavBadgeTone('nbg-users',users.length,'info');
+    setNavIndicator('users',disabledCount>0?'warn':users.length?'ok':'idle');
+    renderUsersPage(PAGE_CACHE.users);
+  }).catch(function(e){
+    setHtml('usr-body','<tr><td colspan="6" class="tc-empty" style="color:var(--red)">'+esc(e.message)+'</td></tr>');
+    if(!silent) toast(e.message,'err');
+  });
 }
 function createUser(){
   var email=document.getElementById('um-email').value.trim(),name=document.getElementById('um-name').value.trim(),pw=document.getElementById('um-pw').value;
@@ -1441,30 +2710,44 @@ function createUser(){
 function toggleUsr(id,active){apiFetch('/api/users/'+id,'PATCH',{active:active}).then(function(){toast('User '+(active?'enabled':'disabled'),'ok');usrLoad();}).catch(function(e){toast(e.message,'err');});}
 
 /* ── system ──────────────────────────────────────────────────────────── */
-function sysLoad(){
+function sysLoad(silent){
   var lv=document.getElementById('log-lv').value;
-  Promise.all([apiFetch('/health','GET',null,false),apiFetch('/api/analytics/sla?days=30').catch(function(){return{compliance_rate:null,avg_resolution_seconds:null};}),apiFetch('/api/system/log?limit=80'+(lv?'&level='+lv:''))])
+  Promise.all([
+    apiFetch('/health','GET',null,false),
+    apiFetch('/api/analytics/sla?days=30').catch(function(){return{compliance_rate:null,avg_resolution_seconds:null};}),
+    apiFetch('/api/system/log?limit=80'+(lv?'&level='+lv:'')),
+    apiFetch('/api/audit?limit=80').catch(function(){return[];}),
+    apiFetch('/api/analytics/ops?hours=24&agent_window_minutes=60').catch(function(){return{summary:{},throughput:[]};})
+  ])
     .then(function(res){
-      var h=res[0],sla=res[1],logs=res[2];
-      document.getElementById('sys-stats').innerHTML=[
-        {l:'API Status',v:h.status,c:h.status==='ok'?'green':'red'},
-        {l:'Database',v:h.db,c:h.db==='ok'?'green':'red'},
-        {l:'Redis',v:h.redis,c:h.redis==='ok'?'green':'red'},
-        {l:'Version',v:h.version||'—',c:''},
-        {l:'SLA Compliance',v:sla.compliance_rate!=null?sla.compliance_rate+'%':'—',c:sla.compliance_rate>=95?'green':sla.compliance_rate>=80?'amber':'red'},
-        {l:'Avg Resolution',v:sla.avg_resolution_seconds?Math.round(sla.avg_resolution_seconds/3600)+'h':'—',c:''},
-      ].map(function(s){return '<div class="sc"><div class="sc-lbl">'+s.l+'</div><div class="sc-val'+(s.c?' '+s.c:'')+'" style="font-size:18px">'+s.v+'</div></div>';}).join('');
-      document.getElementById('log-body').innerHTML=(logs||[]).map(function(l){
-        return '<tr><td class="mono" style="color:var(--faint);white-space:nowrap">'+fd(l.ts)+'</td><td><span class="b '+(l.level==='ERROR'?'critical':l.level==='WARN'?'high':'done')+'">'+l.level+'</span></td><td style="color:var(--muted);font-size:12px;white-space:nowrap">'+esc(l.source)+'</td><td style="color:var(--muted);font-size:12px">'+esc(l.message)+'</td></tr>';
-      }).join('')||'<tr><td colspan="4" class="tc-empty">No log entries.</td></tr>';
-    }).catch(function(e){toast(e.message,'err');});
+      var h=res[0],sla=res[1],logs=res[2]||[],auditRows=res[3]||[],ops=res[4]||{};
+      var errorCount=logs.filter(function(l){return l.level==='ERROR';}).length;
+      var warnCount=logs.filter(function(l){return l.level==='WARN';}).length;
+      var trend=pushLiveSample('system',{
+        bucket:Date.now()/1000,
+        load:calcLoadScore(h,ops.summary||{},ops.throughput||[]),
+        warn:warnCount,
+        error:errorCount
+      },PAGE_SAMPLE_LIMITS.system);
+      PAGE_CACHE.system={
+        health:h,
+        sla:sla,
+        logs:logs,
+        auditRows:auditRows,
+        summary:ops.summary||{},
+        throughput:ops.throughput||[],
+        trend:trend
+      };
+      setNavBadgeTone('nbg-system',(h.status==='ok'?0:1)+errorCount+warnCount,'warn');
+      setNavIndicator('system',h.status==='ok' && !errorCount?'ok':(errorCount?'err':'warn'));
+      renderSystemPage(PAGE_CACHE.system);
+    }).catch(function(e){
+      setHtml('sys-log-stream','<div class="ops-empty" style="color:var(--red)">'+esc(e.message)+'</div>');
+      if(!silent) toast(e.message,'err');
+    });
 }
 function auditLoad(){
-  apiFetch('/api/audit?limit=60').then(function(rows){
-    document.getElementById('audit-body').innerHTML=(rows||[]).map(function(r){
-      return '<tr><td class="mono" style="color:var(--faint);white-space:nowrap">'+fd(r.ts)+'</td><td style="font-size:12px;color:var(--muted)">'+esc(r.user_email)+'</td><td><span style="background:var(--blue-bg);color:var(--blue);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">'+esc(r.action)+'</span></td><td style="color:var(--muted);font-size:12px">'+esc(r.resource_type)+'</td><td class="mono" style="color:var(--faint)">'+((r.resource_id||'').slice(0,16)||'—')+'</td></tr>';
-    }).join('')||'<tr><td colspan="5" class="tc-empty">No audit entries.</td></tr>';
-  }).catch(function(){});
+  return sysLoad(true);
 }
 function chPass(){
   var old=document.getElementById('cp-old').value,nw=document.getElementById('cp-new').value;
@@ -1477,11 +2760,18 @@ function chPass(){
 /* ── charts ──────────────────────────────────────────────────────────── */
 function prepCanvas(id){
   var c=document.getElementById(id);if(!c)return null;
-  var W=c.parentElement.clientWidth||400;
-  var H=parseInt(c.getAttribute('height')||'160',10);
-  c.width=W*2;c.height=H*2;c.style.height=H+'px';
+  if(!c.dataset.baseHeight){
+    c.dataset.baseHeight=String(DASH_CANVAS_HEIGHTS[id] || parseInt(c.getAttribute('height')||String(c.clientHeight||160),10));
+  }
+  var W=Math.max((c.parentElement&&c.parentElement.clientWidth)||c.clientWidth||400,220);
+  var H=parseInt(c.dataset.baseHeight||'160',10);
+  var dpr=window.devicePixelRatio||1;
+  c.style.height=H+'px';
+  c.style.width='100%';
+  c.width=Math.round(W*dpr);
+  c.height=Math.round(H*dpr);
   var x=c.getContext('2d');
-  x.setTransform(2,0,0,2,0,0);
+  x.setTransform(dpr,0,0,dpr,0,0);
   x.clearRect(0,0,W,H);
   return {canvas:c,ctx:x,width:W,height:H};
 }
@@ -1563,11 +2853,61 @@ function drawSeriesChart(id,rows,series){
   });
 }
 
-function drawRatioRing(id,parts,ratio){
+function drawGroupedBarChart(id,rows,series){
+  var setup=prepCanvas(id);if(!setup)return;
+  var x=setup.ctx,W=setup.width,H=setup.height;
+  if(!rows||!rows.length||!series||!series.length){drawEmptyCanvas(x,W,H,'Awaiting telemetry');return;}
+  var pad={t:22,r:14,b:42,l:36},cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
+  var maxVal=Math.max.apply(null,rows.map(function(row){
+    return Math.max.apply(null,series.map(function(def){return Number(row[def.key]||0);}).concat([0]));
+  }).concat([1]));
+  x.strokeStyle='rgba(148,163,184,.16)';
+  x.fillStyle='rgba(148,163,184,.65)';
+  x.font='10px Inter';
+  x.textAlign='right';
+  for(var i=0;i<=4;i++){
+    var gy=pad.t+i*(ch/4);
+    x.beginPath();x.moveTo(pad.l,gy);x.lineTo(pad.l+cw,gy);x.lineWidth=.8;x.stroke();
+    x.fillText(String(Math.round(maxVal-(maxVal*(i/4)))),pad.l-6,gy+3);
+  }
+  var groupW=cw/Math.max(rows.length,1);
+  var gap=Math.min(10,groupW*.14);
+  var inner=Math.max(groupW-gap,12);
+  var barW=Math.max(Math.min((inner/Math.max(series.length,1))-3,24),6);
+  rows.forEach(function(row,idx){
+    var startX=pad.l+(idx*groupW)+(groupW-inner)/2;
+    series.forEach(function(def,sIdx){
+      var value=Number(row[def.key]||0);
+      var height=Math.max((value/maxVal)*ch, value>0?3:0);
+      var bx=startX+sIdx*(barW+3);
+      var by=pad.t+ch-height;
+      x.fillStyle=def.color;
+      x.fillRect(bx,by,barW,height);
+    });
+    x.save();
+    x.translate(pad.l+(idx*groupW)+(groupW/2),H-12);
+    x.rotate(-Math.PI/8);
+    x.textAlign='right';
+    x.fillStyle='rgba(148,163,184,.72)';
+    x.fillText(String(row.label||'—'),0,0);
+    x.restore();
+  });
+  x.textAlign='left';
+  var lx=pad.l,ly=10;
+  series.forEach(function(def){
+    x.fillStyle=def.color;
+    x.fillRect(lx,ly,10,3);
+    x.fillStyle='rgba(219,233,239,.78)';
+    x.fillText(def.label,lx+14,ly+4);
+    lx+=x.measureText(def.label).width+34;
+  });
+}
+
+function drawRatioRing(id,parts,ratio,emptyText){
   var setup=prepCanvas(id);if(!setup)return;
   var x=setup.ctx,W=setup.width,H=setup.height;
   var items=(parts||[]).filter(function(part){return Number(part.value||0)>0;});
-  if(!items.length){drawEmptyCanvas(x,W,H,'No recent automation mix');return;}
+  if(!items.length){drawEmptyCanvas(x,W,H,emptyText||'No recent automation mix');return;}
   var total=items.reduce(function(sum,part){return sum+Number(part.value||0);},0);
   var ringX=W<320?W/2:Math.min(98,W*.34),ringY=H/2,r=Math.min(60,H/2-18);
   var start=-Math.PI/2;
@@ -1612,7 +2952,10 @@ function openM(id){
   el.classList.add('on');
   var first=el.querySelector('input:not([type=checkbox]),select,textarea');
   if(first)setTimeout(function(){first.focus();},60);
-  el.addEventListener('click',function h(e){if(e.target===el){el.classList.remove('on');el.removeEventListener('click',h);}});
+  if(!el._backdropHandler){
+    el._backdropHandler=function(e){if(e.target===el)closeM(id);};
+    el.addEventListener('click',el._backdropHandler);
+  }
 }
 function closeM(id){var el=document.getElementById(id);if(el)el.classList.remove('on');}
 
@@ -1628,6 +2971,20 @@ function toast(msg,type){
 }
 
 /* ── utils ───────────────────────────────────────────────────────────── */
+function setText(id,value){
+  var el=document.getElementById(id);
+  if(!el)return;
+  var next=(value===null||value===undefined)?'':String(value);
+  if(el.textContent!==next) el.textContent=next;
+}
+function setHtml(id,html){
+  var el=document.getElementById(id);
+  if(!el)return;
+  if(el.__lastHtml!==html){
+    el.innerHTML=html;
+    el.__lastHtml=html;
+  }
+}
 function esc(s){var d=document.createElement('div');d.textContent=(s===null||s===undefined)?'':String(s);return d.innerHTML;}
 function setBadge(id,n){var el=document.getElementById(id);if(!el)return;if(n>0){el.textContent=n;el.style.display='';}else el.style.display='none';}
 function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
