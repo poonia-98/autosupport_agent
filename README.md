@@ -6,7 +6,7 @@ Production-grade AI support ticket triage platform.
 
 | Component | Technology |
 |---|---|
-| API | FastAPI + asyncpg + Python 3.12 |
+| API | FastAPI + asyncpg + Python 3.10+ |
 | Task Queue | ARQ (Redis-backed, distributed) |
 | Database | PostgreSQL 16 + full-text search |
 | Migrations | Alembic (versioned, reversible) |
@@ -22,7 +22,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Open http://localhost:8000 — login with your `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
+Open http://localhost:8001 — login with your `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
 
 ## Quick start (local dev)
 
@@ -53,7 +53,7 @@ arq tasks.worker.WorkerSettings
 pytest tests/test_domain.py tests/test_pipeline.py -v
 
 # Full API integration tests (needs running Postgres + Redis)
-TEST_DATABASE_URL=postgresql+asyncpg://autosupport:autosupport@localhost:5432/autosupport_test \
+TEST_DATABASE_URL=postgresql+asyncpg://autosupport:autosupport@localhost:5433/autosupport_test \
 pytest tests/test_api.py -v
 ```
 
@@ -87,7 +87,7 @@ tests/               Unit tests + API integration tests
 | Variable | Required | Default | Notes |
 |---|---|---|---|
 | `SECRET_KEY` | **prod** | dev value | `python -c "import secrets; print(secrets.token_hex(32))"` |
-| `DATABASE_URL` | yes | pg://localhost/autosupport | asyncpg format |
+| `DATABASE_URL` | yes | pg://localhost:5433/autosupport | asyncpg format for local dev |
 | `REDIS_URL` | yes | redis://localhost:6379/0 | shared by API + worker |
 | `ADMIN_EMAIL` | yes | admin@example.com | first-run seed |
 | `ADMIN_PASSWORD` | **prod** | changeme123 | changed by prod validator |

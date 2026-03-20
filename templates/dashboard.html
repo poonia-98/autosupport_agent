@@ -2,642 +2,1649 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AutoSupport</title>
 <style>
-  :root {
-    --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e;
-    --accent: #6c63ff; --accent2: #00d4aa;
-    --text: #e2e8f0; --muted: #8892a4; --danger: #f56565; --warn: #f6ad55; --ok: #68d391;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; overflow: hidden; }
-  #sidebar { width: 220px; min-width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 0; }
-  .logo { padding: 22px 20px 18px; font-size: 1.1rem; font-weight: 700; color: var(--accent); letter-spacing: -.3px; border-bottom: 1px solid var(--border); }
-  .logo span { color: var(--accent2); }
-  nav { flex: 1; padding: 12px 0; overflow-y: auto; }
-  nav a { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: var(--muted); text-decoration: none; font-size: .875rem; cursor: pointer; transition: all .15s; border-left: 3px solid transparent; }
-  nav a:hover, nav a.active { color: var(--text); background: rgba(108,99,255,.08); border-left-color: var(--accent); }
-  .user-bar { padding: 14px 20px; border-top: 1px solid var(--border); font-size: .8rem; color: var(--muted); display: flex; align-items: center; justify-content: space-between; }
-  .user-bar button { background: none; border: none; color: var(--danger); cursor: pointer; font-size: .8rem; }
-  #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-  .topbar { height: 56px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 12px; background: var(--surface); }
-  .topbar h1 { font-size: 1rem; font-weight: 600; }
-  .topbar .spacer { flex: 1; }
-  .page { flex: 1; overflow-y: auto; padding: 24px; display: none; }
-  .page.active { display: block; }
-  /* cards */
-  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); margin-bottom: 24px; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
-  .card .label { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
-  .card .value { font-size: 1.8rem; font-weight: 700; }
-  .card .sub { font-size: .8rem; color: var(--muted); margin-top: 4px; }
-  /* tables */
-  .tbl-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
-  th { text-align: left; padding: 10px 14px; background: rgba(255,255,255,.03); color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); }
-  td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255,255,255,.02); }
-  /* badges */
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: .75rem; font-weight: 500; }
-  .badge.critical { background: rgba(245,101,101,.15); color: #fc8181; }
-  .badge.high { background: rgba(246,173,85,.15); color: #f6ad55; }
-  .badge.medium { background: rgba(108,99,255,.15); color: #a78bfa; }
-  .badge.low { background: rgba(104,211,145,.15); color: #68d391; }
-  .badge.open { background: rgba(108,99,255,.15); color: #a78bfa; }
-  .badge.in_progress { background: rgba(246,173,85,.15); color: #f6ad55; }
-  .badge.resolved, .badge.closed { background: rgba(104,211,145,.15); color: #68d391; }
-  .badge.escalated, .badge.sla_breached { background: rgba(245,101,101,.15); color: #fc8181; }
-  /* forms */
-  .form-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; max-width: 540px; }
-  .field { margin-bottom: 16px; }
-  .field label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 6px; }
-  .field input, .field select, .field textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text); font-size: .875rem; outline: none; font-family: inherit; }
-  .field textarea { min-height: 80px; resize: vertical; }
-  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
-  /* buttons */
-  .btn { padding: 8px 18px; border-radius: 6px; border: none; cursor: pointer; font-size: .875rem; font-weight: 500; transition: opacity .15s; }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-danger { background: var(--danger); color: #fff; }
-  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-  .btn:hover { opacity: .85; }
-  .btn:disabled { opacity: .4; cursor: not-allowed; }
-  /* login */
-  #login-page { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 999; }
-  #login-page.hidden { display: none; }
-  .login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 40px; width: 360px; }
-  .login-box h2 { font-size: 1.4rem; margin-bottom: 24px; }
-  .alert { padding: 10px 14px; border-radius: 6px; font-size: .875rem; margin-bottom: 14px; }
-  .alert.error { background: rgba(245,101,101,.15); color: #fc8181; border: 1px solid rgba(245,101,101,.3); }
-  .alert.success { background: rgba(104,211,145,.15); color: #68d391; border: 1px solid rgba(104,211,145,.3); }
-  /* pagination */
-  .pagination { display: flex; gap: 8px; align-items: center; margin-top: 16px; justify-content: flex-end; }
-  .pagination button { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 5px 12px; border-radius: 5px; cursor: pointer; font-size: .85rem; }
-  .pagination button:disabled { opacity: .4; cursor: not-allowed; }
-  .pagination .page-info { color: var(--muted); font-size: .85rem; }
-  /* misc */
-  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-  .section-header h2 { font-size: 1rem; font-weight: 600; flex: 1; }
-  .empty { text-align: center; color: var(--muted); padding: 40px; }
-  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
-  .dot.ok { background: var(--ok); }
-  .dot.error { background: var(--danger); }
-  .dot.warn { background: var(--warn); }
-  pre { font-size: .8rem; background: var(--bg); border-radius: 6px; padding: 10px; overflow-x: auto; color: var(--accent2); }
-  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0b;--s1:#111113;--s2:#18181b;--s3:#1f1f23;--s4:#27272a;
+  --border:#2e2e33;--border2:#3f3f46;
+  --text:#fafafa;--muted:#a1a1aa;--faint:#52525b;
+  --accent:#7c3aed;--accent-h:#6d28d9;--accent-l:#8b5cf6;--accent-ll:#a78bfa;
+  --accent-glow:rgba(124,58,237,.2);
+  --green:#10b981;--green-bg:rgba(16,185,129,.1);
+  --red:#ef4444;  --red-bg:rgba(239,68,68,.1);
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,.1);
+  --blue:#3b82f6; --blue-bg:rgba(59,130,246,.1);
+  --purple:#8b5cf6;--purple-bg:rgba(139,92,246,.1);
+}
+
+/* base */
+html,body{height:100%;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* ══════════════════════════════════════ LOGIN — normal flow, no fixed/absolute */
+#login-page{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg);
+  padding:24px;
+}
+/* login-page is removed from DOM once app starts, so no z-index fight */
+
+.lcard{background:var(--s2);border:1px solid var(--border);border-radius:16px;padding:40px;width:380px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,.7)}
+.l-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.l-logo-ic{width:34px;height:34px;background:linear-gradient(135deg,#7c3aed,#a78bfa);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0}
+.l-logo-tx{font-size:16px;font-weight:700}.l-logo-tx span{color:var(--accent-ll)}
+.l-h1{font-size:22px;font-weight:700;margin-bottom:4px}
+.l-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+.l-err{background:var(--red-bg);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:14px;display:none}
+
+/* ══════════════════════════════════════ APP SHELL — fixed, only shown after login */
+#app-shell{
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  display:flex;
+  visibility:hidden;   /* hides but keeps layout; swapped to visible after login */
+  background:var(--bg);
+  z-index:10;
+}
+#app-shell.visible{visibility:visible}
+
+/* sidebar */
+#sidebar{width:228px;min-width:228px;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sb-logo{padding:18px 16px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.sb-logo-ic{width:28px;height:28px;background:linear-gradient(135deg,#7c3aed,#a78bfa);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-logo-tx{font-size:14px;font-weight:650;letter-spacing:-.2px}.sb-logo-tx span{color:var(--accent-ll)}
+.sb-nav{flex:1;padding:8px 8px 0;overflow-y:auto}
+.sb-sec-lbl{font-size:10px;font-weight:600;color:var(--faint);letter-spacing:.09em;text-transform:uppercase;padding:14px 10px 5px}
+.nav-btn{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;color:var(--muted);cursor:pointer;font-size:13px;font-weight:450;border:none;background:none;width:100%;text-align:left;position:relative;transition:color .1s,background .1s;font-family:inherit}
+.nav-btn:hover{color:var(--text);background:var(--s3)}
+.nav-btn.on{color:var(--text);background:var(--s4)}
+.nav-btn.on::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:16px;background:var(--accent-ll);border-radius:0 2px 2px 0}
+.nav-btn .ic{font-size:14px;width:17px;text-align:center;flex-shrink:0;opacity:.85}
+.nav-badge{margin-left:auto;background:var(--red-bg);color:var(--red);font-size:10px;font-weight:600;padding:1px 6px;border-radius:20px;display:none}
+.sb-footer{padding:10px 8px;border-top:1px solid var(--border)}
+.sb-user{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px}
+.sb-av{width:26px;height:26px;background:linear-gradient(135deg,var(--accent),var(--accent-ll));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-uinfo{flex:1;min-width:0}
+.sb-uemail{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-urole{font-size:10px;color:var(--faint)}
+.sb-out{font-size:11px;color:var(--faint);background:none;border:none;cursor:pointer;padding:3px 7px;border-radius:4px;font-family:inherit}
+.sb-out:hover{color:var(--red)}
+
+/* main area */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* topbar */
+.topbar{height:50px;flex-shrink:0;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:12px;background:var(--s1)}
+.tb-title{font-size:14px;font-weight:600}
+.flex1{flex:1}
+.hp{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);background:var(--s3);border:1px solid var(--border);padding:4px 10px;border-radius:20px}
+.hd{width:6px;height:6px;border-radius:50%;background:var(--faint)}
+.hd.ok{background:var(--green);box-shadow:0 0 5px rgba(16,185,129,.5)}
+.hd.err{background:var(--red)}.hd.warn{background:var(--amber)}
+
+/* pages */
+.pg{flex:1;overflow-y:auto;padding:28px 32px;display:none}
+.pg.on{display:block}
+
+/* ══════════════════════════════════════ FORMS */
+.fld{margin-bottom:15px}
+.fld label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px}
+.inp{display:block;width:100%;background:var(--s3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;padding:8px 12px;outline:none;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none}
+.inp:focus{border-color:var(--accent-l);box-shadow:0 0 0 3px var(--accent-glow)}
+.inp::placeholder{color:var(--faint)}
+textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
+.inp-sm{padding:5px 9px;font-size:12px;width:auto;display:inline-block}
+
+/* ══════════════════════════════════════ BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 15px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;transition:all .12s;white-space:nowrap;-webkit-appearance:none}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover:not(:disabled){background:var(--accent-h);box-shadow:0 0 14px var(--accent-glow)}
+.btn-g{background:var(--s3);color:var(--muted);border:1px solid var(--border)}.btn-g:hover:not(:disabled){color:var(--text);background:var(--s4);border-color:var(--border2)}
+.btn-d{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.2)}.btn-d:hover:not(:disabled){background:rgba(239,68,68,.18)}
+.btn-sm{padding:4px 10px;font-size:12px}
+
+/* ══════════════════════════════════════ STAT CARDS */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin-bottom:24px}
+.sc{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;transition:border-color .15s}
+.sc:hover{border-color:var(--border2)}
+.sc-lbl{font-size:10.5px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.sc-val{font-size:24px;font-weight:700;letter-spacing:-.5px;line-height:1}
+.sc-val.red{color:var(--red)}.sc-val.amber{color:var(--amber)}.sc-val.green{color:var(--green)}
+.sc-sub{font-size:11px;color:var(--faint);margin-top:5px}
+
+/* ══════════════════════════════════════ SECTION HEADER */
+.sh{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sh-t{font-size:13.5px;font-weight:600}
+
+/* ══════════════════════════════════════ TABLE CARD */
+.tc{background:var(--s2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.tc-bar{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:rgba(255,255,255,.01)}
+table{width:100%;border-collapse:collapse}
+th{padding:9px 14px;text-align:left;font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr{transition:background .08s}
+tbody tr:hover td{background:rgba(255,255,255,.02)}
+.tc-foot{padding:10px 14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.tc-info{font-size:12px;color:var(--faint);flex:1}
+.tc-empty{padding:44px;text-align:center;color:var(--faint);font-size:13px}
+.tc-scroll{overflow-x:auto}
+
+/* ══════════════════════════════════════ BADGES */
+.b{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.b::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.b.critical,.b.failed,.b.err{background:var(--red-bg);color:var(--red)}.b.critical::before,.b.failed::before,.b.err::before{background:var(--red)}
+.b.high{background:var(--amber-bg);color:var(--amber)}.b.high::before{background:var(--amber)}
+.b.medium,.b.open,.b.enqueued{background:var(--blue-bg);color:var(--blue)}.b.medium::before,.b.open::before,.b.enqueued::before{background:var(--blue)}
+.b.low,.b.resolved,.b.done,.b.active,.b.ok{background:var(--green-bg);color:var(--green)}.b.low::before,.b.resolved::before,.b.done::before,.b.active::before,.b.ok::before{background:var(--green)}
+.b.in_progress,.b.running,.b.admin{background:var(--purple-bg);color:var(--purple)}.b.in_progress::before,.b.running::before,.b.admin::before{background:var(--purple)}
+.b.escalated,.b.sla_breached{background:var(--red-bg);color:var(--red)}.b.escalated::before,.b.sla_breached::before{background:var(--red)}
+.b.closed,.b.inactive,.b.skipped,.b.viewer{background:rgba(82,82,91,.18);color:var(--faint)}.b.closed::before,.b.inactive::before,.b.skipped::before,.b.viewer::before{background:var(--faint)}
+.b.operator{background:var(--blue-bg);color:var(--blue)}.b.operator::before{background:var(--blue)}
+
+/* ══════════════════════════════════════ MODALS — z-index 20, above app shell 10 */
+.mo{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:20;display:none;align-items:center;justify-content:center}
+.mo.on{display:flex}
+.mb{background:var(--s2);border:1px solid var(--border);border-radius:16px;padding:26px;width:500px;max-width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow-y:auto;box-shadow:0 12px 48px rgba(0,0,0,.8)}
+.mb.sm{width:400px}
+.m-title{font-size:15px;font-weight:650;margin-bottom:5px}
+.m-sub{font-size:12px;color:var(--muted);margin-bottom:20px}
+.m-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ══════════════════════════════════════ CHARTS */
+.cc{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:18px}
+.cc-t{font-size:13px;font-weight:600;margin-bottom:3px}
+.cc-s{font-size:11px;color:var(--muted);margin-bottom:14px}
+canvas{display:block;width:100%!important}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+@media(max-width:860px){.cgrid{grid-template-columns:1fr}}
+
+/* ══════════════════════════════════════ CONTROL ROOM */
+.ops-shell{display:flex;flex-direction:column;gap:16px}
+.ops-hero{position:relative;overflow:hidden;padding:24px;border-radius:20px;border:1px solid rgba(57,91,120,.5);background:
+  radial-gradient(circle at top left,rgba(74,222,255,.16),transparent 32%),
+  radial-gradient(circle at top right,rgba(251,191,36,.14),transparent 26%),
+  linear-gradient(160deg,#071018 0%,#0a1620 42%,#08131c 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 20px 48px rgba(0,0,0,.35)}
+.ops-hero::before{content:'';position:absolute;inset:auto -12% 18px -12%;height:1px;background:linear-gradient(90deg,transparent,rgba(74,222,255,.4),rgba(251,191,36,.22),transparent)}
+.ops-hero::after{content:'';position:absolute;top:16px;right:18px;width:180px;height:180px;border-radius:50%;border:1px solid rgba(74,222,255,.14);box-shadow:0 0 0 20px rgba(74,222,255,.03),0 0 0 40px rgba(74,222,255,.02)}
+.ops-hero-top{display:flex;align-items:flex-start;gap:18px;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px;position:relative;z-index:1}
+.ops-copy{max-width:720px}
+.ops-eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8dc7d8;margin-bottom:8px}
+.ops-title{font-size:32px;line-height:1.05;letter-spacing:-.04em;font-weight:760;margin-bottom:10px}
+.ops-sub{max-width:620px;color:#98aeb9;font-size:13px;line-height:1.7}
+.ops-meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:11px;color:#7e95a1;letter-spacing:.06em;text-transform:uppercase}
+.ops-meta strong{color:#dbe9ef;font-weight:600}
+.ops-hero-right{display:grid;gap:10px;min-width:260px;max-width:320px;position:relative;z-index:1}
+.ops-live{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(74,222,255,.25);background:rgba(4,22,30,.66)}
+.ops-live-dot{width:10px;height:10px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 0 rgba(74,222,128,.45);animation:ops-pulse 1.8s infinite}
+.ops-live-text{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#a4d7c2}
+.ops-live-detail{font-size:12px;color:#dbe9ef}
+.ops-clock{padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03)}
+.ops-clock-label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#7e95a1;margin-bottom:4px}
+.ops-clock-value{font-size:20px;font-weight:700;letter-spacing:.08em;font-variant-numeric:tabular-nums}
+.ops-load{padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.03)}
+.ops-load-head{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7e95a1;margin-bottom:8px}
+.ops-load-head strong{color:#dbe9ef;font-weight:600}
+.ops-load-track{height:10px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.04)}
+.ops-load-fill{height:100%;width:12%;border-radius:999px;background:linear-gradient(90deg,#4ade80,#22d3ee);box-shadow:0 0 18px rgba(74,222,128,.25);transition:width .35s ease,background .35s ease}
+.ops-load-sub{margin-top:8px;font-size:12px;color:#90a4af;line-height:1.5}
+.ops-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(156px,1fr));gap:12px;position:relative;z-index:1}
+.ops-kpi{padding:14px 14px 12px;border-radius:16px;border:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg,rgba(7,18,24,.92),rgba(8,19,28,.72));box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+.ops-kpi.hot{border-color:rgba(248,113,113,.24)}
+.ops-kpi.warn{border-color:rgba(251,191,36,.24)}
+.ops-kpi.good{border-color:rgba(74,222,128,.22)}
+.ops-kpi-label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#7e95a1;margin-bottom:8px}
+.ops-kpi-value{font-size:28px;line-height:1;font-weight:760;letter-spacing:-.04em}
+.ops-kpi-value.hot{color:#fda4af}
+.ops-kpi-value.warn{color:#fcd34d}
+.ops-kpi-value.good{color:#86efac}
+.ops-kpi-sub{margin-top:8px;font-size:12px;color:#90a4af;line-height:1.5}
+.ops-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+.ops-span-12{grid-column:span 12}
+.ops-span-8{grid-column:span 8}
+.ops-span-7{grid-column:span 7}
+.ops-span-6{grid-column:span 6}
+.ops-span-5{grid-column:span 5}
+.ops-span-4{grid-column:span 4}
+.ops-span-3{grid-column:span 3}
+.ops-panel{position:relative;overflow:hidden;padding:18px;border-radius:18px;border:1px solid rgba(45,66,82,.9);background:
+  linear-gradient(180deg,rgba(10,19,28,.96),rgba(9,17,25,.82));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+.ops-panel::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,rgba(34,211,238,.55),rgba(251,191,36,.35),transparent)}
+.ops-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px;position:relative;z-index:1}
+.ops-kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8dc7d8;margin-bottom:5px}
+.ops-panel-title{font-size:16px;font-weight:650;letter-spacing:-.02em}
+.ops-panel-note{font-size:12px;color:#90a4af;margin-top:3px}
+.ops-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);font-size:11px;color:#9db2bc;white-space:nowrap}
+.ops-chip strong{color:#dbe9ef;font-weight:600}
+.ops-split{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(220px,.9fr);gap:16px;align-items:center}
+.ops-empty{padding:30px 18px;border:1px dashed rgba(255,255,255,.08);border-radius:14px;color:#7e95a1;font-size:12px;text-align:center;background:rgba(255,255,255,.02)}
+.queue-meter{display:flex;flex-direction:column;gap:14px}
+.queue-stack{display:flex;height:16px;border-radius:999px;overflow:hidden;border:1px solid rgba(255,255,255,.06);background:#061018}
+.queue-seg{height:100%;min-width:0;transition:flex .35s ease}
+.queue-enqueued{background:linear-gradient(90deg,#38bdf8,#0ea5e9)}
+.queue-running{background:linear-gradient(90deg,#22d3ee,#14b8a6)}
+.queue-failed{background:linear-gradient(90deg,#fb7185,#ef4444)}
+.queue-done{background:linear-gradient(90deg,#4ade80,#22c55e)}
+.queue-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.queue-cell{padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.02)}
+.queue-cell-l{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#7e95a1;margin-bottom:6px}
+.queue-cell-v{font-size:22px;font-weight:720;line-height:1}
+.queue-cell-s{margin-top:6px;font-size:12px;color:#90a4af}
+.ops-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.ops-legend-item{display:inline-flex;align-items:center;gap:7px;font-size:11px;color:#90a4af}
+.ops-legend-dot{width:9px;height:9px;border-radius:50%}
+.heat-wrap{display:grid;gap:8px}
+.heat-grid{display:grid;grid-template-columns:120px repeat(5,minmax(0,1fr));gap:8px}
+.heat-label,.heat-col,.heat-cell{min-height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;text-align:center}
+.heat-col{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7e95a1;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05)}
+.heat-label{justify-content:flex-start;padding:0 12px;font-size:12px;font-weight:600;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05)}
+.heat-cell{flex-direction:column;gap:4px;border:1px solid rgba(255,255,255,.05);color:#f5fbff;font-weight:700}
+.heat-cell span{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(245,251,255,.7)}
+.agent-list,.stream-list,.slow-list,.recent-list,.timeline-list,.failing-list,.auto-list{display:flex;flex-direction:column;gap:10px}
+.agent-row,.stream-item,.slow-item,.recent-item,.timeline-item,.failing-item,.auto-stat{padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.02)}
+.agent-row-top,.stream-top,.slow-top,.recent-top,.timeline-top,.failing-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.agent-name,.stream-name,.slow-name,.recent-name,.timeline-name,.failing-name{font-size:13px;font-weight:620;line-height:1.4}
+.agent-meta,.stream-meta,.slow-meta,.recent-meta,.timeline-meta,.failing-meta{font-size:11px;color:#90a4af;line-height:1.5}
+.agent-stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.agent-stat{padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.03);font-size:11px;color:#9db2bc}
+.agent-stat strong{color:#f5fbff;font-weight:600}
+.agent-bar{height:5px;border-radius:999px;background:rgba(255,255,255,.05);overflow:hidden;margin-top:10px}
+.agent-bar > span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#22d3ee,#38bdf8)}
+.stream-item{position:relative;padding-left:16px}
+.stream-item::before{content:'';position:absolute;left:7px;top:16px;bottom:-12px;width:1px;background:rgba(74,222,255,.18)}
+.stream-item:last-child::before{display:none}
+.stream-item::after{content:'';position:absolute;left:3px;top:14px;width:9px;height:9px;border-radius:50%;background:#22d3ee;box-shadow:0 0 0 4px rgba(34,211,238,.14)}
+.stream-status{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#90a4af}
+.stream-status strong{color:#f5fbff;font-weight:600}
+.timeline-track{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:12px}
+.timeline-stage{position:relative;overflow:hidden;padding:10px 8px 9px;border-radius:12px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.02)}
+.timeline-stage::before{content:'';position:absolute;left:0;right:0;bottom:0;height:var(--fill,22%);background:linear-gradient(180deg,rgba(255,255,255,.03),var(--stage-color,rgba(34,211,238,.22)))}
+.timeline-stage.fail{border-color:rgba(248,113,113,.28)}
+.timeline-stage-l{position:relative;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#86a4b1;margin-bottom:6px}
+.timeline-stage-v{position:relative;font-size:13px;font-weight:650}
+.timeline-stage-s{position:relative;font-size:10px;color:#7e95a1;margin-top:5px}
+.slow-item,.recent-item,.failing-item{display:flex;flex-direction:column;gap:6px}
+.ops-inline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ops-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.04);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#8fb0be}
+.ops-link{color:#c5f3ff;cursor:pointer;font-weight:600}
+.ops-link:hover{text-decoration:underline}
+.ops-sep{width:1px;height:14px;background:rgba(255,255,255,.08)}
+.ops-mini{font-size:11px;color:#90a4af}
+.ops-mini strong{color:#f5fbff;font-weight:600}
+.ops-panel-foot{margin-top:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+@keyframes ops-pulse{0%{box-shadow:0 0 0 0 rgba(74,222,128,.45)}70%{box-shadow:0 0 0 10px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
+@media(max-width:1180px){
+  .ops-span-8,.ops-span-7,.ops-span-6,.ops-span-5,.ops-span-4,.ops-span-3{grid-column:span 6}
+  .ops-split{grid-template-columns:1fr}
+}
+@media(max-width:860px){
+  .ops-title{font-size:27px}
+  .ops-grid{grid-template-columns:1fr}
+  .ops-span-12,.ops-span-8,.ops-span-7,.ops-span-6,.ops-span-5,.ops-span-4,.ops-span-3{grid-column:1 / -1}
+  .heat-grid{grid-template-columns:100px repeat(5,minmax(0,1fr))}
+  .timeline-track{grid-template-columns:1fr}
+}
+
+/* detail meta grid */
+.dmeta{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px}
+.dcell{padding:13px 16px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.dcell:nth-child(3n){border-right:none}.dcell:nth-last-child(-n+3){border-bottom:none}
+.dclbl{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.dcval{font-size:13px;font-weight:500}
+
+/* sparkbar */
+.spark-t{height:3px;background:var(--s4);border-radius:2px;margin-top:8px;overflow:hidden}
+.spark-f{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-ll));border-radius:2px;transition:width .4s}
+
+/* ══════════════════════════════════════ TOASTS — z-index 30, topmost */
+#toasts{position:fixed;bottom:22px;right:22px;z-index:30;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.ti{background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:11px 15px;font-size:13px;display:flex;align-items:center;gap:9px;box-shadow:0 4px 20px rgba(0,0,0,.6);max-width:320px;pointer-events:all;animation:ti-in .18s ease}
+.ti.ok{border-color:rgba(16,185,129,.35)}.ti.err{border-color:rgba(239,68,68,.35)}.ti.info{border-color:rgba(59,130,246,.35)}
+@keyframes ti-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* misc */
+.divider{height:1px;background:var(--border);margin:20px 0}
+.mono{font-family:'JetBrains Mono','Fira Code',monospace;font-size:11.5px}
+.trunc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lnk{color:var(--accent-ll);cursor:pointer;font-weight:500}.lnk:hover{text-decoration:underline}
+.ai-tag{background:var(--purple-bg);color:var(--purple);padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent-l);border-radius:50%;animation:sp .55s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--s4);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--border2)}
 </style>
 </head>
 <body>
 
-<!-- LOGIN OVERLAY -->
+<!-- ═══════════════════════ LOGIN PAGE (normal flow — inputs always work) -->
 <div id="login-page">
-  <div class="login-box">
-    <div class="logo" style="margin-bottom:20px;padding:0">Auto<span>Support</span></div>
-    <h2>Sign in</h2>
-    <div id="login-alert" style="display:none"></div>
-    <div class="field"><label>Email</label><input type="email" id="l-email" placeholder="admin@example.com" autofocus></div>
-    <div class="field"><label>Password</label><input type="password" id="l-password" placeholder="••••••••"></div>
-    <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="doLogin()">Sign in</button>
+  <div class="lcard">
+    <div class="l-logo">
+      <div class="l-logo-ic">AS</div>
+      <div class="l-logo-tx">Auto<span>Support</span></div>
+    </div>
+    <h1 class="l-h1">Welcome back</h1>
+    <p class="l-sub">Sign in to your support workspace</p>
+    <div class="l-err" id="l-err"></div>
+    <div class="fld">
+      <label for="l-email">Email</label>
+      <input class="inp" type="email" id="l-email"
+             placeholder="admin@example.com" autocomplete="email"
+             name="email" tabindex="1">
+    </div>
+    <div class="fld" style="margin-bottom:22px">
+      <label for="l-pw">Password</label>
+      <input class="inp" type="password" id="l-pw"
+             placeholder="••••••••" autocomplete="current-password"
+             name="password" tabindex="2">
+    </div>
+    <button class="btn btn-p" id="l-btn" style="width:100%;padding:10px"
+            type="button" tabindex="3" onclick="doLogin()">
+      Sign in →
+    </button>
   </div>
 </div>
 
-<!-- APP SHELL -->
-<div id="sidebar">
-  <div class="logo">Auto<span>Support</span></div>
-  <nav>
-    <a onclick="nav('dashboard')" id="nav-dashboard">📊 Dashboard</a>
-    <a onclick="nav('tickets')"   id="nav-tickets">🎫 Tickets</a>
-    <a onclick="nav('create')"    id="nav-create">➕ New Ticket</a>
-    <a onclick="nav('queue')"     id="nav-queue">⚙️ Queue</a>
-    <a onclick="nav('agents')"    id="nav-agents">🤖 Agents</a>
-    <a onclick="nav('integrations')" id="nav-integrations">🔌 Integrations</a>
-    <a onclick="nav('users')"     id="nav-users">👥 Users</a>
-    <a onclick="nav('system')"    id="nav-system">🖥️ System</a>
-  </nav>
-  <div class="user-bar">
-    <span id="user-email">—</span>
-    <button onclick="logout()">Sign out</button>
-  </div>
-</div>
+<!-- ═══════════════════════ APP SHELL (fixed overlay, hidden until login) -->
+<div id="app-shell">
 
-<div id="main">
-  <div class="topbar">
-    <h1 id="page-title">Dashboard</h1>
-    <div class="spacer"></div>
-    <div id="health-dot" class="dot warn" title="Checking..."></div>
-  </div>
-
-  <!-- DASHBOARD -->
-  <div class="page active" id="page-dashboard">
-    <div class="grid" id="stats-grid"></div>
-    <div class="section-header"><h2>Recent Tickets</h2></div>
-    <div class="tbl-wrap"><table id="recent-tbl"><thead><tr><th>Title</th><th>Priority</th><th>Status</th><th>Category</th><th>Created</th></tr></thead><tbody id="recent-body"></tbody></table></div>
-  </div>
-
-  <!-- TICKETS -->
-  <div class="page" id="page-tickets">
-    <div class="section-header">
-      <h2>All Tickets</h2>
-      <select id="filter-status" onchange="loadTickets()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:5px;font-size:.85rem">
-        <option value="">All statuses</option>
-        <option>open</option><option>in_progress</option><option>escalated</option>
-        <option>sla_breached</option><option>resolved</option><option>closed</option>
-      </select>
-      <select id="filter-priority" onchange="loadTickets()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:5px;font-size:.85rem">
-        <option value="">All priorities</option>
-        <option>critical</option><option>high</option><option>medium</option><option>low</option>
-      </select>
-      <input id="search-input" placeholder="Search..." onkeyup="debounceSearch()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:5px;font-size:.85rem;width:200px">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-ic">AS</div>
+      <div class="sb-logo-tx">Auto<span>Support</span></div>
     </div>
-    <div class="tbl-wrap"><table><thead><tr><th>Title</th><th>Priority</th><th>Status</th><th>Team</th><th>Created</th><th></th></tr></thead><tbody id="tickets-body"></tbody></table></div>
-    <div class="pagination">
-      <button onclick="ticketPage(-1)" id="prev-btn">← Prev</button>
-      <span class="page-info" id="page-info">—</span>
-      <button onclick="ticketPage(1)" id="next-btn">Next →</button>
-    </div>
-  </div>
-
-  <!-- CREATE TICKET -->
-  <div class="page" id="page-create">
-    <div class="form-box">
-      <h2 style="margin-bottom:20px">New Ticket</h2>
-      <div id="create-alert" style="display:none"></div>
-      <div class="field"><label>Title *</label><input id="c-title" placeholder="Brief summary of the issue"></div>
-      <div class="field"><label>Description</label><textarea id="c-desc" placeholder="Detailed description..."></textarea></div>
-      <div class="field"><label>Priority</label>
-        <select id="c-priority"><option>medium</option><option>low</option><option>high</option><option>critical</option></select>
+    <nav class="sb-nav" role="navigation">
+      <div class="sb-sec-lbl">Overview</div>
+      <button class="nav-btn on" id="nb-dashboard" type="button" onclick="goTo('dashboard')"><span class="ic">◉</span>Dashboard</button>
+      <button class="nav-btn" id="nb-tickets" type="button" onclick="goTo('tickets')"><span class="ic">🎫</span>Tickets<span class="nav-badge" id="nbg-tickets"></span></button>
+      <div class="sb-sec-lbl">Tools</div>
+      <button class="nav-btn" id="nb-queue" type="button" onclick="goTo('queue')"><span class="ic">⚡</span>Queue<span class="nav-badge" id="nbg-queue"></span></button>
+      <button class="nav-btn" id="nb-agents" type="button" onclick="goTo('agents')"><span class="ic">🤖</span>Agents</button>
+      <div class="sb-sec-lbl">Config</div>
+      <button class="nav-btn" id="nb-integrations" type="button" onclick="goTo('integrations')"><span class="ic">🔌</span>Integrations</button>
+      <button class="nav-btn" id="nb-users" type="button" onclick="goTo('users')"><span class="ic">👥</span>Users</button>
+      <button class="nav-btn" id="nb-system" type="button" onclick="goTo('system')"><span class="ic">⚙</span>System</button>
+    </nav>
+    <div class="sb-footer">
+      <div class="sb-user">
+        <div class="sb-av" id="sb-av">A</div>
+        <div class="sb-uinfo">
+          <div class="sb-uemail trunc" id="sb-email">—</div>
+          <div class="sb-urole" id="sb-role">—</div>
+        </div>
+        <button class="sb-out" type="button" onclick="doLogout()" title="Sign out">✕</button>
       </div>
-      <div class="field"><label>Category</label>
-        <select id="c-category"><option>general</option><option>billing</option><option>technical</option><option>bug</option><option>feature_request</option></select>
-      </div>
-      <button class="btn btn-primary" onclick="createTicket()">Submit Ticket</button>
     </div>
   </div>
 
-  <!-- TICKET DETAIL (virtual page) -->
-  <div class="page" id="page-ticket-detail">
-    <div id="ticket-detail-content"></div>
-  </div>
+  <!-- MAIN -->
+  <div id="main">
+    <div class="topbar">
+      <span class="tb-title" id="pg-title">Dashboard</span>
+      <span class="flex1"></span>
+      <button class="btn btn-g btn-sm" id="tb-btn" type="button" style="display:none" onclick="tbClick()"></button>
+      <div class="hp"><div class="hd warn" id="hd"></div><span id="ht" style="font-size:12px">Checking…</span></div>
+    </div>
 
-  <!-- QUEUE -->
-  <div class="page" id="page-queue">
-    <div class="section-header"><h2>Job Queue</h2><button class="btn btn-ghost" onclick="loadQueue()">Refresh</button></div>
-    <div class="tbl-wrap"><table><thead><tr><th>Job ID</th><th>Ticket</th><th>Status</th><th>Attempts</th><th>Updated</th><th></th></tr></thead><tbody id="queue-body"></tbody></table></div>
-  </div>
+    <!-- DASHBOARD -->
+    <div class="pg on" id="pg-dashboard">
+      <div class="ops-shell">
+        <section class="ops-hero">
+          <div class="ops-hero-top">
+            <div class="ops-copy">
+              <div class="ops-eyebrow">Autonomous Support Operations</div>
+              <h2 class="ops-title">Control Room</h2>
+              <p class="ops-sub">Live operational intelligence across queue pressure, ticket flow, pipeline execution, SLA exposure, and agent reliability.</p>
+              <div class="ops-meta">
+                <span>Refresh cadence <strong>15s</strong></span>
+                <span>Telemetry window <strong>24h</strong></span>
+                <span>Agent window <strong>60m</strong></span>
+              </div>
+            </div>
+            <div class="ops-hero-right">
+              <div class="ops-live">
+                <span class="ops-live-dot"></span>
+                <div>
+                  <div class="ops-live-text">Live Telemetry</div>
+                  <div class="ops-live-detail" id="d-live">Awaiting first refresh</div>
+                </div>
+              </div>
+              <div class="ops-clock">
+                <div class="ops-clock-label">Control Room Time</div>
+                <div class="ops-clock-value" id="d-clock">--:--:--</div>
+              </div>
+              <div class="ops-load">
+                <div class="ops-load-head">
+                  <span>System Load</span>
+                  <strong id="d-load-label">Standby</strong>
+                </div>
+                <div class="ops-load-track"><div class="ops-load-fill" id="d-load-fill"></div></div>
+                <div class="ops-load-sub" id="d-load-sub">Waiting for live telemetry from the backend.</div>
+              </div>
+            </div>
+          </div>
+          <div class="ops-kpis" id="d-kpis"></div>
+        </section>
 
-  <!-- AGENTS -->
-  <div class="page" id="page-agents">
-    <div class="section-header"><h2>Agent Statistics (last 24h)</h2></div>
-    <div class="tbl-wrap"><table><thead><tr><th>Agent</th><th>Runs</th><th>Avg ms</th><th>Last Run</th><th>Description</th></tr></thead><tbody id="agents-body"></tbody></table></div>
-  </div>
+        <div class="ops-grid">
+          <section class="ops-panel ops-span-8">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Throughput</div>
+                <div class="ops-panel-title">Ticket Ingress vs Processing</div>
+                <div class="ops-panel-note">Created, resolved, processed, and failed pipeline jobs across the last 24 hours.</div>
+              </div>
+              <div class="ops-chip"><span>Feed</span><strong id="d-generated">Awaiting telemetry</strong></div>
+            </div>
+            <canvas id="c-throughput" height="180"></canvas>
+          </section>
 
-  <!-- INTEGRATIONS -->
-  <div class="page" id="page-integrations">
-    <div class="section-header"><h2>Integrations</h2><button class="btn btn-primary" onclick="showCreateIntegration()">+ Add</button></div>
-    <div id="integration-form" style="display:none;margin-bottom:20px">
-      <div class="form-box">
-        <h3 style="margin-bottom:16px">Add Integration</h3>
-        <div class="field"><label>Name</label><input id="i-name" placeholder="My Webhook"></div>
-        <div class="field"><label>Type</label><select id="i-type"><option value="webhook">webhook</option></select></div>
-        <div class="field"><label>Notify URL (optional)</label><input id="i-notify-url" placeholder="https://hooks.example.com/..."></div>
-        <div class="field"><label>Secret (optional)</label><input id="i-secret" type="password" placeholder="HMAC signing secret"></div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" onclick="createIntegration()">Create</button>
-          <button class="btn btn-ghost" onclick="document.getElementById('integration-form').style.display='none'">Cancel</button>
+          <section class="ops-panel ops-span-4">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Queue</div>
+                <div class="ops-panel-title">Queue Pressure</div>
+                <div class="ops-panel-note">Backlog pressure across enqueued, running, failed, and completed jobs.</div>
+              </div>
+            </div>
+            <div id="d-queue"></div>
+          </section>
+
+          <section class="ops-panel ops-span-5">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Backlog</div>
+                <div class="ops-panel-title">Trend and Clearance Outlook</div>
+                <div class="ops-panel-note">Open ticket load over time with a live clearance forecast when drain exceeds ingress.</div>
+              </div>
+              <div class="ops-chip"><span>Forecast</span><strong id="d-forecast-chip">Pending</strong></div>
+            </div>
+            <canvas id="c-backlog" height="146"></canvas>
+          </section>
+
+          <section class="ops-panel ops-span-7">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">SLA Exposure</div>
+                <div class="ops-panel-title">Aging Heatmap</div>
+                <div class="ops-panel-note">Open tickets bucketed by age and priority to surface response risk concentration.</div>
+              </div>
+            </div>
+            <div id="d-heatmap"></div>
+          </section>
+
+          <section class="ops-panel ops-span-6">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Agents</div>
+                <div class="ops-panel-title">Performance Panel</div>
+                <div class="ops-panel-note">Average latency, p95 latency, error rate, and executions per minute from recent agent runs.</div>
+              </div>
+            </div>
+            <div id="d-agent-perf"></div>
+          </section>
+
+          <section class="ops-panel ops-span-6">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Automation</div>
+                <div class="ops-panel-title">Automation vs Escalation Mix</div>
+                <div class="ops-panel-note">How much of the recent support load was handled autonomously versus routed to human escalation.</div>
+              </div>
+            </div>
+            <div class="ops-split">
+              <canvas id="c-automation" height="176"></canvas>
+              <div id="d-automation"></div>
+            </div>
+          </section>
+
+          <section class="ops-panel ops-span-6">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Pipeline</div>
+                <div class="ops-panel-title">Execution Timelines</div>
+                <div class="ops-panel-note">Recent tickets with stage-level execution timing across the autonomous pipeline.</div>
+              </div>
+            </div>
+            <div id="d-pipeline"></div>
+          </section>
+
+          <section class="ops-panel ops-span-6">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Stream</div>
+                <div class="ops-panel-title">Live Event Flow</div>
+                <div class="ops-panel-note">Latest agent activity flowing through the system with real stage timing and status.</div>
+              </div>
+            </div>
+            <div id="d-stream"></div>
+          </section>
+
+          <section class="ops-panel ops-span-5">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Outliers</div>
+                <div class="ops-panel-title">Slowest Tickets</div>
+                <div class="ops-panel-note">Longest end-to-end tickets observed from recent pipeline activity.</div>
+              </div>
+            </div>
+            <div id="d-slowest"></div>
+          </section>
+
+          <section class="ops-panel ops-span-4">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Failures</div>
+                <div class="ops-panel-title">Failing Agents</div>
+                <div class="ops-panel-note">Agents with failed executions or elevated error rate in the live window.</div>
+              </div>
+            </div>
+            <div id="d-failing"></div>
+          </section>
+
+          <section class="ops-panel ops-span-3">
+            <div class="ops-head">
+              <div>
+                <div class="ops-kicker">Recent</div>
+                <div class="ops-panel-title">Newest Tickets</div>
+                <div class="ops-panel-note">Fast jump list into the current inbound workload.</div>
+              </div>
+            </div>
+            <div id="d-recent"></div>
+            <div class="ops-panel-foot">
+              <span class="ops-mini">Open the full triage queue for filters, bulk actions, and detail workflow.</span>
+              <button class="btn btn-g btn-sm" type="button" onclick="goTo('tickets')">Open Tickets</button>
+            </div>
+          </section>
         </div>
       </div>
     </div>
-    <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Events</th><th>Actions</th></tr></thead><tbody id="integrations-body"></tbody></table></div>
-  </div>
 
-  <!-- USERS -->
-  <div class="page" id="page-users">
-    <div class="section-header"><h2>Users</h2><button class="btn btn-primary" onclick="showCreateUser()">+ Add User</button></div>
-    <div id="user-form" style="display:none;margin-bottom:20px">
-      <div class="form-box">
-        <h3 style="margin-bottom:16px">Create User</h3>
-        <div id="user-form-alert" style="display:none"></div>
-        <div class="field"><label>Email</label><input id="u-email" type="email"></div>
-        <div class="field"><label>Name</label><input id="u-name"></div>
-        <div class="field"><label>Role</label><select id="u-role"><option>operator</option><option>admin</option><option>viewer</option></select></div>
-        <div class="field"><label>Password</label><input id="u-password" type="password" placeholder="Min 8 characters"></div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" onclick="createUser()">Create</button>
-          <button class="btn btn-ghost" onclick="document.getElementById('user-form').style.display='none'">Cancel</button>
+    <!-- TICKETS -->
+    <div class="pg" id="pg-tickets">
+      <div class="tc">
+        <div class="tc-bar">
+          <input class="inp inp-sm" style="width:210px" id="t-search" type="text" placeholder="🔍  Search tickets…" autocomplete="off" oninput="tSearchDelay()">
+          <select class="inp inp-sm" id="t-status" onchange="tLoad()">
+            <option value="">All statuses</option><option>open</option><option>in_progress</option>
+            <option>escalated</option><option>sla_breached</option><option>resolved</option><option>closed</option>
+          </select>
+          <select class="inp inp-sm" id="t-priority" onchange="tLoad()">
+            <option value="">All priorities</option><option>critical</option><option>high</option><option>medium</option><option>low</option>
+          </select>
+          <select class="inp inp-sm" id="t-category" onchange="tLoad()">
+            <option value="">All categories</option><option>billing</option><option>technical</option><option>bug</option><option>feature_request</option><option>general</option>
+          </select>
+          <span class="flex1"></span>
+          <button class="btn btn-p btn-sm" type="button" onclick="openM('m-create')">+ New Ticket</button>
+        </div>
+        <div class="tc-scroll">
+          <table><thead><tr>
+            <th><input type="checkbox" id="sel-all" onchange="selAll()"></th>
+            <th>Title</th><th>Priority</th><th>Status</th><th>Category</th><th>Team</th><th>Created</th><th></th>
+          </tr></thead><tbody id="t-body"></tbody></table>
+        </div>
+        <div class="tc-foot">
+          <div class="tc-info" id="t-info"></div>
+          <div id="bulk-bar" style="display:none;align-items:center;gap:8px">
+            <span style="font-size:12px;color:var(--muted)" id="sel-cnt"></span>
+            <button class="btn btn-d btn-sm" type="button" onclick="bulkClose()">Close selected</button>
+          </div>
+          <span class="flex1"></span>
+          <button class="btn btn-g btn-sm" type="button" id="t-prev" onclick="tPage(-1)">← Prev</button>
+          <button class="btn btn-g btn-sm" type="button" id="t-next" onclick="tPage(1)">Next →</button>
         </div>
       </div>
     </div>
-    <div class="tbl-wrap"><table><thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Active</th><th>Created</th></tr></thead><tbody id="users-body"></tbody></table></div>
-  </div>
 
-  <!-- SYSTEM -->
-  <div class="page" id="page-system">
-    <div class="grid" id="system-health-grid"></div>
-    <div class="section-header"><h2>System Log</h2><button class="btn btn-ghost" onclick="loadSystem()">Refresh</button></div>
-    <div class="tbl-wrap"><table><thead><tr><th>Time</th><th>Level</th><th>Source</th><th>Message</th></tr></thead><tbody id="syslog-body"></tbody></table></div>
+    <!-- TICKET DETAIL -->
+    <div class="pg" id="pg-detail"><div id="det-body"></div></div>
+
+    <!-- QUEUE -->
+    <div class="pg" id="pg-queue">
+      <div class="tc">
+        <div class="tc-bar">
+          <select class="inp inp-sm" id="q-status" onchange="qLoad()">
+            <option value="">All statuses</option><option>enqueued</option><option>running</option><option>done</option><option>failed</option><option>skipped</option>
+          </select>
+          <span class="flex1"></span>
+          <button class="btn btn-g btn-sm" type="button" onclick="qLoad()">↺ Refresh</button>
+        </div>
+        <table><thead><tr><th>Job ID</th><th>Ticket</th><th>Priority</th><th>Status</th><th>Attempts</th><th>Updated</th><th></th></tr></thead><tbody id="q-body"></tbody></table>
+        <div class="tc-foot"><div class="tc-info" id="q-info"></div></div>
+      </div>
+    </div>
+
+    <!-- AGENTS -->
+    <div class="pg" id="pg-agents">
+      <div class="sgrid" id="ag-stats"></div>
+      <div class="sh"><span class="sh-t">Pipeline Events</span><span class="flex1"></span><button class="btn btn-g btn-sm" type="button" onclick="agLoad()">↺ Refresh</button></div>
+      <div class="tc"><table><thead><tr><th>Ticket</th><th>Agent</th><th>Duration</th><th>Time</th></tr></thead><tbody id="ag-body"></tbody></table></div>
+    </div>
+
+    <!-- INTEGRATIONS -->
+    <div class="pg" id="pg-integrations">
+      <div class="tc">
+        <div class="tc-bar"><span class="flex1"></span><button class="btn btn-p btn-sm" type="button" onclick="openM('m-int')">+ Add Integration</button></div>
+        <table><thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Events</th><th>Last Sync</th><th></th></tr></thead><tbody id="int-body"></tbody></table>
+        <div class="tc-foot"><div class="tc-info" id="int-info"></div></div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="pg" id="pg-users">
+      <div class="tc">
+        <div class="tc-bar"><span class="flex1"></span><button class="btn btn-p btn-sm" type="button" onclick="openM('m-user')">+ Add User</button></div>
+        <table><thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Active</th><th>Created</th><th></th></tr></thead><tbody id="usr-body"></tbody></table>
+        <div class="tc-foot"><div class="tc-info" id="usr-info"></div></div>
+      </div>
+    </div>
+
+    <!-- SYSTEM -->
+    <div class="pg" id="pg-system">
+      <div class="sgrid" id="sys-stats"></div>
+      <div class="sh"><span class="sh-t">System Log</span><span class="flex1"></span>
+        <select class="inp inp-sm" id="log-lv" onchange="sysLoad()"><option value="">All levels</option><option>INFO</option><option>WARN</option><option>ERROR</option></select>
+        <button class="btn btn-g btn-sm" type="button" onclick="sysLoad()">↺ Refresh</button>
+      </div>
+      <div class="tc" style="margin-bottom:22px"><table><thead><tr><th>Time</th><th>Level</th><th>Source</th><th>Message</th></tr></thead><tbody id="log-body"></tbody></table></div>
+      <div class="sh"><span class="sh-t">Audit Log</span><span class="flex1"></span><button class="btn btn-g btn-sm" type="button" onclick="auditLoad()">↺ Refresh</button></div>
+      <div class="tc"><table><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Resource</th><th>ID</th></tr></thead><tbody id="audit-body"></tbody></table></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="pg" id="pg-settings">
+      <div style="max-width:440px">
+        <div class="cc">
+          <div class="cc-t" style="margin-bottom:16px">Change Password</div>
+          <div class="fld"><label for="cp-old">Current password</label><input class="inp" type="password" id="cp-old" autocomplete="current-password"></div>
+          <div class="fld"><label for="cp-new">New password</label><input class="inp" type="password" id="cp-new" placeholder="Minimum 8 characters" autocomplete="new-password"></div>
+          <button class="btn btn-p" type="button" onclick="chPass()">Update password</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /#main -->
+</div><!-- /#app-shell -->
+
+<!-- ═══════════════════════ MODALS (z-index 20, above app shell) -->
+
+<div class="mo" id="m-create">
+  <div class="mb">
+    <div class="m-title">New Ticket</div>
+    <div class="m-sub">Submit a support ticket — it will be auto-classified by the AI pipeline.</div>
+    <div class="fld"><label for="new-title">Title <span style="color:var(--red)">*</span></label><input class="inp" type="text" id="new-title" placeholder="Brief summary of the issue" maxlength="255" autocomplete="off"></div>
+    <div class="fld"><label for="new-desc">Description</label><textarea class="inp" id="new-desc" placeholder="Detailed description, steps to reproduce, expected behavior…"></textarea></div>
+    <div class="g2">
+      <div class="fld"><label for="new-pri">Priority</label><select class="inp" id="new-pri"><option value="medium">Medium</option><option value="low">Low</option><option value="high">High</option><option value="critical">Critical</option></select></div>
+      <div class="fld"><label for="new-cat">Category</label><select class="inp" id="new-cat"><option value="general">General</option><option value="billing">Billing</option><option value="technical">Technical</option><option value="bug">Bug</option><option value="feature_request">Feature Request</option></select></div>
+    </div>
+    <div class="fld"><label for="new-idem">Idempotency Key <span style="color:var(--faint);font-weight:400">(optional)</span></label><input class="inp" type="text" id="new-idem" placeholder="e.g. jira-TKT-1234" maxlength="64" autocomplete="off"></div>
+    <div class="m-foot">
+      <button class="btn btn-g" type="button" onclick="closeM('m-create')">Cancel</button>
+      <button class="btn btn-p" type="button" onclick="createTicket()">Create Ticket</button>
+    </div>
   </div>
 </div>
+
+<div class="mo" id="m-edit">
+  <div class="mb sm">
+    <div class="m-title">Edit Ticket</div>
+    <div class="m-sub">Update status, priority, or category.</div>
+    <div class="fld"><label for="ed-status">Status</label><select class="inp" id="ed-status"><option value="open">Open</option><option value="in_progress">In Progress</option><option value="escalated">Escalated</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></div>
+    <div class="fld"><label for="ed-pri">Priority</label><select class="inp" id="ed-pri"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div>
+    <div class="fld"><label for="ed-cat">Category</label><select class="inp" id="ed-cat"><option value="general">General</option><option value="billing">Billing</option><option value="technical">Technical</option><option value="bug">Bug</option><option value="feature_request">Feature Request</option></select></div>
+    <div class="m-foot">
+      <button class="btn btn-g" type="button" onclick="closeM('m-edit')">Cancel</button>
+      <button class="btn btn-p" type="button" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="m-int">
+  <div class="mb sm">
+    <div class="m-title">Add Integration</div>
+    <div class="m-sub">Connect an external system to ingest tickets via webhook.</div>
+    <div class="fld"><label for="im-name">Name <span style="color:var(--red)">*</span></label><input class="inp" type="text" id="im-name" placeholder="e.g. Zendesk Webhook" autocomplete="off"></div>
+    <div class="fld"><label for="im-type">Type</label><select class="inp" id="im-type"><option value="webhook">Webhook</option></select></div>
+    <div class="fld"><label for="im-url">Outbound Notify URL <span style="color:var(--faint);font-weight:400">(optional)</span></label><input class="inp" type="url" id="im-url" placeholder="https://hooks.example.com/…"></div>
+    <div class="fld"><label for="im-secret">HMAC Secret <span style="color:var(--faint);font-weight:400">(optional)</span></label><input class="inp" type="password" id="im-secret" placeholder="Used to validate incoming requests"></div>
+    <div class="m-foot">
+      <button class="btn btn-g" type="button" onclick="closeM('m-int')">Cancel</button>
+      <button class="btn btn-p" type="button" onclick="createInt()">Create</button>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="m-user">
+  <div class="mb sm">
+    <div class="m-title">Create User</div>
+    <div class="m-sub">Add a team member to this workspace.</div>
+    <div class="fld"><label for="um-email">Email <span style="color:var(--red)">*</span></label><input class="inp" type="email" id="um-email" placeholder="user@company.com" autocomplete="off"></div>
+    <div class="fld"><label for="um-name">Full Name <span style="color:var(--red)">*</span></label><input class="inp" type="text" id="um-name" placeholder="Jane Smith" autocomplete="off"></div>
+    <div class="fld"><label for="um-role">Role</label><select class="inp" id="um-role"><option value="operator">Operator</option><option value="admin">Admin</option><option value="viewer">Viewer</option></select></div>
+    <div class="fld"><label for="um-pw">Password <span style="color:var(--red)">*</span></label><input class="inp" type="password" id="um-pw" placeholder="Minimum 8 characters" autocomplete="new-password"></div>
+    <div class="m-foot">
+      <button class="btn btn-g" type="button" onclick="closeM('m-user')">Cancel</button>
+      <button class="btn btn-p" type="button" onclick="createUser()">Create User</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
 
 <script>
-const API = '';
-let token = localStorage.getItem('as_token') || '';
-let role  = localStorage.getItem('as_role') || '';
-let email = localStorage.getItem('as_email') || '';
-let currentPage = 0;
-const PAGE_SIZE = 50;
-let searchTimer = null;
+'use strict';
+/* ── state ───────────────────────────────────────────────────────────── */
+var TOK   = localStorage.getItem('as_tok')   || '';
+var ROLE  = localStorage.getItem('as_role')  || '';
+var UMAIL = localStorage.getItem('as_mail')  || '';
+var tOff=0, tTotal=0, selIds=new Set(), editId='', stimer=null, dashBusy=false, dashCache=null, dashResizeTimer=null;
+var DASH_STAGE_ORDER=['ticket_classifier','priority_predictor','escalation_detector','response_suggester','auto_router'];
+var DASH_STAGE_META={
+  ticket_classifier:{label:'Classify',color:'rgba(56,189,248,.34)'},
+  priority_predictor:{label:'Priority',color:'rgba(34,211,238,.34)'},
+  escalation_detector:{label:'Escalation',color:'rgba(251,191,36,.34)'},
+  response_suggester:{label:'Response',color:'rgba(129,140,248,.34)'},
+  auto_router:{label:'Routing',color:'rgba(74,222,128,.34)'}
+};
 
-// ── auth ──────────────────────────────────────────────────────────────────────
+/* ── boot ────────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+  // Enter key on login fields
+  document.getElementById('l-email').addEventListener('keydown', function(e){
+    if(e.key==='Enter') document.getElementById('l-pw').focus();
+  });
+  document.getElementById('l-pw').addEventListener('keydown', function(e){
+    if(e.key==='Enter') doLogin();
+  });
 
-async function doLogin() {
-  const e = v('l-email'), p = v('l-password');
-  showAlert('login-alert', null);
-  try {
-    const r = await api('/api/auth/login', 'POST', {email: e, password: p}, false);
-    token = r.access_token; role = r.role;
-    const me = await api('/api/auth/me');
-    email = me.email;
-    localStorage.setItem('as_token', token);
-    localStorage.setItem('as_role', role);
-    localStorage.setItem('as_email', email);
-    document.getElementById('login-page').classList.add('hidden');
-    document.getElementById('user-email').textContent = email;
-    nav('dashboard');
-  } catch(err) {
-    showAlert('login-alert', err.message || 'Login failed', 'error');
+  // Escape closes modals
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape') document.querySelectorAll('.mo.on').forEach(function(m){m.classList.remove('on');});
+  });
+
+  // If already logged in, skip login page
+  if(TOK){ showApp(); goTo('dashboard'); }
+
+  setInterval(pingHealth, 60000);
+  setInterval(function(){
+    if(TOK && document.getElementById('pg-dashboard') && document.getElementById('pg-dashboard').classList.contains('on')){
+      dashLoad(true);
+    }
+  }, 15000);
+  setInterval(updateDashClock, 1000);
+  updateDashClock();
+  window.addEventListener('resize', function(){
+    clearTimeout(dashResizeTimer);
+    dashResizeTimer=setTimeout(function(){
+      if(dashCache && document.getElementById('pg-dashboard') && document.getElementById('pg-dashboard').classList.contains('on')){
+        renderDashboard(dashCache);
+      }
+    }, 140);
+  });
+});
+
+/* ── auth ────────────────────────────────────────────────────────────── */
+function doLogin(){
+  var email = document.getElementById('l-email').value.trim();
+  var pw    = document.getElementById('l-pw').value;
+  var errEl = document.getElementById('l-err');
+  errEl.style.display = 'none';
+
+  if(!email || !pw){
+    errEl.textContent = 'Please enter your email and password.';
+    errEl.style.display = 'block';
+    return;
   }
+
+  var btn = document.getElementById('l-btn');
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+
+  apiFetch('/api/auth/login','POST',{email:email,password:pw},false)
+    .then(function(r){
+      TOK  = r.access_token;
+      ROLE = r.role;
+      return apiFetch('/api/auth/me');
+    })
+    .then(function(me){
+      UMAIL = me.email;
+      localStorage.setItem('as_tok',  TOK);
+      localStorage.setItem('as_role', ROLE);
+      localStorage.setItem('as_mail', UMAIL);
+      showApp();
+      goTo('dashboard');
+    })
+    .catch(function(e){
+      errEl.textContent = e.message || 'Login failed. Please check your credentials.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Sign in →';
+    });
 }
 
-function logout() {
-  token = role = email = '';
-  ['as_token','as_role','as_email'].forEach(k => localStorage.removeItem(k));
+function doLogout(){
+  TOK = ROLE = UMAIL = '';
+  localStorage.removeItem('as_tok');
+  localStorage.removeItem('as_role');
+  localStorage.removeItem('as_mail');
   location.reload();
 }
 
-// ── navigation ────────────────────────────────────────────────────────────────
+function showApp(){
+  // Remove login page from DOM entirely — no stacking issues possible
+  var lp = document.getElementById('login-page');
+  if(lp) lp.parentNode.removeChild(lp);
 
-function nav(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-  const pg = document.getElementById('page-'+page);
-  if (pg) pg.classList.add('active');
-  const ln = document.getElementById('nav-'+page);
-  if (ln) ln.classList.add('active');
-  const titles = { dashboard:'Dashboard', tickets:'Tickets', create:'New Ticket',
-    queue:'Queue', agents:'Agents', integrations:'Integrations', users:'Users', system:'System' };
-  document.getElementById('page-title').textContent = titles[page] || page;
-  if (page === 'dashboard')    loadDashboard();
-  if (page === 'tickets')      { currentPage = 0; loadTickets(); }
-  if (page === 'queue')        loadQueue();
-  if (page === 'agents')       loadAgents();
-  if (page === 'integrations') loadIntegrations();
-  if (page === 'users')        loadUsers();
-  if (page === 'system')       loadSystem();
+  document.getElementById('app-shell').classList.add('visible');
+  document.getElementById('sb-email').textContent = UMAIL;
+  document.getElementById('sb-role').textContent  = ROLE;
+  document.getElementById('sb-av').textContent    = (UMAIL||'?')[0].toUpperCase();
+  pingHealth();
 }
 
-// ── api helper ────────────────────────────────────────────────────────────────
+/* ── navigation ──────────────────────────────────────────────────────── */
+var TITLES={dashboard:'Dashboard',tickets:'Tickets',detail:'Ticket Detail',queue:'Queue',agents:'Agents',integrations:'Integrations',users:'Users',system:'System',settings:'Settings'};
 
-async function api(path, method='GET', body=null, auth=true) {
-  const headers = {'Content-Type': 'application/json'};
-  if (auth && token) headers['Authorization'] = 'Bearer ' + token;
-  const r = await fetch(API + path, { method, headers, body: body ? JSON.stringify(body) : null });
-  if (r.status === 401) { logout(); throw new Error('Session expired'); }
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data.detail || `HTTP ${r.status}`);
-  return data;
+function goTo(page){
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('on');});
+  var pg=document.getElementById('pg-'+page); if(pg) pg.classList.add('on');
+  var nb=document.getElementById('nb-'+page); if(nb) nb.classList.add('on');
+  document.getElementById('pg-title').textContent = TITLES[page]||page;
+  var tb=document.getElementById('tb-btn');
+  if(page==='tickets'){tb.style.display='';tb.textContent='+ New Ticket';tb._p='tickets';}
+  else if(page==='detail'){tb.style.display='';tb.textContent='← All Tickets';tb._p='detail';}
+  else tb.style.display='none';
+  ({dashboard:dashLoad,tickets:function(){tOff=0;tLoad();},queue:qLoad,agents:agLoad,integrations:intLoad,users:usrLoad,system:function(){sysLoad();auditLoad();}})[page]&&({dashboard:dashLoad,tickets:function(){tOff=0;tLoad();},queue:qLoad,agents:agLoad,integrations:intLoad,users:usrLoad,system:function(){sysLoad();auditLoad();}})[page]();
 }
+function tbClick(){var p=document.getElementById('tb-btn')._p;if(p==='tickets')openM('m-create');else if(p==='detail')goTo('tickets');}
 
-// ── dashboard ─────────────────────────────────────────────────────────────────
-
-async function loadDashboard() {
-  checkHealth();
-  try {
-    const a = await api('/api/analytics');
-    const stats = [
-      { label: 'Total Tickets',   value: a.total_tickets,  sub: 'all time' },
-      { label: 'Open Tickets',    value: a.open_tickets,   sub: 'unresolved', class: a.open_tickets > 10 ? 'warn' : '' },
-      { label: 'Resolved Today',  value: a.resolved_today, sub: 'last 24h' },
-      { label: 'SLA At Risk',     value: a.sla_at_risk,    sub: 'breached SLA', class: a.sla_at_risk > 0 ? 'crit' : '' },
-      { label: 'Pending Jobs',    value: a.pending_jobs,   sub: 'in queue' },
-      { label: 'Failed Jobs',     value: a.failed_jobs,    sub: 'need retry', class: a.failed_jobs > 0 ? 'crit' : '' },
-    ];
-    document.getElementById('stats-grid').innerHTML = stats.map(s =>
-      `<div class="card"><div class="label">${s.label}</div>
-       <div class="value" style="${s.class==='crit'?'color:var(--danger)':s.class==='warn'?'color:var(--warn)':''}">${s.value}</div>
-       <div class="sub">${s.sub}</div></div>`
-    ).join('');
-    const {items} = await api('/api/tickets?limit=8&offset=0');
-    document.getElementById('recent-body').innerHTML = (items||[]).map(t =>
-      `<tr onclick="showTicket('${t.id}')" style="cursor:pointer">
-        <td>${esc(t.title)}</td><td><span class="badge ${t.priority}">${t.priority}</span></td>
-        <td><span class="badge ${t.status}">${t.status}</span></td>
-        <td>${t.category||'—'}</td><td>${fmtDate(t.created_at)}</td></tr>`
-    ).join('') || '<tr><td colspan="5" class="empty">No tickets yet</td></tr>';
-  } catch(e) { console.error('dashboard error', e); }
-}
-
-async function checkHealth() {
-  try {
-    const h = await api('/health', 'GET', null, false);
-    const dot = document.getElementById('health-dot');
-    dot.className = 'dot ' + (h.status === 'ok' ? 'ok' : 'error');
-    dot.title = `API: ${h.status} | DB: ${h.db} | Redis: ${h.redis}`;
-  } catch(e) {
-    document.getElementById('health-dot').className = 'dot error';
-  }
-}
-
-// ── tickets ───────────────────────────────────────────────────────────────────
-
-function debounceSearch() {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => { currentPage = 0; loadTickets(); }, 350);
-}
-
-async function loadTickets() {
-  const status   = v('filter-status');
-  const priority = v('filter-priority');
-  const search   = v('search-input');
-  let path = `/api/tickets?limit=${PAGE_SIZE}&offset=${currentPage * PAGE_SIZE}`;
-  if (status)   path += `&status=${status}`;
-  if (priority) path += `&priority=${priority}`;
-  if (search)   path += `&search=${encodeURIComponent(search)}`;
-  try {
-    const {items, total} = await api(path);
-    const tbody = document.getElementById('tickets-body');
-    tbody.innerHTML = (items||[]).map(t =>
-      `<tr>
-        <td><a style="color:var(--accent);cursor:pointer" onclick="showTicket('${t.id}')">${esc(t.title)}</a></td>
-        <td><span class="badge ${t.priority}">${t.priority}</span></td>
-        <td><span class="badge ${t.status}">${t.status}</span></td>
-        <td>${t.assigned_team||'—'}</td>
-        <td>${fmtDate(t.created_at)}</td>
-        <td><button class="btn btn-ghost" style="padding:3px 10px;font-size:.8rem" onclick="showTicket('${t.id}')">View</button></td>
-      </tr>`
-    ).join('') || '<tr><td colspan="6" class="empty">No tickets found</td></tr>';
-    const totalPages = Math.ceil((total||0) / PAGE_SIZE);
-    document.getElementById('page-info').textContent = `${currentPage+1} / ${Math.max(1,totalPages)}  (${total} total)`;
-    document.getElementById('prev-btn').disabled = currentPage === 0;
-    document.getElementById('next-btn').disabled = (currentPage + 1) >= totalPages;
-  } catch(e) {
-    document.getElementById('tickets-body').innerHTML = `<tr><td colspan="6" style="color:var(--danger);padding:16px">${esc(e.message)}</td></tr>`;
-  }
-}
-
-function ticketPage(dir) { currentPage = Math.max(0, currentPage + dir); loadTickets(); }
-
-async function showTicket(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-ticket-detail').classList.add('active');
-  document.getElementById('page-title').textContent = 'Ticket Detail';
-  const el = document.getElementById('ticket-detail-content');
-  el.innerHTML = '<div class="spinner"></div>';
-  try {
-    const t = await api(`/api/tickets/${id}`);
-    const sla = await api(`/api/analytics/sla/${id}`).catch(() => null);
-    el.innerHTML = `
-      <div style="max-width:720px">
-        <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px">
-          <button class="btn btn-ghost" onclick="nav('tickets')">← Back</button>
-          <h2 style="flex:1;font-size:1.1rem">${esc(t.title)}</h2>
-          <span class="badge ${t.priority}">${t.priority}</span>
-          <span class="badge ${t.status}">${t.status}</span>
-        </div>
-        <div class="card" style="margin-bottom:16px">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
-            <div><div class="label">Category</div><div>${t.category||'—'}</div></div>
-            <div><div class="label">Assigned Team</div><div>${t.assigned_team||'—'}</div></div>
-            <div><div class="label">Assigned To</div><div>${t.assigned_to||'—'}</div></div>
-            <div><div class="label">Source</div><div>${t.source||'—'}</div></div>
-            <div><div class="label">Created</div><div>${fmtDate(t.created_at)}</div></div>
-            <div><div class="label">SLA Breached</div><div style="color:${t.response_sla_breached?'var(--danger)':'var(--ok)'}">${t.response_sla_breached?'Yes':'No'}</div></div>
-          </div>
-        </div>
-        ${t.description ? `<div class="card" style="margin-bottom:16px"><div class="label">Description</div><p style="margin-top:8px;line-height:1.6;color:var(--muted)">${esc(t.description)}</p></div>` : ''}
-        ${t.suggested_response ? `<div class="card" style="margin-bottom:16px"><div class="label">Suggested Response</div><p style="margin-top:8px;line-height:1.6">${esc(t.suggested_response)}</p></div>` : ''}
-        ${sla ? `<div class="card" style="margin-bottom:16px"><div class="label">SLA Metrics</div>
-          <div style="margin-top:8px;font-size:.875rem;color:var(--muted)">
-            Response remaining: <strong style="color:var(--text)">${sla.response_time_remaining_seconds != null ? Math.round(sla.response_time_remaining_seconds/60) + ' min' : '—'}</strong>
-            &nbsp;&nbsp; Resolution sla breached: <strong style="color:${sla.resolution_sla_breached?'var(--danger)':'var(--ok)'}">${sla.resolution_sla_breached?'Yes':'No'}</strong>
-          </div></div>` : ''}
-        <div style="display:flex;gap:10px">
-          ${t.status !== 'resolved' && t.status !== 'closed' ? `<button class="btn btn-primary" onclick="resolveTicket('${t.id}')">Mark Resolved</button>` : ''}
-          <button class="btn btn-ghost" onclick="retryJob('${t.id}')">Re-run Classification</button>
-        </div>
-      </div>`;
-  } catch(e) { el.innerHTML = `<div style="color:var(--danger)">${esc(e.message)}</div>`; }
-}
-
-async function resolveTicket(id) {
-  try {
-    await api(`/api/tickets/${id}/resolve`, 'POST');
-    showTicket(id);
-  } catch(e) { alert(e.message); }
-}
-
-async function retryJob(ticketId) {
-  try {
-    const r = await api(`/api/queue/${ticketId}/retry`, 'POST');
-    alert(`Job enqueued: ${r.job_id}`);
-  } catch(e) { alert(e.message); }
-}
-
-// ── create ticket ─────────────────────────────────────────────────────────────
-
-async function createTicket() {
-  showAlert('create-alert', null);
-  const title = v('c-title');
-  if (!title.trim()) { showAlert('create-alert', 'Title is required', 'error'); return; }
-  try {
-    const t = await api('/api/tickets', 'POST', {
-      title:       title,
-      description: v('c-desc'),
-      priority:    v('c-priority'),
-      category:    v('c-category'),
+/* ── api ─────────────────────────────────────────────────────────────── */
+function apiFetch(path,method,body,auth){
+  if(method===undefined)method='GET';
+  if(auth===undefined)auth=true;
+  var h={'Content-Type':'application/json'};
+  if(auth&&TOK) h['Authorization']='Bearer '+TOK;
+  return fetch(path,{method:method,headers:h,body:body?JSON.stringify(body):null})
+    .then(function(r){
+      if(r.status===401){doLogout();throw new Error('Session expired');}
+      return r.json().catch(function(){return{};}).then(function(d){
+        if(!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+        return d;
+      });
     });
-    showAlert('create-alert', `Ticket created: ${t.id}`, 'success');
-    document.getElementById('c-title').value = '';
-    document.getElementById('c-desc').value = '';
-  } catch(e) { showAlert('create-alert', e.message, 'error'); }
 }
 
-// ── queue ─────────────────────────────────────────────────────────────────────
-
-async function loadQueue() {
-  const tbody = document.getElementById('queue-body');
-  try {
-    const jobs = await api('/api/queue?limit=100');
-    tbody.innerHTML = (jobs||[]).map(j =>
-      `<tr>
-        <td style="font-family:monospace;font-size:.8rem">${(j.job_id||'').slice(0,16)}…</td>
-        <td><a style="color:var(--accent);cursor:pointer" onclick="showTicket('${j.ticket_id}')">${esc(j.title||j.ticket_id)}</a></td>
-        <td><span class="badge ${j.status==='done'?'resolved':j.status==='failed'?'critical':'medium'}">${j.status}</span></td>
-        <td>${j.attempts||0}</td>
-        <td>${fmtDate(j.updated_at)}</td>
-        <td>${j.status==='failed'?`<button class="btn btn-ghost" style="padding:3px 10px;font-size:.8rem" onclick="retryJob('${j.ticket_id}')">Retry</button>`:''}</td>
-      </tr>`
-    ).join('') || '<tr><td colspan="6" class="empty">No jobs</td></tr>';
-  } catch(e) { tbody.innerHTML = `<tr><td colspan="6" style="color:var(--danger);padding:16px">${esc(e.message)}</td></tr>`; }
+/* ── health ──────────────────────────────────────────────────────────── */
+function pingHealth(){
+  apiFetch('/health','GET',null,false)
+    .then(function(h){
+      var ok=h.status==='ok';
+      document.getElementById('hd').className='hd '+(ok?'ok':'err');
+      document.getElementById('ht').textContent=ok?'All systems operational':'Degraded — DB:'+h.db+' Redis:'+h.redis;
+    })
+    .catch(function(){
+      document.getElementById('hd').className='hd err';
+      document.getElementById('ht').textContent='API unreachable';
+    });
 }
 
-// ── agents ────────────────────────────────────────────────────────────────────
-
-async function loadAgents() {
-  const tbody = document.getElementById('agents-body');
-  try {
-    const agents = await api('/api/agents');
-    tbody.innerHTML = (agents||[]).map(a =>
-      `<tr>
-        <td><strong>${a.agent}</strong></td>
-        <td>${a.total_runs}</td>
-        <td>${a.avg_ms != null ? a.avg_ms+'ms' : '—'}</td>
-        <td>${a.last_run_ts ? fmtDate(a.last_run_ts) : '—'}</td>
-        <td style="color:var(--muted);font-size:.85rem">${esc(a.description)}</td>
-      </tr>`
-    ).join('');
-  } catch(e) { tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger);padding:16px">${esc(e.message)}</td></tr>`; }
+/* ── dashboard ───────────────────────────────────────────────────────── */
+function dashLoad(silent){
+  if(dashBusy)return;
+  dashBusy=true;
+  Promise.all([
+    apiFetch('/api/analytics'),
+    apiFetch('/api/analytics/ops?hours=24&agent_window_minutes=60'),
+    apiFetch('/api/agents/events?limit=60'),
+    apiFetch('/api/tickets?limit=8&offset=0'),
+    apiFetch('/health','GET',null,false)
+  ])
+    .then(function(res){
+      dashCache={analytics:res[0],ops:res[1],events:res[2]||[],tickets:res[3]||{items:[]},health:res[4]||{}};
+      renderDashboard(dashCache);
+    })
+    .catch(function(e){
+      document.getElementById('d-live').textContent='Telemetry feed interrupted';
+      if(!silent) toast(e.message,'err');
+    })
+    .finally(function(){dashBusy=false;});
 }
 
-// ── integrations ──────────────────────────────────────────────────────────────
+function renderDashboard(data){
+  var analytics=data.analytics||{};
+  var ops=data.ops||{};
+  var summary=ops.summary||{};
+  var throughput=ops.throughput||[];
+  var events=data.events||[];
+  var tickets=(data.tickets&&data.tickets.items)||[];
+  var health=data.health||{};
 
-async function loadIntegrations() {
-  const tbody = document.getElementById('integrations-body');
-  try {
-    const list = await api('/api/integrations');
-    tbody.innerHTML = (list||[]).map(i =>
-      `<tr>
-        <td>${esc(i.name)}</td><td>${i.type}</td>
-        <td><span class="badge ${i.status==='active'?'resolved':'critical'}">${i.status}</span></td>
-        <td>${i.event_count||0}</td>
-        <td style="display:flex;gap:8px">
-          <button class="btn btn-ghost" style="padding:3px 10px;font-size:.8rem" onclick="testIntegration('${i.id}')">Test</button>
-          <button class="btn btn-danger" style="padding:3px 10px;font-size:.8rem" onclick="deleteIntegration('${i.id}')">Delete</button>
-        </td>
-      </tr>`
-    ).join('') || '<tr><td colspan="5" class="empty">No integrations</td></tr>';
-  } catch(e) { tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger);padding:16px">${esc(e.message)}</td></tr>`; }
+  setBadge('nbg-tickets',analytics.open_tickets||summary.open_tickets||0);
+  setBadge('nbg-queue',analytics.failed_jobs||summary.queue_failed||0);
+
+  renderControlStatus(health,summary,throughput);
+  renderDashKpis(analytics,summary,throughput);
+  renderQueue(summary,throughput);
+  renderHeatmap(ops.sla_heatmap||[],ops.age_buckets||[]);
+  renderAgentPerformance(ops.agent_performance||[]);
+  renderAutomation(summary,throughput);
+  renderPipeline(events);
+  renderStream(events);
+  renderSlowTickets(ops.slow_tickets||[]);
+  renderFailingAgents(ops.failing_agents||[],summary);
+  renderRecentTickets(tickets);
+
+  drawSeriesChart('c-throughput',throughput,[
+    {key:'created',label:'Created',color:'#38bdf8',fill:'rgba(56,189,248,.08)'},
+    {key:'resolved',label:'Resolved',color:'#4ade80',fill:'rgba(74,222,128,.08)'},
+    {key:'processed',label:'Processed',color:'#facc15',fill:'rgba(250,204,21,.06)'},
+    {key:'failed',label:'Failed',color:'#fb7185',fill:'rgba(251,113,133,.06)'}
+  ]);
+  drawSeriesChart('c-backlog',ops.backlog||[],[
+    {key:'backlog',label:'Open backlog',color:'#facc15',fill:'rgba(250,204,21,.10)'}
+  ]);
+  drawRatioRing('c-automation',[
+    {label:'Automated',value:summary.automation_success||0,color:'#22d3ee'},
+    {label:'Escalated',value:summary.human_escalations||0,color:'#f97316'}
+  ],summary.automation_ratio);
+
+  document.getElementById('d-generated').textContent='Refreshed '+fd(ops.generated_at)+' · '+throughput.length+' samples';
+  document.getElementById('d-forecast-chip').textContent=summary.forecast_hours_to_clear!=null?fmtHours(summary.forecast_hours_to_clear):'No positive drain';
 }
 
-function showCreateIntegration() {
-  document.getElementById('integration-form').style.display = 'block';
-}
+function renderControlStatus(health,summary,throughput){
+  var loadScore=calcLoadScore(health,summary,throughput);
+  var loadLabel=loadScore>=72?'Hot':loadScore>=38?'Elevated':'Nominal';
+  var fill=document.getElementById('d-load-fill');
+  fill.style.width=Math.max(loadScore,8)+'%';
+  fill.style.background=loadLabel==='Hot'
+    ?'linear-gradient(90deg,#fb7185,#ef4444)'
+    :loadLabel==='Elevated'
+      ?'linear-gradient(90deg,#facc15,#f97316)'
+      :'linear-gradient(90deg,#4ade80,#22d3ee)';
+  document.getElementById('d-load-label').textContent=loadLabel;
 
-async function createIntegration() {
-  const name = v('i-name'), type = v('i-type');
-  const notifyUrl = v('i-notify-url'), secret = v('i-secret');
-  if (!name) { alert('Name required'); return; }
-  try {
-    await api('/api/integrations', 'POST', {name, type, config: notifyUrl ? {notify_url: notifyUrl} : {}, secret: secret||null});
-    document.getElementById('integration-form').style.display = 'none';
-    loadIntegrations();
-  } catch(e) { alert(e.message); }
-}
+  var loadNotes=[];
+  if(summary.queue_running) loadNotes.push(summary.queue_running+' running');
+  if(summary.queue_depth) loadNotes.push(summary.queue_depth+' queued');
+  if(summary.queue_failed) loadNotes.push(summary.queue_failed+' failed');
+  if(summary.sla_risk_open) loadNotes.push(summary.sla_risk_open+' at risk');
+  if(!loadNotes.length) loadNotes.push('No active queue pressure');
+  document.getElementById('d-load-sub').textContent=loadNotes.join(' · ');
 
-async function testIntegration(id) {
-  try {
-    const r = await api(`/api/integrations/${id}/test`, 'POST');
-    alert(`${r.ok ? '✅' : '❌'} ${r.message}`);
-    loadIntegrations();
-  } catch(e) { alert(e.message); }
-}
-
-async function deleteIntegration(id) {
-  if (!confirm('Delete this integration?')) return;
-  try {
-    await api(`/api/integrations/${id}`, 'DELETE');
-    loadIntegrations();
-  } catch(e) { alert(e.message); }
-}
-
-// ── users ─────────────────────────────────────────────────────────────────────
-
-async function loadUsers() {
-  const tbody = document.getElementById('users-body');
-  try {
-    const users = await api('/api/users');
-    tbody.innerHTML = (users||[]).map(u =>
-      `<tr>
-        <td>${esc(u.email)}</td><td>${esc(u.name)}</td>
-        <td><span class="badge ${u.role==='admin'?'critical':'medium'}">${u.role}</span></td>
-        <td><span class="dot ${u.active?'ok':'error'}"></span>${u.active?'Active':'Disabled'}</td>
-        <td>${fmtDate(u.created_at)}</td>
-      </tr>`
-    ).join('') || '<tr><td colspan="5" class="empty">No users</td></tr>';
-  } catch(e) { tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger);padding:16px">${esc(e.message)}</td></tr>`; }
-}
-
-function showCreateUser() { document.getElementById('user-form').style.display = 'block'; }
-
-async function createUser() {
-  showAlert('user-form-alert', null);
-  const body = { email: v('u-email'), name: v('u-name'), role: v('u-role'), password: v('u-password') };
-  if (!body.email || !body.name || !body.password) { showAlert('user-form-alert', 'All fields required', 'error'); return; }
-  try {
-    await api('/api/users', 'POST', body);
-    document.getElementById('user-form').style.display = 'none';
-    loadUsers();
-  } catch(e) { showAlert('user-form-alert', e.message, 'error'); }
-}
-
-// ── system ────────────────────────────────────────────────────────────────────
-
-async function loadSystem() {
-  try {
-    const h = await api('/health', 'GET', null, false);
-    document.getElementById('system-health-grid').innerHTML = [
-      {label: 'API', val: h.status, ok: h.status==='ok'},
-      {label: 'Database', val: h.db, ok: h.db==='ok'},
-      {label: 'Redis', val: h.redis, ok: h.redis==='ok'},
-      {label: 'Version', val: h.version, ok: true},
-    ].map(c => `<div class="card"><div class="label">${c.label}</div>
-      <div class="value" style="font-size:1.2rem;color:${c.ok?'var(--ok)':'var(--danger)'}">${c.val}</div></div>`
-    ).join('');
-    const logs = await api('/api/system/log?limit=60');
-    document.getElementById('syslog-body').innerHTML = (logs||[]).map(l =>
-      `<tr>
-        <td style="font-size:.8rem;color:var(--muted);white-space:nowrap">${fmtDate(l.ts)}</td>
-        <td><span class="badge ${l.level==='ERROR'?'critical':l.level==='WARN'?'high':'low'}">${l.level}</span></td>
-        <td style="font-size:.8rem;color:var(--muted)">${esc(l.source)}</td>
-        <td style="font-size:.85rem">${esc(l.message)}</td>
-      </tr>`
-    ).join('') || '<tr><td colspan="4" class="empty">No logs</td></tr>';
-  } catch(e) { console.error(e); }
-}
-
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-function v(id) { const el = document.getElementById(id); return el ? el.value : ''; }
-function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
-function fmtDate(ts) {
-  if (!ts) return '—';
-  const d = ts > 9999999999 ? new Date(ts) : new Date(ts * 1000);
-  return d.toLocaleString();
-}
-function showAlert(id, msg, type='error') {
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (!msg) { el.style.display = 'none'; return; }
-  el.className = `alert ${type}`;
-  el.textContent = msg;
-  el.style.display = 'block';
-}
-
-// ── init ──────────────────────────────────────────────────────────────────────
-
-(function init() {
-  if (token) {
-    document.getElementById('login-page').classList.add('hidden');
-    document.getElementById('user-email').textContent = email;
-    nav('dashboard');
+  var liveText=health.status==='ok'?'All systems live':'Infrastructure degraded';
+  if(health.db!=='ok' || health.redis!=='ok'){
+    liveText+=' · DB '+(health.db||'unknown')+' / Redis '+(health.redis||'unknown');
+  }else if(loadLabel==='Hot'){
+    liveText+=' · backlog pressure elevated';
+  }else if(loadLabel==='Elevated'){
+    liveText+=' · intake outpacing drain';
+  }else{
+    liveText+=' · queue and agents nominal';
   }
-  // enter key on login
-  document.getElementById('l-password').addEventListener('keyup', e => { if (e.key === 'Enter') doLogin(); });
-  document.getElementById('l-email').addEventListener('keyup', e => { if (e.key === 'Enter') doLogin(); });
-  // health check every 60s
-  setInterval(checkHealth, 60_000);
-})();
+  document.getElementById('d-live').textContent=liveText;
+}
+
+function renderDashKpis(analytics,summary,throughput){
+  var processed24=sumSeries(throughput,'processed');
+  var failed24=sumSeries(throughput,'failed');
+  var queueOpen=(summary.queue_depth||0)+(summary.queue_running||0);
+  var ratio=summary.automation_ratio;
+  var kpis=[
+    {label:'Open Backlog',value:fmtNum(summary.open_tickets),sub:'Current unresolved ticket load',tone:(summary.open_tickets||0)>20?'hot':(summary.open_tickets||0)>8?'warn':'good'},
+    {label:'Ingress 24h',value:fmtNum(summary.tickets_created_in_window),sub:'New tickets accepted in the live window',tone:''},
+    {label:'Processed 24h',value:fmtNum(processed24),sub:'Pipeline completions captured by queue telemetry',tone:'good'},
+    {label:'Queue Depth',value:fmtNum(queueOpen),sub:(summary.queue_running||0)+' running · '+(summary.queue_failed||0)+' failed',tone:(summary.queue_failed||0)>0?'hot':queueOpen>0?'warn':'good'},
+    {label:'SLA Exposure',value:fmtNum(summary.sla_risk_open),sub:'Open tickets currently at response risk',tone:(summary.sla_risk_open||0)>0?'hot':'good'},
+    {label:'Failed 24h',value:fmtNum(failed24),sub:'Pipeline failures in the visible throughput window',tone:failed24>0?'hot':'good'},
+    {label:'Automation Ratio',value:ratio!=null?ratio.toFixed(1)+'%':'—',sub:(summary.automation_success||0)+' automated · '+(summary.human_escalations||0)+' escalated',tone:ratio!=null&&ratio>=85?'good':ratio!=null&&ratio>=60?'warn':'hot'},
+    {label:'Clearance Forecast',value:summary.forecast_hours_to_clear!=null?fmtHours(summary.forecast_hours_to_clear):'—',sub:summary.forecast_hours_to_clear!=null?'Estimated time to clear open backlog':'No net drain advantage yet',tone:summary.forecast_hours_to_clear!=null&&summary.forecast_hours_to_clear<=4?'good':summary.forecast_hours_to_clear!=null?'warn':''}
+  ];
+  document.getElementById('d-kpis').innerHTML=kpis.map(function(k){
+    return '<div class="ops-kpi '+(k.tone||'')+'"><div class="ops-kpi-label">'+k.label+'</div><div class="ops-kpi-value '+(k.tone||'')+'">'+k.value+'</div><div class="ops-kpi-sub">'+k.sub+'</div></div>';
+  }).join('');
+}
+
+function renderQueue(summary,throughput){
+  var enqueued=summary.queue_depth||0;
+  var running=summary.queue_running||0;
+  var failed=summary.queue_failed||0;
+  var retries=summary.retry_count||0;
+  var activeTotal=enqueued+running+failed;
+  var denom=Math.max(activeTotal,1);
+  var recentProcessed=sumTail(throughput,4,'processed');
+  var recentCreated=sumTail(throughput,4,'created');
+  var html='<div class="queue-meter">';
+  html+='<div class="queue-stack">'
+    +'<div class="queue-seg queue-enqueued" style="flex:'+enqueued+'"></div>'
+    +'<div class="queue-seg queue-running" style="flex:'+running+'"></div>'
+    +'<div class="queue-seg queue-failed" style="flex:'+failed+'"></div>'
+    +'</div>';
+  html+='<div class="ops-legend">'
+    +legendItemHtml('Queued','#38bdf8',enqueued,denom)
+    +legendItemHtml('Running','#22d3ee',running,denom)
+    +legendItemHtml('Failed','#fb7185',failed,denom)
+    +'</div>';
+  html+='<div class="queue-grid">'
+    +queueCellHtml('Queue depth',enqueued+running,(enqueued+running>0?'Live backlog across waiting and active jobs':'Queue is currently clear'))
+    +queueCellHtml('Retries',retries,(retries>0?'Observed retry loops in job history':'No retries recorded'))
+    +queueCellHtml('Processed 4h',recentProcessed,(recentCreated>recentProcessed?'Ingress currently exceeds processing':'Processing is keeping pace'))
+    +queueCellHtml('Completed total',summary.queue_done||0,'Historical completed jobs retained in queue log')
+    +'</div>';
+  html+='</div>';
+  document.getElementById('d-queue').innerHTML=html;
+}
+
+function renderHeatmap(rows,buckets){
+  if(!rows.length){
+    document.getElementById('d-heatmap').innerHTML='<div class="ops-empty">No open-ticket SLA exposure detected in the current dataset.</div>';
+    return;
+  }
+  var maxCount=1;
+  rows.forEach(function(row){(row.cells||[]).forEach(function(cell){maxCount=Math.max(maxCount,cell.count||0);});});
+  var html='<div class="heat-wrap"><div class="heat-grid"><div class="heat-col">Priority</div>';
+  (buckets||[]).forEach(function(bucket){html+='<div class="heat-col">'+esc(bucket)+'</div>';});
+  rows.forEach(function(row){
+    html+='<div class="heat-label"><span class="b '+row.priority+'">'+row.priority+'</span></div>';
+    (row.cells||[]).forEach(function(cell){
+      var tone=heatColor(row.priority,cell.count||0,maxCount);
+      html+='<div class="heat-cell" style="'+tone+'"><div>'+fmtNum(cell.count||0)+'</div><span>'+esc(cell.bucket)+'</span></div>';
+    });
+  });
+  html+='</div></div>';
+  document.getElementById('d-heatmap').innerHTML=html;
+}
+
+function renderAgentPerformance(list){
+  if(!list.length){
+    document.getElementById('d-agent-perf').innerHTML='<div class="ops-empty">Agent latency will appear here once recent pipeline runs are recorded.</div>';
+    return;
+  }
+  var sorted=list.slice().sort(function(a,b){return (b.p95_ms||0)-(a.p95_ms||0) || (b.executions_per_min||0)-(a.executions_per_min||0);});
+  var cap=Math.max.apply(null,sorted.map(function(a){return Math.max(a.p95_ms||0,a.avg_ms||0,1);}).concat([1]));
+  document.getElementById('d-agent-perf').innerHTML='<div class="agent-list">'+sorted.map(function(agent){
+    var errorRate=agent.error_rate||0;
+    var tone=errorRate>0?'hot':(agent.executions_per_min||0)>0?'good':'';
+    var width=Math.max(14,Math.round((Math.max(agent.p95_ms||0,agent.avg_ms||0,1)/cap)*100));
+    return '<div class="agent-row">'
+      +'<div class="agent-row-top"><div><div class="agent-name">'+prettyAgent(agent.agent)+'</div><div class="agent-meta">'+(agent.total_runs||0)+' runs · last seen '+fd(agent.last_run_ts)+'</div></div><span class="b '+(errorRate>0?'failed':'done')+'">'+(errorRate>0?errorRate.toFixed(1)+'% error':'stable')+'</span></div>'
+      +'<div class="agent-stats">'
+        +agentStatHtml('avg',fmtMs(agent.avg_ms))
+        +agentStatHtml('p95',fmtMs(agent.p95_ms))
+        +agentStatHtml('max',fmtMs(agent.max_ms))
+        +agentStatHtml('exec/min',agent.executions_per_min!=null?agent.executions_per_min.toFixed(2):'—')
+      +'</div>'
+      +'<div class="agent-bar"><span style="width:'+width+'%;background:'+(tone==='hot'?'linear-gradient(90deg,#fb7185,#f97316)':'linear-gradient(90deg,#22d3ee,#38bdf8)')+'"></span></div>'
+      +'</div>';
+  }).join('')+'</div>';
+}
+
+function renderAutomation(summary,throughput){
+  var automated=summary.automation_success||0;
+  var escalated=summary.human_escalations||0;
+  var total=automated+escalated;
+  var processed4=sumTail(throughput,4,'processed');
+  var items=[
+    autoStatHtml('Automated resolutions',fmtNum(automated),total?'Within the last 24h telemetry window':'Awaiting recent routing activity'),
+    autoStatHtml('Human escalations',fmtNum(escalated),escalated>0?'Escalated tickets from autonomous pipeline':'No recent human escalation observed'),
+    autoStatHtml('Automation ratio',summary.automation_ratio!=null?summary.automation_ratio.toFixed(1)+'%':'—',summary.automation_ratio!=null?'Share of autonomous handling in the observed window':'No comparable flow yet'),
+    autoStatHtml('Processed 4h',fmtNum(processed4),'Recent pipeline completions feeding the automation surface')
+  ];
+  document.getElementById('d-automation').innerHTML='<div class="auto-list">'+items.join('')+'</div>';
+}
+
+function renderPipeline(events){
+  var groups=buildPipelineGroups(events);
+  if(!groups.length){
+    document.getElementById('d-pipeline').innerHTML='<div class="ops-empty">Recent ticket timelines will appear once agent events stream through the pipeline.</div>';
+    return;
+  }
+  document.getElementById('d-pipeline').innerHTML='<div class="timeline-list">'+groups.map(function(group){
+    return '<div class="timeline-item">'
+      +'<div class="timeline-top"><div><div class="timeline-name"><span class="ops-link" onclick="viewTicket(\''+group.ticket_id+'\')">'+esc(group.title||group.ticket_id)+'</span></div><div class="timeline-meta">'+fd(group.last_ts)+' · '+group.present+'/'+DASH_STAGE_ORDER.length+' stages captured</div></div><div class="ops-inline"><span class="b '+(group.priority||'medium')+'">'+(group.priority||'medium')+'</span><span class="ops-tag">'+fmtMs(group.total_ms)+'</span></div></div>'
+      +'<div class="timeline-track">'+group.stages.map(function(stage){
+        return '<div class="timeline-stage'+(stage.failed?' fail':'')+'" style="--stage-color:'+stage.color+';--fill:'+stage.fill+'%"><div class="timeline-stage-l">'+stage.label+'</div><div class="timeline-stage-v">'+stage.display+'</div><div class="timeline-stage-s">'+stage.note+'</div></div>';
+      }).join('')+'</div>'
+      +'</div>';
+  }).join('')+'</div>';
+}
+
+function renderStream(events){
+  if(!events.length){
+    document.getElementById('d-stream').innerHTML='<div class="ops-empty">No agent events available for the live stream yet.</div>';
+    return;
+  }
+  document.getElementById('d-stream').innerHTML='<div class="stream-list">'+events.slice(0,10).map(function(evt){
+    var failed=!!(evt.result&&evt.result.status==='failed');
+    return '<div class="stream-item">'
+      +'<div class="stream-top"><div><div class="stream-name"><span class="ops-link" onclick="viewTicket(\''+evt.ticket_id+'\')">'+esc(evt.title||evt.ticket_id)+'</span></div><div class="stream-meta">'+prettyAgent(evt.agent)+' · '+fd(evt.ts)+'</div></div><div class="ops-inline"><span class="b '+(evt.priority||'medium')+'">'+(evt.priority||'medium')+'</span><span class="ops-tag">'+durationLabel(evt.duration_ms)+'</span></div></div>'
+      +'<div class="stream-status"><span>'+(failed?'Stage failure':'Stage latency')+'</span><strong>'+(failed?'Investigate agent output':'Captured '+durationLabel(evt.duration_ms))+'</strong></div>'
+      +'</div>';
+  }).join('')+'</div>';
+}
+
+function renderSlowTickets(list){
+  if(!list.length){
+    document.getElementById('d-slowest').innerHTML='<div class="ops-empty">No slow tickets detected yet in the recent telemetry window.</div>';
+    return;
+  }
+  document.getElementById('d-slowest').innerHTML='<div class="slow-list">'+list.slice(0,6).map(function(ticket){
+    return '<div class="slow-item">'
+      +'<div class="slow-top"><div><div class="slow-name"><span class="ops-link" onclick="viewTicket(\''+ticket.ticket_id+'\')">'+esc(ticket.title||ticket.ticket_id)+'</span></div><div class="slow-meta">'+fd(ticket.last_event_ts)+' · '+(ticket.assigned_team||'unassigned')+'</div></div><div class="ops-inline"><span class="b '+(ticket.priority||'medium')+'">'+(ticket.priority||'medium')+'</span><span class="ops-tag">'+fmtMs(ticket.total_ms)+'</span></div></div>'
+      +'<div class="ops-inline"><span class="ops-mini"><strong>'+fmtNum(ticket.stages||0)+'</strong> stages</span><span class="ops-sep"></span><span class="ops-mini">slowest stage <strong>'+fmtMs(ticket.slowest_stage_ms)+'</strong></span><span class="ops-sep"></span><span class="ops-mini">status <strong>'+esc((ticket.status||'open').replace(/_/g,' '))+'</strong></span></div>'
+      +'</div>';
+  }).join('')+'</div>';
+}
+
+function renderFailingAgents(list,summary){
+  if(!list.length){
+    document.getElementById('d-failing').innerHTML='<div class="ops-empty">No failing agents in the recent window. Retry count currently at '+fmtNum(summary.retry_count||0)+'.</div>';
+    return;
+  }
+  document.getElementById('d-failing').innerHTML='<div class="failing-list">'+list.map(function(agent){
+    return '<div class="failing-item">'
+      +'<div class="failing-top"><div><div class="failing-name">'+prettyAgent(agent.agent)+'</div><div class="failing-meta">'+(agent.total_runs||0)+' runs · last seen '+fd(agent.last_run_ts)+'</div></div><span class="b failed">'+(agent.error_rate||0).toFixed(1)+'% error</span></div>'
+      +'<div class="ops-inline"><span class="ops-mini"><strong>'+fmtNum(agent.failures||0)+'</strong> failed runs</span><span class="ops-sep"></span><span class="ops-mini">p95 <strong>'+fmtMs(agent.p95_ms)+'</strong></span><span class="ops-sep"></span><span class="ops-mini">exec/min <strong>'+(agent.executions_per_min!=null?agent.executions_per_min.toFixed(2):'—')+'</strong></span></div>'
+      +'</div>';
+  }).join('')+'</div>';
+}
+
+function renderRecentTickets(list){
+  if(!list.length){
+    document.getElementById('d-recent').innerHTML='<div class="ops-empty">No recent tickets are available to display.</div>';
+    return;
+  }
+  document.getElementById('d-recent').innerHTML='<div class="recent-list">'+list.slice(0,6).map(function(ticket){
+    return '<div class="recent-item">'
+      +'<div class="recent-top"><div><div class="recent-name"><span class="ops-link" onclick="viewTicket(\''+ticket.id+'\')">'+esc(ticket.title)+'</span></div><div class="recent-meta">'+fd(ticket.created_at)+'</div></div><span class="b '+ticket.priority+'">'+ticket.priority+'</span></div>'
+      +'<div class="ops-inline"><span class="ops-mini">status <strong>'+esc((ticket.status||'open').replace(/_/g,' '))+'</strong></span><span class="ops-sep"></span><span class="ops-mini">'+(ticket.assigned_team?('team <strong>'+esc(ticket.assigned_team)+'</strong>'):'<strong>Awaiting routing</strong>')+'</span></div>'
+      +'</div>';
+  }).join('')+'</div>';
+}
+
+function buildPipelineGroups(events){
+  var groups={}, order=[];
+  events.forEach(function(evt){
+    if(!evt || !evt.ticket_id)return;
+    if(!groups[evt.ticket_id]){
+      if(order.length>=4)return;
+      groups[evt.ticket_id]={ticket_id:evt.ticket_id,title:evt.title||evt.ticket_id,priority:evt.priority||'medium',last_ts:evt.ts,stagesByName:{}};
+      order.push(evt.ticket_id);
+    }
+    var group=groups[evt.ticket_id];
+    if(!group.stagesByName[evt.agent]) group.stagesByName[evt.agent]=evt;
+    group.last_ts=Math.max(group.last_ts||0,evt.ts||0);
+  });
+  return order.map(function(ticketId){
+    var group=groups[ticketId];
+    var captured=DASH_STAGE_ORDER.map(function(name){return group.stagesByName[name];}).filter(Boolean);
+    var maxDuration=Math.max.apply(null,captured.map(function(evt){return safeDuration(evt.duration_ms)||1;}).concat([1]));
+    var total=0,present=0;
+    var stages=DASH_STAGE_ORDER.map(function(name){
+      var evt=group.stagesByName[name];
+      var meta=DASH_STAGE_META[name]||{label:prettyAgent(name),color:'rgba(74,222,128,.24)'};
+      if(!evt){
+        return {label:meta.label,color:meta.color,display:'—',note:'no event',fill:16,failed:false};
+      }
+      present+=1;
+      total+=safeDuration(evt.duration_ms)||0;
+      return {
+        label:meta.label,
+        color:meta.color,
+        display:durationLabel(evt.duration_ms),
+        note:(evt.result&&evt.result.status==='failed')?'failed':'captured',
+        failed:!!(evt.result&&evt.result.status==='failed'),
+        fill:Math.max(18,Math.round(((safeDuration(evt.duration_ms)||1)/maxDuration)*100))
+      };
+    });
+    return {ticket_id:group.ticket_id,title:group.title,priority:group.priority,last_ts:group.last_ts,total_ms:total,present:present,stages:stages};
+  });
+}
+
+function calcLoadScore(health,summary,throughput){
+  var imbalance=Math.max((summary.tickets_created_in_window||0)-(summary.tickets_resolved_in_window||0),0);
+  var score=(summary.queue_depth||0)*9+(summary.queue_running||0)*11+(summary.queue_failed||0)*18+(summary.sla_risk_open||0)*14+imbalance*4+sumTail(throughput,4,'failed')*10;
+  if(health.status!=='ok') score+=30;
+  if(health.db!=='ok') score+=25;
+  if(health.redis!=='ok') score+=20;
+  return clamp(score,0,100);
+}
+
+function legendItemHtml(label,color,value,denom){
+  return '<span class="ops-legend-item"><span class="ops-legend-dot" style="background:'+color+'"></span>'+label+' <strong>'+(value||0)+'</strong> '+Math.round(((value||0)/Math.max(denom,1))*100)+'%</span>';
+}
+
+function queueCellHtml(label,value,sub){
+  return '<div class="queue-cell"><div class="queue-cell-l">'+label+'</div><div class="queue-cell-v">'+fmtNum(value)+'</div><div class="queue-cell-s">'+sub+'</div></div>';
+}
+
+function agentStatHtml(label,value){
+  return '<span class="agent-stat">'+label+' <strong>'+value+'</strong></span>';
+}
+
+function autoStatHtml(label,value,sub){
+  return '<div class="auto-stat"><div class="agent-name">'+label+'</div><div class="ops-inline" style="margin-top:8px"><span class="ops-tag">'+value+'</span></div><div class="agent-meta" style="margin-top:8px">'+sub+'</div></div>';
+}
+
+function heatColor(priority,count,maxCount){
+  var palette={critical:[239,68,68],high:[245,158,11],medium:[56,189,248],low:[74,222,128]};
+  var rgb=palette[priority]||[148,163,184];
+  var ratio=maxCount?count/maxCount:0;
+  var alpha=count?0.12+(ratio*.7):0.04;
+  return 'background:rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+alpha.toFixed(3)+');border-color:rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+Math.max(alpha,.16).toFixed(3)+');';
+}
+
+function prettyAgent(name){
+  return esc((name||'agent').replace(/_/g,' '));
+}
+
+function fmtNum(value){
+  return value===null||value===undefined?'—':Number(value).toLocaleString('en-US');
+}
+
+function fmtMs(value){
+  if(value===null||value===undefined||isNaN(Number(value)))return'—';
+  var ms=Number(value);
+  if(ms<1)return'sub-ms';
+  if(ms<1000)return Math.round(ms)+'ms';
+  return (ms/1000).toFixed(ms>=10000?0:1)+'s';
+}
+
+function fmtHours(value){
+  if(value===null||value===undefined||isNaN(Number(value)))return'—';
+  var h=Number(value);
+  if(h<1)return Math.round(h*60)+'m';
+  if(h<24)return h.toFixed(h<10?1:0)+'h';
+  return (h/24).toFixed(1)+'d';
+}
+
+function durationLabel(value){
+  if(value===null||value===undefined)return'—';
+  return Number(value)>0?fmtMs(value):'sub-ms';
+}
+
+function safeDuration(value){
+  if(value===null||value===undefined)return null;
+  return Math.max(Number(value)||0,1);
+}
+
+function sumSeries(rows,key){
+  return (rows||[]).reduce(function(sum,row){return sum+Number(row&&row[key]||0);},0);
+}
+
+function sumTail(rows,count,key){
+  return (rows||[]).slice(-count).reduce(function(sum,row){return sum+Number(row&&row[key]||0);},0);
+}
+
+function updateDashClock(){
+  var el=document.getElementById('d-clock');
+  if(!el)return;
+  el.textContent=new Date().toLocaleTimeString('en-US',{hour12:false});
+}
+
+/* ── tickets ─────────────────────────────────────────────────────────── */
+var PSZ=50;
+function tSearchDelay(){clearTimeout(stimer);stimer=setTimeout(function(){tOff=0;tLoad();},320);}
+function tLoad(){
+  selIds.clear();updBulk();
+  var st=document.getElementById('t-status').value,
+      pr=document.getElementById('t-priority').value,
+      ca=document.getElementById('t-category').value,
+      se=document.getElementById('t-search').value.trim();
+  var url='/api/tickets?limit='+PSZ+'&offset='+tOff;
+  if(st)url+='&status='+st; if(pr)url+='&priority='+pr;
+  if(ca)url+='&category='+ca; if(se)url+='&search='+encodeURIComponent(se);
+  apiFetch(url).then(function(d){
+    tTotal=d.total||0;
+    document.getElementById('t-info').textContent=(tOff+1)+'–'+Math.min(tOff+PSZ,tTotal)+' of '+tTotal+' tickets';
+    document.getElementById('t-prev').disabled=tOff===0;
+    document.getElementById('t-next').disabled=tOff+PSZ>=tTotal;
+    document.getElementById('t-body').innerHTML=(d.items||[]).map(function(t){
+      return '<tr><td><input type="checkbox" value="'+t.id+'" onchange="togSel(this)"></td><td class="trunc" style="max-width:240px"><span class="lnk" onclick="viewTicket(\''+t.id+'\')">'+esc(t.title)+'</span></td><td><span class="b '+t.priority+'">'+t.priority+'</span></td><td><span class="b '+t.status+'">'+t.status.replace(/_/g,' ')+'</span></td><td style="color:var(--muted)">'+(t.category||'—')+'</td><td style="color:var(--muted)">'+(t.assigned_team||'—')+'</td><td style="color:var(--faint);white-space:nowrap">'+fd(t.created_at)+'</td><td><button class="btn btn-g btn-sm" type="button" onclick="viewTicket(\''+t.id+'\')">View →</button></td></tr>';
+    }).join('')||'<tr><td colspan="8" class="tc-empty">No tickets match your filters.</td></tr>';
+  }).catch(function(e){document.getElementById('t-body').innerHTML='<tr><td colspan="8" class="tc-empty" style="color:var(--red)">'+esc(e.message)+'</td></tr>';});
+}
+function tPage(d){tOff=Math.max(0,tOff+d*PSZ);tLoad();}
+function togSel(cb){if(cb.checked)selIds.add(cb.value);else selIds.delete(cb.value);updBulk();}
+function selAll(){var c=document.getElementById('sel-all').checked;document.querySelectorAll('#t-body input[type=checkbox]').forEach(function(cb){cb.checked=c;if(c)selIds.add(cb.value);else selIds.delete(cb.value);});updBulk();}
+function updBulk(){var b=document.getElementById('bulk-bar');if(selIds.size>0){b.style.display='flex';document.getElementById('sel-cnt').textContent=selIds.size+' selected';}else b.style.display='none';}
+function bulkClose(){
+  if(!selIds.size)return;
+  if(!confirm('Close '+selIds.size+' ticket(s)?'))return;
+  apiFetch('/api/tickets/bulk-close','POST',{ticket_ids:Array.from(selIds)})
+    .then(function(r){toast('Closed '+r.closed+' ticket(s)'+(r.not_found&&r.not_found.length?' ('+r.not_found.length+' not found)':''),'ok');tLoad();})
+    .catch(function(e){toast(e.message,'err');});
+}
+
+/* ── ticket detail ───────────────────────────────────────────────────── */
+function viewTicket(id){
+  goTo('detail');
+  document.getElementById('det-body').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:200px"><div class="spin"></div></div>';
+  Promise.all([apiFetch('/api/tickets/'+id),apiFetch('/api/analytics/sla/'+id).catch(function(){return null;})])
+    .then(function(res){
+      var t=res[0],sla=res[1]; editId=id;
+      var html='<div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:22px;flex-wrap:wrap"><div style="flex:1;min-width:0"><h2 style="font-size:17px;font-weight:700;line-height:1.3;margin-bottom:6px">'+esc(t.title)+'</h2><div class="mono" style="color:var(--faint)">'+t.id+'</div></div><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="b '+t.priority+'">'+t.priority+'</span><span class="b '+t.status+'">'+t.status.replace(/_/g,' ')+'</span>'+(t.response_sla_breached?'<span class="b critical">⚠ SLA Breached</span>':'')+'</div></div>';
+      html+='<div class="dmeta"><div class="dcell"><div class="dclbl">Category</div><div class="dcval">'+(t.category||'—')+'</div></div><div class="dcell"><div class="dclbl">Source</div><div class="dcval">'+(t.source||'api')+'</div></div><div class="dcell"><div class="dclbl">Created</div><div class="dcval">'+fd(t.created_at)+'</div></div><div class="dcell"><div class="dclbl">Assigned Team</div><div class="dcval">'+(t.assigned_team||'—')+'</div></div><div class="dcell"><div class="dclbl">Assigned To</div><div class="dcval">'+(t.assigned_to||'—')+'</div></div><div class="dcell"><div class="dclbl">Resolved</div><div class="dcval">'+(t.resolved_at?fd(t.resolved_at):'—')+'</div></div></div>';
+      if(t.description) html+='<div class="cc" style="margin-bottom:14px"><div class="cc-t" style="margin-bottom:10px">Description</div><p style="font-size:13px;color:var(--muted);line-height:1.75;white-space:pre-wrap">'+esc(t.description)+'</p></div>';
+      if(t.suggested_response) html+='<div class="cc" style="margin-bottom:14px;border-color:rgba(124,58,237,.3)"><div style="margin-bottom:10px"><span class="ai-tag">🤖 AI Suggested Response</span></div><p style="font-size:13px;line-height:1.75">'+esc(t.suggested_response)+'</p></div>';
+      if(sla) html+='<div class="cc" style="margin-bottom:14px"><div class="cc-t" style="margin-bottom:14px">SLA Status</div><div class="g2"><div><div style="font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Response SLA</div><div style="font-size:13px;font-weight:600;color:'+(t.response_sla_breached?'var(--red)':'var(--green)')+'">'+( t.response_sla_breached?'Breached':'Compliant')+'</div>'+(sla.response_time_remaining_seconds>0?'<div style="font-size:11px;color:var(--faint);margin-top:3px">'+Math.round(sla.response_time_remaining_seconds/60)+' min remaining</div>':'')+'</div><div><div style="font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Resolution SLA</div><div style="font-size:13px;font-weight:600;color:'+(sla.resolution_sla_breached?'var(--red)':'var(--green)')+'">'+( sla.resolution_sla_breached?'Breached':'Compliant')+'</div>'+(sla.resolution_seconds?'<div style="font-size:11px;color:var(--faint);margin-top:3px">Resolved in '+Math.round(sla.resolution_seconds/3600)+'h</div>':'')+'</div></div></div>';
+      html+='<div style="display:flex;gap:8px;flex-wrap:wrap">'+(!['resolved','closed'].includes(t.status)?'<button class="btn btn-p" type="button" onclick="resTicket(\''+t.id+'\')">✓ Mark Resolved</button>':'')+'<button class="btn btn-g" type="button" onclick="openEditM(\''+t.id+'\',\''+t.status+'\',\''+t.priority+'\',\''+t.category+'\')">✎ Edit</button><button class="btn btn-g" type="button" onclick="retryJob(\''+t.id+'\')">↺ Re-run AI Pipeline</button></div>';
+      document.getElementById('det-body').innerHTML=html;
+    })
+    .catch(function(e){document.getElementById('det-body').innerHTML='<div style="color:var(--red);padding:20px">'+esc(e.message)+'</div>';});
+}
+function resTicket(id){apiFetch('/api/tickets/'+id+'/resolve','POST').then(function(){toast('Ticket resolved','ok');viewTicket(id);}).catch(function(e){toast(e.message,'err');});}
+function retryJob(id){apiFetch('/api/queue/'+id+'/retry','POST').then(function(r){toast('Job re-enqueued: '+r.job_id.slice(0,12)+'…','ok');}).catch(function(e){toast(e.message,'err');});}
+function openEditM(id,status,priority,category){
+  editId=id;
+  document.getElementById('ed-status').value=status;
+  document.getElementById('ed-pri').value=priority;
+  document.getElementById('ed-cat').value=category;
+  openM('m-edit');
+}
+function saveEdit(){
+  apiFetch('/api/tickets/'+editId,'PATCH',{status:document.getElementById('ed-status').value,priority:document.getElementById('ed-pri').value,category:document.getElementById('ed-cat').value})
+    .then(function(){closeM('m-edit');toast('Ticket updated','ok');viewTicket(editId);})
+    .catch(function(e){toast(e.message,'err');});
+}
+
+/* ── create ticket ───────────────────────────────────────────────────── */
+function createTicket(){
+  var title=document.getElementById('new-title').value.trim();
+  if(!title){toast('Title is required','err');return;}
+  var idem=document.getElementById('new-idem').value.trim();
+  var p={title:title,description:document.getElementById('new-desc').value,priority:document.getElementById('new-pri').value,category:document.getElementById('new-cat').value};
+  if(idem) p.idempotency_key=idem;
+  apiFetch('/api/tickets','POST',p)
+    .then(function(t){
+      closeM('m-create');
+      document.getElementById('new-title').value='';document.getElementById('new-desc').value='';document.getElementById('new-idem').value='';
+      toast('Ticket created — AI pipeline queued','ok');viewTicket(t.id);
+    }).catch(function(e){toast(e.message,'err');});
+}
+
+/* ── queue ───────────────────────────────────────────────────────────── */
+function qLoad(){
+  var st=document.getElementById('q-status').value;
+  apiFetch('/api/queue?limit=100'+(st?'&status='+st:''))
+    .then(function(jobs){
+      setBadge('nbg-queue',jobs.filter(function(j){return j.status==='failed';}).length);
+      document.getElementById('q-info').textContent=jobs.length+' jobs';
+      document.getElementById('q-body').innerHTML=(jobs||[]).map(function(j){
+        return '<tr><td class="mono trunc" style="max-width:130px;color:var(--faint)">'+(j.job_id||'').slice(0,16)+'…</td><td><span class="lnk" onclick="viewTicket(\''+j.ticket_id+'\')">'+esc(j.title||j.ticket_id)+'</span></td><td>'+(j.priority?'<span class="b '+j.priority+'">'+j.priority+'</span>':'—')+'</td><td><span class="b '+j.status+'">'+j.status+'</span></td><td style="color:var(--muted)">'+(j.attempts||0)+'</td><td style="color:var(--faint);white-space:nowrap">'+fd(j.updated_at)+'</td><td>'+(j.status==='failed'?'<button class="btn btn-g btn-sm" type="button" onclick="retryJob(\''+j.ticket_id+'\')">↺ Retry</button>':'')+'</td></tr>';
+      }).join('')||'<tr><td colspan="7" class="tc-empty">Queue is empty.</td></tr>';
+    }).catch(function(e){toast(e.message,'err');});
+}
+
+/* ── agents ──────────────────────────────────────────────────────────── */
+function agLoad(){
+  Promise.all([apiFetch('/api/agents'),apiFetch('/api/agents/events')])
+    .then(function(res){
+      var agents=res[0],events=res[1];
+      var mx=Math.max.apply(null,agents.map(function(a){return a.total_runs||0;}).concat([1]));
+      document.getElementById('ag-stats').innerHTML=agents.map(function(a){
+        return '<div class="sc"><div class="sc-lbl">'+a.agent.replace(/_/g,' ')+'</div><div class="sc-val" style="font-size:20px">'+a.total_runs+'</div><div class="sc-sub">'+(a.avg_ms!=null?'avg '+a.avg_ms+'ms':'no data')+' · '+(a.last_run_ts?fd(a.last_run_ts):'never')+'</div><div class="spark-t"><div class="spark-f" style="width:'+Math.round(((a.total_runs||0)/mx)*100)+'%"></div></div></div>';
+      }).join('');
+      document.getElementById('ag-body').innerHTML=(events||[]).map(function(e){
+        return '<tr><td class="trunc" style="max-width:220px"><span class="lnk" onclick="viewTicket(\''+e.ticket_id+'\')">'+esc(e.title||e.ticket_id)+'</span></td><td><span style="background:var(--purple-bg);color:var(--purple);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">'+e.agent.replace(/_/g,' ')+'</span></td><td style="color:var(--muted)">'+(e.duration_ms!=null?e.duration_ms+'ms':'—')+'</td><td style="color:var(--faint);white-space:nowrap">'+fd(e.ts)+'</td></tr>';
+      }).join('')||'<tr><td colspan="4" class="tc-empty">No pipeline events yet.</td></tr>';
+    }).catch(function(e){toast(e.message,'err');});
+}
+
+/* ── integrations ────────────────────────────────────────────────────── */
+function intLoad(){
+  apiFetch('/api/integrations').then(function(list){
+    document.getElementById('int-info').textContent=list.length+' integration'+(list.length===1?'':'s');
+    document.getElementById('int-body').innerHTML=(list||[]).map(function(i){
+      return '<tr><td style="font-weight:500">'+esc(i.name)+'</td><td style="color:var(--muted)">'+i.type+'</td><td><span class="b '+i.status+'">'+i.status+'</span></td><td style="color:var(--muted)">'+(i.event_count||0)+'</td><td style="color:var(--faint);white-space:nowrap">'+(i.last_sync_at?fd(i.last_sync_at):'never')+'</td><td style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn btn-g btn-sm" type="button" onclick="testInt(\''+i.id+'\')">Test</button><button class="btn btn-g btn-sm" type="button" onclick="copyIngest(\''+i.id+'\')">Copy URL</button><button class="btn btn-d btn-sm" type="button" onclick="delInt(\''+i.id+'\')">Delete</button></td></tr>';
+    }).join('')||'<tr><td colspan="6" class="tc-empty">No integrations configured yet.</td></tr>';
+  }).catch(function(e){toast(e.message,'err');});
+}
+function createInt(){
+  var name=document.getElementById('im-name').value.trim();
+  if(!name){toast('Name required','err');return;}
+  var url=document.getElementById('im-url').value.trim(),secret=document.getElementById('im-secret').value;
+  apiFetch('/api/integrations','POST',{name:name,type:document.getElementById('im-type').value,config:url?{notify_url:url}:{},secret:secret||null})
+    .then(function(){closeM('m-int');document.getElementById('im-name').value='';document.getElementById('im-url').value='';document.getElementById('im-secret').value='';toast('Integration created','ok');intLoad();})
+    .catch(function(e){toast(e.message,'err');});
+}
+function testInt(id){apiFetch('/api/integrations/'+id+'/test','POST').then(function(r){toast((r.ok?'✓ ':'✗ ')+r.message,r.ok?'ok':'err');intLoad();}).catch(function(e){toast(e.message,'err');});}
+function delInt(id){if(!confirm('Delete this integration?'))return;apiFetch('/api/integrations/'+id,'DELETE').then(function(){toast('Deleted','ok');intLoad();}).catch(function(e){toast(e.message,'err');});}
+function copyIngest(id){var u=location.origin+'/api/integrations/'+id+'/ingest';if(navigator.clipboard)navigator.clipboard.writeText(u).then(function(){toast('Ingest URL copied','info');});else toast(u,'info');}
+
+/* ── users ───────────────────────────────────────────────────────────── */
+function usrLoad(){
+  apiFetch('/api/users').then(function(users){
+    document.getElementById('usr-info').textContent=users.length+' user'+(users.length===1?'':'s');
+    document.getElementById('usr-body').innerHTML=(users||[]).map(function(u){
+      return '<tr><td style="font-weight:500">'+esc(u.email)+'</td><td>'+esc(u.name)+'</td><td><span class="b '+u.role+'">'+u.role+'</span></td><td><span class="b '+(u.active?'active':'inactive')+'">'+(u.active?'Active':'Disabled')+'</span></td><td style="color:var(--faint);white-space:nowrap">'+fd(u.created_at)+'</td><td>'+(u.active?'<button class="btn btn-d btn-sm" type="button" onclick="toggleUsr(\''+u.id+'\',false)">Disable</button>':'<button class="btn btn-g btn-sm" type="button" onclick="toggleUsr(\''+u.id+'\',true)">Enable</button>')+'</td></tr>';
+    }).join('')||'<tr><td colspan="6" class="tc-empty">No users found.</td></tr>';
+  }).catch(function(e){toast(e.message,'err');});
+}
+function createUser(){
+  var email=document.getElementById('um-email').value.trim(),name=document.getElementById('um-name').value.trim(),pw=document.getElementById('um-pw').value;
+  if(!email||!name||!pw){toast('All fields required','err');return;}
+  apiFetch('/api/users','POST',{email:email,name:name,role:document.getElementById('um-role').value,password:pw})
+    .then(function(){closeM('m-user');document.getElementById('um-email').value='';document.getElementById('um-name').value='';document.getElementById('um-pw').value='';toast('User created','ok');usrLoad();})
+    .catch(function(e){toast(e.message,'err');});
+}
+function toggleUsr(id,active){apiFetch('/api/users/'+id,'PATCH',{active:active}).then(function(){toast('User '+(active?'enabled':'disabled'),'ok');usrLoad();}).catch(function(e){toast(e.message,'err');});}
+
+/* ── system ──────────────────────────────────────────────────────────── */
+function sysLoad(){
+  var lv=document.getElementById('log-lv').value;
+  Promise.all([apiFetch('/health','GET',null,false),apiFetch('/api/analytics/sla?days=30').catch(function(){return{compliance_rate:null,avg_resolution_seconds:null};}),apiFetch('/api/system/log?limit=80'+(lv?'&level='+lv:''))])
+    .then(function(res){
+      var h=res[0],sla=res[1],logs=res[2];
+      document.getElementById('sys-stats').innerHTML=[
+        {l:'API Status',v:h.status,c:h.status==='ok'?'green':'red'},
+        {l:'Database',v:h.db,c:h.db==='ok'?'green':'red'},
+        {l:'Redis',v:h.redis,c:h.redis==='ok'?'green':'red'},
+        {l:'Version',v:h.version||'—',c:''},
+        {l:'SLA Compliance',v:sla.compliance_rate!=null?sla.compliance_rate+'%':'—',c:sla.compliance_rate>=95?'green':sla.compliance_rate>=80?'amber':'red'},
+        {l:'Avg Resolution',v:sla.avg_resolution_seconds?Math.round(sla.avg_resolution_seconds/3600)+'h':'—',c:''},
+      ].map(function(s){return '<div class="sc"><div class="sc-lbl">'+s.l+'</div><div class="sc-val'+(s.c?' '+s.c:'')+'" style="font-size:18px">'+s.v+'</div></div>';}).join('');
+      document.getElementById('log-body').innerHTML=(logs||[]).map(function(l){
+        return '<tr><td class="mono" style="color:var(--faint);white-space:nowrap">'+fd(l.ts)+'</td><td><span class="b '+(l.level==='ERROR'?'critical':l.level==='WARN'?'high':'done')+'">'+l.level+'</span></td><td style="color:var(--muted);font-size:12px;white-space:nowrap">'+esc(l.source)+'</td><td style="color:var(--muted);font-size:12px">'+esc(l.message)+'</td></tr>';
+      }).join('')||'<tr><td colspan="4" class="tc-empty">No log entries.</td></tr>';
+    }).catch(function(e){toast(e.message,'err');});
+}
+function auditLoad(){
+  apiFetch('/api/audit?limit=60').then(function(rows){
+    document.getElementById('audit-body').innerHTML=(rows||[]).map(function(r){
+      return '<tr><td class="mono" style="color:var(--faint);white-space:nowrap">'+fd(r.ts)+'</td><td style="font-size:12px;color:var(--muted)">'+esc(r.user_email)+'</td><td><span style="background:var(--blue-bg);color:var(--blue);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">'+esc(r.action)+'</span></td><td style="color:var(--muted);font-size:12px">'+esc(r.resource_type)+'</td><td class="mono" style="color:var(--faint)">'+((r.resource_id||'').slice(0,16)||'—')+'</td></tr>';
+    }).join('')||'<tr><td colspan="5" class="tc-empty">No audit entries.</td></tr>';
+  }).catch(function(){});
+}
+function chPass(){
+  var old=document.getElementById('cp-old').value,nw=document.getElementById('cp-new').value;
+  if(!old||!nw){toast('Both fields required','err');return;}
+  apiFetch('/api/auth/change-password','POST',{current_password:old,new_password:nw})
+    .then(function(){document.getElementById('cp-old').value='';document.getElementById('cp-new').value='';toast('Password updated. Signing you out…','ok');setTimeout(doLogout,2200);})
+    .catch(function(e){toast(e.message,'err');});
+}
+
+/* ── charts ──────────────────────────────────────────────────────────── */
+function prepCanvas(id){
+  var c=document.getElementById(id);if(!c)return null;
+  var W=c.parentElement.clientWidth||400;
+  var H=parseInt(c.getAttribute('height')||'160',10);
+  c.width=W*2;c.height=H*2;c.style.height=H+'px';
+  var x=c.getContext('2d');
+  x.setTransform(2,0,0,2,0,0);
+  x.clearRect(0,0,W,H);
+  return {canvas:c,ctx:x,width:W,height:H};
+}
+
+function drawEmptyCanvas(ctx,W,H,msg){
+  ctx.fillStyle='#64748b';
+  ctx.font='12px Inter';
+  ctx.textAlign='center';
+  ctx.fillText(msg||'No data',W/2,H/2);
+}
+
+function drawSeriesChart(id,rows,series){
+  var setup=prepCanvas(id);if(!setup)return;
+  var x=setup.ctx,W=setup.width,H=setup.height;
+  if(!rows||!rows.length||!series||!series.length){drawEmptyCanvas(x,W,H,'Awaiting telemetry');return;}
+  var pad={t:20,r:12,b:28,l:36},cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
+  var maxVal=Math.max.apply(null,series.map(function(s){
+    return Math.max.apply(null,rows.map(function(row){return Number(row&&row[s.key]||0);}).concat([0]));
+  }).concat([1]));
+  var px=function(i){return pad.l+(rows.length===1?cw/2:i*(cw/Math.max(rows.length-1,1)));};
+  var py=function(v){return pad.t+ch-(Number(v||0)/maxVal*ch);};
+
+  x.strokeStyle='rgba(148,163,184,.18)';
+  x.fillStyle='rgba(148,163,184,.65)';
+  x.font='10px Inter';
+  x.textAlign='right';
+  for(var i=0;i<=4;i++){
+    var gy=pad.t+i*(ch/4);
+    x.beginPath();x.moveTo(pad.l,gy);x.lineTo(pad.l+cw,gy);x.lineWidth=.8;x.stroke();
+    x.fillText(String(Math.round(maxVal-(maxVal*(i/4)))),pad.l-6,gy+3);
+  }
+
+  series.forEach(function(s){
+    var pts=rows.map(function(row,idx){return{x:px(idx),y:py(row[s.key]||0)};});
+    if(s.fill){
+      x.beginPath();
+      x.moveTo(pts[0].x,pts[0].y);
+      pts.slice(1).forEach(function(p){x.lineTo(p.x,p.y);});
+      x.lineTo(pts[pts.length-1].x,pad.t+ch);
+      x.lineTo(pts[0].x,pad.t+ch);
+      x.closePath();
+      x.fillStyle=s.fill;
+      x.fill();
+    }
+    x.beginPath();
+    x.moveTo(pts[0].x,pts[0].y);
+    pts.slice(1).forEach(function(p){x.lineTo(p.x,p.y);});
+    x.strokeStyle=s.color;
+    x.lineWidth=2;
+    x.lineJoin='round';
+    x.lineCap='round';
+    x.stroke();
+    pts.forEach(function(p){
+      x.beginPath();
+      x.arc(p.x,p.y,2.5,0,Math.PI*2);
+      x.fillStyle=s.color;
+      x.fill();
+    });
+  });
+
+  x.textAlign='center';
+  x.fillStyle='rgba(148,163,184,.68)';
+  var step=Math.max(1,Math.ceil(rows.length/6));
+  rows.forEach(function(row,idx){
+    if(idx%step===0 || idx===rows.length-1){
+      x.fillText(formatBucketLabel(row.bucket||row.date),px(idx),H-8);
+    }
+  });
+
+  x.textAlign='left';
+  x.font='10px Inter';
+  var lx=pad.l,ly=10;
+  series.forEach(function(s){
+    x.fillStyle=s.color;
+    x.fillRect(lx,ly,10,3);
+    x.fillStyle='rgba(219,233,239,.78)';
+    x.fillText(s.label,lx+14,ly+4);
+    lx+=x.measureText(s.label).width+34;
+  });
+}
+
+function drawRatioRing(id,parts,ratio){
+  var setup=prepCanvas(id);if(!setup)return;
+  var x=setup.ctx,W=setup.width,H=setup.height;
+  var items=(parts||[]).filter(function(part){return Number(part.value||0)>0;});
+  if(!items.length){drawEmptyCanvas(x,W,H,'No recent automation mix');return;}
+  var total=items.reduce(function(sum,part){return sum+Number(part.value||0);},0);
+  var ringX=W<320?W/2:Math.min(98,W*.34),ringY=H/2,r=Math.min(60,H/2-18);
+  var start=-Math.PI/2;
+  x.lineWidth=16;
+  x.strokeStyle='rgba(255,255,255,.08)';
+  x.beginPath();
+  x.arc(ringX,ringY,r,0,Math.PI*2);
+  x.stroke();
+
+  items.forEach(function(part){
+    var slice=(Number(part.value||0)/total)*Math.PI*2;
+    x.beginPath();
+    x.strokeStyle=part.color;
+    x.arc(ringX,ringY,r,start,start+slice);
+    x.stroke();
+    start+=slice;
+  });
+
+  x.textAlign='center';
+  x.fillStyle='#f8fafc';
+  x.font='700 20px Inter';
+  x.fillText(ratio!=null?ratio.toFixed(1)+'%':fmtNum(total),ringX,ringY+4);
+  x.font='11px Inter';
+  x.fillStyle='rgba(148,163,184,.9)';
+  x.fillText('automated',ringX,ringY+20);
+
+  var lx=W<320?18:Math.max(182,W*.54),ly=W<320?H-56:34;
+  x.textAlign='left';
+  items.forEach(function(part){
+    x.fillStyle=part.color;
+    x.fillRect(lx,ly,10,10);
+    x.fillStyle='rgba(219,233,239,.86)';
+    x.font='11px Inter';
+    x.fillText(part.label+' '+fmtNum(part.value),lx+16,ly+9);
+    ly+=18;
+  });
+}
+
+/* ── modal helpers ───────────────────────────────────────────────────── */
+function openM(id){
+  var el=document.getElementById(id);if(!el)return;
+  el.classList.add('on');
+  var first=el.querySelector('input:not([type=checkbox]),select,textarea');
+  if(first)setTimeout(function(){first.focus();},60);
+  el.addEventListener('click',function h(e){if(e.target===el){el.classList.remove('on');el.removeEventListener('click',h);}});
+}
+function closeM(id){var el=document.getElementById(id);if(el)el.classList.remove('on');}
+
+/* ── toast ───────────────────────────────────────────────────────────── */
+function toast(msg,type){
+  if(!type)type='info';
+  var icons={ok:'✓',err:'✗',info:'ℹ'};
+  var el=document.createElement('div');
+  el.className='ti '+type;
+  el.innerHTML='<span style="font-size:13px;flex-shrink:0">'+(icons[type]||'ℹ')+'</span><span>'+esc(msg)+'</span>';
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(function(){el.style.transition='opacity .18s,transform .18s';el.style.opacity='0';el.style.transform='translateY(6px)';setTimeout(function(){el.remove();},200);},3400);
+}
+
+/* ── utils ───────────────────────────────────────────────────────────── */
+function esc(s){var d=document.createElement('div');d.textContent=(s===null||s===undefined)?'':String(s);return d.innerHTML;}
+function setBadge(id,n){var el=document.getElementById(id);if(!el)return;if(n>0){el.textContent=n;el.style.display='';}else el.style.display='none';}
+function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+function formatBucketLabel(ts){
+  if(!ts)return'—';
+  var ms=ts>1e12?ts:ts*1000;
+  return new Date(ms).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+}
+function fd(ts){
+  if(!ts)return'—';
+  var ms=ts>1e12?ts:ts*1000,d=new Date(ms),now=new Date(),diff=now-d;
+  if(diff<60000)return'just now';
+  if(diff<3600000)return Math.round(diff/60000)+'m ago';
+  if(diff<86400000)return Math.round(diff/3600000)+'h ago';
+  if(diff<604800000)return Math.round(diff/86400000)+'d ago';
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:d.getFullYear()!==now.getFullYear()?'numeric':undefined});
+}
 </script>
 </body>
 </html>

@@ -22,7 +22,7 @@ async def me(identity: dict = Depends(require_auth)):
     return {"user_id": identity["sub"], "email": identity["email"], "role": identity["role"]}
 
 
-@router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/change-password", status_code=status.HTTP_200_OK)
 async def change_password(
     body: ChangePasswordRequest,
     request: Request,
@@ -33,3 +33,4 @@ async def change_password(
         await user_service.change_password(pool, identity["sub"], body.current_password, body.new_password)
     except AuthenticationError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    return {"ok": True}

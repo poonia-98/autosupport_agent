@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Any
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -20,7 +21,7 @@ class Settings(BaseSettings):
     host: str = Field(default="0.0.0.0")
     port: int = Field(default=8000)
 
-    secret_key: str = Field(default="dev-secret-change-me")
+    secret_key: str = Field(default="dev-secret-change-me-32-bytes-minimum")
     jwt_ttl_minutes: int = Field(default=480)
 
     admin_email: str = Field(default="admin@example.com")
@@ -28,7 +29,7 @@ class Settings(BaseSettings):
 
     # postgresql+asyncpg://user:pass@host:port/db
     database_url: str = Field(
-        default="postgresql+asyncpg://autosupport:autosupport@localhost:5432/autosupport"
+        default="postgresql+asyncpg://autosupport:autosupport@localhost:5433/autosupport"
     )
 
     redis_url: str = Field(default="redis://localhost:6379/0")
@@ -75,6 +76,19 @@ class Settings(BaseSettings):
         if v not in {"development", "staging", "production"}:
             raise ValueError(f"invalid environment: {v}")
         return v
+
+    @field_validator("debug", mode="before")
+    @classmethod
+    def _coerce_debug(cls, v: Any) -> bool:
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, str):
+            normalized = v.strip().lower()
+            if normalized in {"1", "true", "yes", "on", "debug", "development"}:
+                return True
+            if normalized in {"0", "false", "no", "off", "release", "prod", "production"}:
+                return False
+        return bool(v)
 
     @model_validator(mode="after")
     def _production_guards(self) -> "Settings":

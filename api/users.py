@@ -13,7 +13,7 @@ async def list_users(request: Request, identity: dict = Depends(require_admin)):
     return await store.list_users(request.app.state.pool)
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_200_OK)
 async def create_user(
     body:     CreateUserRequest,
     request:  Request,

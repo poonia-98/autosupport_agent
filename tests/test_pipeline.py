@@ -32,6 +32,16 @@ async def test_full_pipeline_general_ticket():
     assert result["suggested_response"]
     assert "audit" in result
     assert "audit_passed" in result["audit"]
+    assert "agent_trace" in result
+    assert set(result["agent_trace"]) == {
+        "ticket_classifier",
+        "priority_predictor",
+        "escalation_detector",
+        "response_suggester",
+        "auto_router",
+    }
+    assert result["pipeline_duration_ms"] >= 1
+    assert all(stage.get("duration_ms", 0) >= 1 for stage in result["agent_trace"].values())
 
 
 @pytest.mark.asyncio
@@ -94,6 +104,7 @@ async def test_pipeline_llm_disabled_still_works():
     result = await run_pipeline(ticket)
     assert result.get("intent") == "feature_request"
     assert result.get("assigned_team") == "product_team"
+    assert all((stage.get("duration_ms") or 0) >= 1 for stage in result.get("agent_trace", {}).values())
 
 
 @pytest.mark.asyncio

@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from core.config import get_settings
@@ -104,6 +104,7 @@ def verify_hmac(secret: str, body: bytes, signature: str) -> bool:
 
 
 async def require_auth(
+    request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer),
 ) -> dict:
     if not credentials:
@@ -114,7 +115,7 @@ async def require_auth(
     # token_version check — invalidates all tokens issued before password change
     from db.store import get_user_by_id
     from db.pool import get_pool
-    pool = get_pool()
+    pool = getattr(request.app.state, "pool", None) or get_pool()
     user = await get_user_by_id(pool, payload["sub"])
     if not user or not user.get("active"):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive")

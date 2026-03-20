@@ -1,4 +1,6 @@
+import re
 import uuid
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 import asyncpg
@@ -41,11 +43,19 @@ async def create(
         "priority":        data.get("priority", "medium"),
         "category":        data.get("category", "general"),
         "source":          data.get("source", "api"),
-        "user_id":         actor.get("sub"),
+        "user_id":         data.get("user_id") or (actor.get("sub") if actor.get("sub") not in {None, "system"} else None),
         "idempotency_key": idem_key,
     }
 
-    await store.insert_ticket(pool, ticket_id, ticket_data)
+    try:
+        await store.insert_ticket(pool, ticket_id, ticket_data)
+    except asyncpg.UniqueViolationError:
+        if idem_key:
+            existing = await store.get_ticket_by_idempotency_key(pool, idem_key)
+            if existing:
+                logger.info("ticket.idempotent_conflict_hit", ticket_id=existing["id"])
+                return existing
+        raise
 
     # enqueue classification in ARQ
     job = await arq.enqueue_job(
@@ -132,7 +142,7 @@ async def resolve(
             ok = await store.transition_ticket_status(conn, ticket_id, ticket["status"], "resolved")
             if not ok:
                 raise InvalidStateTransition(ticket["status"], "resolved")
-            await store.update_ticket(conn, ticket_id, {"resolved_at": "NOW()"})
+            await store.update_ticket(conn, ticket_id, {"resolved_at": datetime.now(timezone.utc)})
             await store.audit(conn, actor["sub"], actor["email"], "ticket.resolve", "ticket", ticket_id)
 
     await bus.emit(TicketResolved(
@@ -173,6 +183,10 @@ async def get_page(
     category: Optional[str] = None,
     search: Optional[str] = None,
 ) -> dict[str, Any]:
+    if search and re.fullmatch(r"\s*(?i:(and|or|not)(?:\s+(and|or|not))*)\s*", search):
+        from fastapi import HTTPException, status as http_status
+        raise HTTPException(http_status.HTTP_400_BAD_REQUEST, detail="Invalid search query.")
+
     try:
         items, total = await store.get_tickets_page(
             pool, limit=limit, offset=offset,

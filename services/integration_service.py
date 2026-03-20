@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 import asyncpg
@@ -65,13 +66,12 @@ async def ingest(
         return None
 
     from services.ticket_service import create as create_ticket
-    from domain.bus import bus
     actor = {"sub": "system", "email": "system@autosupport.internal"}
     ticket = await create_ticket(pool, arq, ticket_data, actor)
     ticket_id = ticket["id"]
 
     await store.record_integration_event(pool, integration_id, "inbound", "ok", ticket_id=ticket_id)
-    await store.update_integration(pool, integration_id, {"last_sync_at": "NOW()"})
+    await store.update_integration(pool, integration_id, {"last_sync_at": datetime.now(timezone.utc)})
     logger.info("integration.ingested", integration_id=integration_id, ticket_id=ticket_id)
     return ticket_id
 

@@ -22,8 +22,9 @@ async def client():
     from main import create_app
 
     _app = create_app()
-    async with AsyncClient(transport=ASGITransport(app=_app), base_url="http://test") as c:
-        yield c
+    async with _app.router.lifespan_context(_app):
+        async with AsyncClient(transport=ASGITransport(app=_app), base_url="http://test") as c:
+            yield c
 
 
 @pytest.mark.asyncio
@@ -75,7 +76,7 @@ async def test_create_and_get_ticket(client):
         "description": "This is a test description.",
         "priority":    "medium",
     }, headers=auth)
-    assert r.status_code == 201
+    assert r.status_code == 200
     ticket_id = r.json()["id"]
     assert ticket_id
 
@@ -97,8 +98,8 @@ async def test_idempotency_key(client):
 
     r1 = await client.post("/api/tickets", json=payload, headers=auth)
     r2 = await client.post("/api/tickets", json=payload, headers=auth)
-    assert r1.status_code == 201
-    assert r2.status_code == 201
+    assert r1.status_code == 200
+    assert r2.status_code == 200
     assert r1.json()["id"] == r2.json()["id"]
 
 
@@ -129,6 +130,25 @@ async def test_analytics_endpoint(client):
     data = r.json()
     assert "total_tickets" in data
     assert "by_priority" in data
+
+
+@pytest.mark.asyncio
+async def test_operational_intelligence_endpoint(client):
+    login = await client.post("/api/auth/login", json={
+        "email": os.getenv("ADMIN_EMAIL", "admin@example.com"),
+        "password": os.getenv("ADMIN_PASSWORD", "changeme123"),
+    })
+    token = login.json()["access_token"]
+    auth  = {"Authorization": f"Bearer {token}"}
+
+    r = await client.get("/api/analytics/ops?hours=24&agent_window_minutes=60", headers=auth)
+    assert r.status_code == 200
+    data = r.json()
+    assert "summary" in data
+    assert "throughput" in data
+    assert "agent_performance" in data
+    assert "sla_heatmap" in data
+    assert all(point["backlog"] >= 0 for point in data["backlog"])
 
 
 @pytest.mark.asyncio

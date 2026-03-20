@@ -29,7 +29,7 @@ async def get_supported_types(identity: dict = Depends(require_auth)):
     return {"types": supported_types()}
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_200_OK)
 async def create_integration(
     body:     CreateIntegrationRequest,
     request:  Request,
@@ -68,7 +68,7 @@ async def test_integration(
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(exc))
 
 
-@router.post("/{integration_id}/ingest", status_code=status.HTTP_202_ACCEPTED)
+@router.post("/{integration_id}/ingest", status_code=status.HTTP_200_OK)
 async def ingest(
     integration_id: str,
     payload:        dict[str, Any],
@@ -93,7 +93,7 @@ async def integration_events(
     return await store.get_integration_events(request.app.state.pool, integration_id)
 
 
-@router.delete("/{integration_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{integration_id}", status_code=status.HTTP_200_OK)
 async def delete_integration(
     integration_id: str,
     request:        Request,
@@ -103,3 +103,4 @@ async def delete_integration(
         await integration_service.delete(request.app.state.pool, integration_id, identity)
     except IntegrationError as exc:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(exc))
+    return {"ok": True}

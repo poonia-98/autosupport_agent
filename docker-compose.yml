@@ -1,8 +1,6 @@
-version: "3.9"
-
 x-common-env: &common-env
   ENVIRONMENT: ${ENVIRONMENT:-development}
-  SECRET_KEY: ${SECRET_KEY:-dev-secret-change-me}
+  SECRET_KEY: ${SECRET_KEY:-dev-secret-change-me-32-bytes-minimum}
   JWT_TTL_MINUTES: ${JWT_TTL_MINUTES:-480}
   ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
   ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme123}
@@ -26,7 +24,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "${POSTGRES_PORT:-5433}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U autosupport"]
       interval: 5s
@@ -40,7 +38,7 @@ services:
     volumes:
       - redis_data:/data
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -67,7 +65,7 @@ services:
     environment:
       <<: *common-env
     ports:
-      - "8001:8000"
+      - "${API_PORT:-8001}:8000"
     depends_on:
       postgres:
         condition: service_healthy

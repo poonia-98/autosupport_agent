@@ -36,6 +36,17 @@ async def sla_compliance(
     return await store.get_sla_compliance(pool, days)
 
 
+@router.get("/ops")
+async def operational_intelligence(
+    request: Request,
+    hours: int = Query(default=24, ge=6, le=168),
+    agent_window_minutes: int = Query(default=60, ge=15, le=1440),
+    identity: dict = Depends(require_auth),
+):
+    pool = request.app.state.pool
+    return await store.get_operational_insights(pool, hours=hours, agent_window_minutes=agent_window_minutes)
+
+
 @router.get("/sla/{ticket_id}")
 async def ticket_sla(
     ticket_id: str,

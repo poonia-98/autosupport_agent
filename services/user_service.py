@@ -115,17 +115,40 @@ async def seed_admin(pool: asyncpg.Pool) -> None:
     from core.config import get_settings
 
     settings = get_settings()
-
-    # idempotent seed — check admin specifically
     existing = await store.get_user_by_email(pool, settings.admin_email)
+
     if existing:
+        needs_refresh = (
+            existing.get("role") != "admin"
+            or not existing.get("active", True)
+            or not await verify_password(settings.admin_password, existing["password_hash"])
+        )
+        if settings.environment != "production" and needs_refresh:
+            async with pool.acquire() as conn:
+                async with conn.transaction():
+                    await store.update_user(
+                        conn,
+                        existing["id"],
+                        {
+                            "name": "Admin",
+                            "role": "admin",
+                            "active": True,
+                            "password_hash": hash_password(settings.admin_password),
+                        },
+                    )
+                    await store.increment_token_version(conn, existing["id"])
+            logger.info("user.admin_refreshed", email=settings.admin_email)
         return
 
     user_id = str(uuid.uuid4())
     pw_hash = hash_password(settings.admin_password)
 
-    await store.insert_user(
-        pool,
+    await pool.execute(
+        """
+        INSERT INTO users(id, email, name, role, password_hash)
+        VALUES($1,$2,$3,$4,$5)
+        ON CONFLICT (email) DO NOTHING
+        """,
         user_id,
         settings.admin_email,
         "Admin",
@@ -133,4 +156,6 @@ async def seed_admin(pool: asyncpg.Pool) -> None:
         pw_hash,
     )
 
-    logger.info("user.admin_seeded", email=settings.admin_email)
+    admin = await store.get_user_by_email(pool, settings.admin_email)
+    if admin:
+        logger.info("user.admin_seeded", email=settings.admin_email)

@@ -19,6 +19,18 @@ from support_agents import (
 logger = structlog.get_logger("workflows.engine")
 
 
+class StageExecutionError(Exception):
+    def __init__(self, agent: str, duration_ms: int, original: Exception):
+        super().__init__(f"{agent} failed: {original}")
+        self.agent = agent
+        self.duration_ms = duration_ms
+        self.original = original
+
+
+def _elapsed_ms(started_at: float) -> int:
+    return max(int((time.monotonic() - started_at) * 1000), 1)
+
+
 async def run_pipeline(ticket_data: dict[str, Any], correlation_id: str | None = None) -> dict[str, Any]:
     """
     Runs the 5-agent pipeline against ticket_data.
@@ -27,35 +39,60 @@ async def run_pipeline(ticket_data: dict[str, Any], correlation_id: str | None =
     ticket_id     = ticket_data.get("id", "unknown")
     correlation   = correlation_id or str(uuid.uuid4())
     ml_signals: dict[str, Any] = {}
+    agent_trace: dict[str, dict[str, Any]] = {}
 
     pipeline_start = time.monotonic()
 
     # -- classifier
-    t0             = time.monotonic()
-    classification = await ticket_classifier.run(ticket_data)
-    _record("ticket_classifier", t0)
+    classification, classifier_ms = await _run_stage("ticket_classifier", ticket_classifier.run, ticket_data)
+    agent_trace["ticket_classifier"] = {
+        "status": "ok",
+        "duration_ms": classifier_ms,
+        "output": classification,
+    }
 
     # -- priority
-    t0       = time.monotonic()
-    priority = await priority_predictor.run(ticket_data, classification, ml_signals)
-    _record("priority_predictor", t0)
+    priority, priority_ms = await _run_stage(
+        "priority_predictor", priority_predictor.run, ticket_data, classification, ml_signals
+    )
+    agent_trace["priority_predictor"] = {
+        "status": "ok",
+        "duration_ms": priority_ms,
+        "output": priority,
+    }
 
     # -- escalation
-    t0         = time.monotonic()
-    escalation = await escalation_detector.run(ticket_data, classification, ml_signals)
-    _record("escalation_detector", t0)
+    escalation, escalation_ms = await _run_stage(
+        "escalation_detector", escalation_detector.run, ticket_data, classification, ml_signals
+    )
+    agent_trace["escalation_detector"] = {
+        "status": "ok",
+        "duration_ms": escalation_ms,
+        "output": escalation,
+    }
 
     # -- response
-    t0       = time.monotonic()
-    response = await response_suggester.run(ticket_data, classification, escalation)
-    _record("response_suggester", t0)
+    response, response_ms = await _run_stage(
+        "response_suggester", response_suggester.run, ticket_data, classification, escalation
+    )
+    agent_trace["response_suggester"] = {
+        "status": "ok",
+        "duration_ms": response_ms,
+        "output": response,
+    }
 
     # -- routing
-    t0      = time.monotonic()
-    routing = await auto_router.run(ticket_data, classification, escalation)
-    _record("auto_router", t0)
+    routing, routing_ms = await _run_stage(
+        "auto_router", auto_router.run, ticket_data, classification, escalation
+    )
+    agent_trace["auto_router"] = {
+        "status": "ok",
+        "duration_ms": routing_ms,
+        "output": routing,
+    }
 
-    pipeline_duration.observe(time.monotonic() - pipeline_start)
+    pipeline_duration_seconds = time.monotonic() - pipeline_start
+    pipeline_duration.observe(pipeline_duration_seconds)
 
     ctx = {
         "classification": classification,
@@ -76,6 +113,8 @@ async def run_pipeline(ticket_data: dict[str, Any], correlation_id: str | None =
         "assigned_to":         routing.get("assigned_engineer"),
         "routing_reason":      routing.get("routing_reason"),
         "audit":               audit,
+        "agent_trace":         agent_trace,
+        "pipeline_duration_ms": max(int(pipeline_duration_seconds * 1000), 1),
     }
 
     # emit domain events — fire-and-forget, handlers must not block
@@ -106,5 +145,14 @@ async def run_pipeline(ticket_data: dict[str, Any], correlation_id: str | None =
     return result
 
 
-def _record(agent: str, t0: float) -> None:
-    agent_duration.labels(agent=agent).observe(time.monotonic() - t0)
+async def _run_stage(agent: str, runner, *args):
+    t0 = time.monotonic()
+    try:
+        result = await runner(*args)
+    except Exception as exc:
+        duration_ms = _elapsed_ms(t0)
+        agent_duration.labels(agent=agent).observe(max(duration_ms, 1) / 1000)
+        raise StageExecutionError(agent, duration_ms, exc) from exc
+    duration_ms = _elapsed_ms(t0)
+    agent_duration.labels(agent=agent).observe(max(duration_ms, 1) / 1000)
+    return result, duration_ms

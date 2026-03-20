@@ -20,6 +20,7 @@ from db.pool import close_pool, init_worker_pool
 from tasks.classify import classify_ticket
 
 logger = structlog.get_logger("worker")
+settings = get_settings()
 
 
 async def startup(ctx: dict) -> None:
@@ -61,9 +62,9 @@ class WorkerSettings:
     on_startup     = startup
     on_shutdown    = shutdown
     redis_settings = _redis_settings()
-    max_jobs       = 10     # overridden by QUEUE_MAX_JOBS in practice
-    job_timeout    = 300
-    max_tries      = 3
+    max_jobs       = settings.queue_max_jobs
+    job_timeout    = settings.queue_job_timeout
+    max_tries      = settings.queue_max_tries
     keep_result    = 3600   # keep job result for 1 hour
     retry_jobs     = True
     health_check_interval = 30

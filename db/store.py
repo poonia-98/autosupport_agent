@@ -26,6 +26,12 @@ def _rows(rows) -> list[dict[str, Any]]:
     return [_to_dict(r) for r in rows]  # type: ignore[misc]
 
 
+def _normalize_db_value(value: Any) -> Any:
+    if isinstance(value, str) and value.upper() == "NOW()":
+        return datetime.now(timezone.utc)
+    return value
+
+
 # ── users ─────────────────────────────────────────────────────────────────────
 
 async def insert_user(conn: Conn, user_id: str, email: str, name: str, role: str, password_hash: str) -> None:
@@ -54,7 +60,7 @@ async def list_users(conn: Conn) -> list[dict[str, Any]]:
 
 async def update_user(conn: Conn, user_id: str, updates: dict[str, Any]) -> None:
     _ALLOWED = {"name", "role", "active", "password_hash", "updated_at"}
-    safe = {k: v for k, v in updates.items() if k in _ALLOWED}
+    safe = {k: _normalize_db_value(v) for k, v in updates.items() if k in _ALLOWED}
     if not safe:
         return
     safe["updated_at"] = datetime.now(timezone.utc)
@@ -117,7 +123,7 @@ async def update_ticket(conn: Conn, ticket_id: str, updates: dict[str, Any]) -> 
         "assigned_team", "assigned_to", "suggested_response",
         "response_sla_breached", "first_response_at", "resolved_at",
     }
-    safe = {k: v for k, v in updates.items() if k in _ALLOWED}
+    safe = {k: _normalize_db_value(v) for k, v in updates.items() if k in _ALLOWED}
     if not safe:
         return
     safe["updated_at"] = datetime.now(timezone.utc)
@@ -233,14 +239,21 @@ async def upsert_job_status(
     status: str,
     error: Optional[str] = None,
 ) -> None:
+    attempts = 1 if status == "running" else 0
     await conn.execute(
         """
-        INSERT INTO job_log(job_id, ticket_id, status, error, updated_at)
-        VALUES ($1,$2,$3,$4,NOW())
+        INSERT INTO job_log(job_id, ticket_id, status, error, attempts, updated_at)
+        VALUES ($1,$2,$3,$4,$5,NOW())
         ON CONFLICT (job_id) DO UPDATE
-          SET status=$3, error=$4, updated_at=NOW()
+          SET status=$3,
+              error=$4,
+              attempts=CASE
+                WHEN $3='running' THEN job_log.attempts + 1
+                ELSE job_log.attempts
+              END,
+              updated_at=NOW()
         """,
-        job_id, ticket_id, status, error,
+        job_id, ticket_id, status, error, attempts,
     )
 
 
@@ -269,22 +282,35 @@ async def list_job_log(
 async def record_agent_event(
     conn: Conn, ticket_id: str, agent: str, result: dict[str, Any], duration_ms: int
 ) -> None:
+    normalized_duration = max(int(duration_ms or 0), 1)
     await conn.execute(
         "INSERT INTO agent_events(ticket_id, agent, result, duration_ms) VALUES($1,$2,$3,$4)",
-        ticket_id, agent, json.dumps(result), duration_ms,
+        ticket_id, agent, json.dumps(result), normalized_duration,
     )
 
 
-async def get_recent_events(conn: Conn, limit: int = 50) -> list[dict[str, Any]]:
+async def get_recent_events(
+    conn: Conn,
+    limit: int = 50,
+    ticket_id: Optional[str] = None,
+) -> list[dict[str, Any]]:
+    where = "WHERE ae.ticket_id=$1" if ticket_id else ""
+    params: list[Any] = [ticket_id, limit] if ticket_id else [limit]
     rows = await conn.fetch(
         """
-        SELECT ae.ticket_id, ae.agent, ae.result, ae.duration_ms, ae.ts,
+        SELECT ae.ticket_id, ae.agent, ae.result,
+               CASE
+                 WHEN ae.duration_ms IS NULL THEN NULL
+                 ELSE GREATEST(ae.duration_ms, 1)
+               END AS duration_ms,
+               ae.ts,
                t.priority, t.category, t.title
         FROM agent_events ae
         LEFT JOIN tickets t ON t.id=ae.ticket_id
-        ORDER BY ae.ts DESC LIMIT $1
-        """,
-        limit,
+        """
+        + f"{where}\n"
+        + f"ORDER BY ae.ts DESC LIMIT ${2 if ticket_id else 1}",
+        *params,
     )
     events = []
     for r in rows:
@@ -303,7 +329,15 @@ async def get_agent_stats(conn: Conn) -> list[dict[str, Any]]:
         """
         SELECT agent,
                COUNT(*) AS total_runs,
-               ROUND(AVG(duration_ms)::numeric, 1) AS avg_ms,
+               ROUND(
+                 AVG(
+                   CASE
+                     WHEN duration_ms IS NULL THEN NULL
+                     ELSE GREATEST(duration_ms, 1)
+                   END
+                 )::numeric,
+                 1
+               ) AS avg_ms,
                MAX(ts) AS last_run_ts
         FROM agent_events
         WHERE ts > NOW() - INTERVAL '24 hours'
@@ -312,6 +346,294 @@ async def get_agent_stats(conn: Conn) -> list[dict[str, Any]]:
         """
     )
     return _rows(rows)
+
+
+async def get_operational_insights(
+    conn: Conn,
+    hours: int = 24,
+    agent_window_minutes: int = 60,
+) -> dict[str, Any]:
+    open_count = await conn.fetchval(
+        "SELECT COUNT(*) FROM tickets WHERE status NOT IN ('resolved','closed')"
+    ) or 0
+
+    queue_row = await conn.fetchrow(
+        """
+        SELECT
+          COUNT(*) FILTER (WHERE status='enqueued') AS enqueued,
+          COUNT(*) FILTER (WHERE status='running') AS running,
+          COUNT(*) FILTER (WHERE status='failed') AS failed,
+          COUNT(*) FILTER (WHERE status='done') AS done,
+          COALESCE(SUM(GREATEST(attempts - 1, 0)), 0) AS retries
+        FROM job_log
+        """
+    )
+
+    ops_row = await conn.fetchrow(
+        """
+        SELECT
+          COUNT(*) FILTER (WHERE created_at >= NOW() - ($1 || ' hours')::interval) AS created_in_window,
+          COUNT(*) FILTER (WHERE resolved_at >= NOW() - ($1 || ' hours')::interval) AS resolved_in_window,
+          COUNT(*) FILTER (
+            WHERE created_at >= NOW() - ($1 || ' hours')::interval
+              AND assigned_team IS NOT NULL
+              AND status <> 'escalated'
+          ) AS automated_in_window,
+          COUNT(*) FILTER (
+            WHERE created_at >= NOW() - ($1 || ' hours')::interval
+              AND status = 'escalated'
+          ) AS escalated_in_window,
+          COUNT(*) FILTER (
+            WHERE status NOT IN ('resolved','closed')
+              AND response_sla_breached = TRUE
+          ) AS sla_risk_open
+        FROM tickets
+        """,
+        str(hours),
+    )
+
+    throughput_rows = await conn.fetch(
+        """
+        WITH series AS (
+          SELECT generate_series(
+            date_trunc('hour', NOW() - ($1 || ' hours')::interval),
+            date_trunc('hour', NOW()),
+            interval '1 hour'
+          ) AS bucket
+        ),
+        created AS (
+          SELECT date_trunc('hour', created_at) AS bucket, COUNT(*) AS count
+          FROM tickets
+          WHERE created_at >= NOW() - ($1 || ' hours')::interval
+          GROUP BY 1
+        ),
+        resolved AS (
+          SELECT date_trunc('hour', resolved_at) AS bucket, COUNT(*) AS count
+          FROM tickets
+          WHERE resolved_at IS NOT NULL
+            AND resolved_at >= NOW() - ($1 || ' hours')::interval
+          GROUP BY 1
+        ),
+        processed AS (
+          SELECT date_trunc('hour', updated_at) AS bucket, COUNT(*) AS count
+          FROM job_log
+          WHERE status='done'
+            AND updated_at >= NOW() - ($1 || ' hours')::interval
+          GROUP BY 1
+        ),
+        failed AS (
+          SELECT date_trunc('hour', updated_at) AS bucket, COUNT(*) AS count
+          FROM job_log
+          WHERE status='failed'
+            AND updated_at >= NOW() - ($1 || ' hours')::interval
+          GROUP BY 1
+        )
+        SELECT
+          s.bucket,
+          COALESCE(c.count, 0) AS created,
+          COALESCE(r.count, 0) AS resolved,
+          COALESCE(p.count, 0) AS processed,
+          COALESCE(f.count, 0) AS failed
+        FROM series s
+        LEFT JOIN created c ON c.bucket = s.bucket
+        LEFT JOIN resolved r ON r.bucket = s.bucket
+        LEFT JOIN processed p ON p.bucket = s.bucket
+        LEFT JOIN failed f ON f.bucket = s.bucket
+        ORDER BY s.bucket
+        """,
+        str(hours),
+    )
+
+    backlog_rows = await conn.fetch(
+        """
+        WITH series AS (
+          SELECT generate_series(
+            date_trunc('hour', NOW() - ($1 || ' hours')::interval),
+            date_trunc('hour', NOW()),
+            interval '1 hour'
+          ) AS bucket
+        )
+        SELECT
+          s.bucket,
+          COUNT(t.id)::int AS backlog
+        FROM series s
+        LEFT JOIN tickets t
+          ON t.created_at <= s.bucket
+         AND (t.resolved_at IS NULL OR t.resolved_at > s.bucket)
+        GROUP BY s.bucket
+        ORDER BY s.bucket
+        """,
+        str(hours),
+    )
+
+    throughput: list[dict[str, Any]] = []
+    backlog_points = [
+        {
+            "bucket": row["bucket"].timestamp(),
+            "backlog": int(row["backlog"] or 0),
+        }
+        for row in backlog_rows
+    ]
+    backlog_points.append({"bucket": time.time(), "backlog": int(open_count)})
+
+    for row in throughput_rows:
+        throughput.append(
+            {
+                "bucket": row["bucket"].timestamp(),
+                "created": int(row["created"] or 0),
+                "resolved": int(row["resolved"] or 0),
+                "processed": int(row["processed"] or 0),
+                "failed": int(row["failed"] or 0),
+            }
+        )
+
+    agent_rows = await conn.fetch(
+        """
+        SELECT
+          agent,
+          COUNT(*) AS total_runs,
+          ROUND(AVG(GREATEST(duration_ms, 1))::numeric, 1)::float8 AS avg_ms,
+          percentile_disc(0.95) WITHIN GROUP (ORDER BY GREATEST(duration_ms, 1))::int AS p95_ms,
+          MAX(GREATEST(duration_ms, 1))::int AS max_ms,
+          SUM(CASE WHEN COALESCE(result->>'status', 'ok')='failed' THEN 1 ELSE 0 END)::int AS failures,
+          MAX(ts) AS last_run_ts
+        FROM agent_events
+        WHERE ts >= NOW() - ($1 || ' minutes')::interval
+          AND duration_ms IS NOT NULL
+        GROUP BY agent
+        ORDER BY agent
+        """,
+        str(agent_window_minutes),
+    )
+
+    agent_performance = []
+    for row in agent_rows:
+        total_runs = int(row["total_runs"] or 0)
+        failures = int(row["failures"] or 0)
+        agent_performance.append(
+            {
+                "agent": row["agent"],
+                "total_runs": total_runs,
+                "avg_ms": float(row["avg_ms"] or 0.0),
+                "p95_ms": int(row["p95_ms"] or 0),
+                "max_ms": int(row["max_ms"] or 0),
+                "failures": failures,
+                "error_rate": round((failures / total_runs) * 100, 1) if total_runs else None,
+                "executions_per_min": round(total_runs / max(agent_window_minutes, 1), 2),
+                "last_run_ts": row["last_run_ts"].timestamp() if row["last_run_ts"] else None,
+            }
+        )
+
+    slow_ticket_rows = await conn.fetch(
+        """
+        SELECT
+          ae.ticket_id,
+          t.title,
+          t.priority,
+          t.status,
+          t.assigned_team,
+          COUNT(*)::int AS stages,
+          COALESCE(SUM(GREATEST(ae.duration_ms, 1)), 0)::int AS total_ms,
+          COALESCE(MAX(GREATEST(ae.duration_ms, 1)), 0)::int AS slowest_stage_ms,
+          MAX(ae.ts) AS last_event_ts
+        FROM agent_events ae
+        LEFT JOIN tickets t ON t.id = ae.ticket_id
+        WHERE ae.ts >= NOW() - ($1 || ' hours')::interval
+          AND ae.duration_ms IS NOT NULL
+        GROUP BY ae.ticket_id, t.title, t.priority, t.status, t.assigned_team
+        ORDER BY total_ms DESC, last_event_ts DESC
+        LIMIT 8
+        """,
+        str(hours),
+    )
+
+    slow_tickets = [
+        {
+            "ticket_id": row["ticket_id"],
+            "title": row["title"],
+            "priority": row["priority"],
+            "status": row["status"],
+            "assigned_team": row["assigned_team"],
+            "stages": int(row["stages"] or 0),
+            "total_ms": int(row["total_ms"] or 0),
+            "slowest_stage_ms": int(row["slowest_stage_ms"] or 0),
+            "last_event_ts": row["last_event_ts"].timestamp() if row["last_event_ts"] else None,
+        }
+        for row in slow_ticket_rows
+    ]
+
+    heat_rows = await conn.fetch(
+        """
+        SELECT
+          COALESCE(priority, 'unknown') AS priority,
+          COUNT(*) FILTER (WHERE NOW() - created_at < INTERVAL '30 minutes')::int AS bucket_0_30m,
+          COUNT(*) FILTER (WHERE NOW() - created_at >= INTERVAL '30 minutes' AND NOW() - created_at < INTERVAL '2 hours')::int AS bucket_30m_2h,
+          COUNT(*) FILTER (WHERE NOW() - created_at >= INTERVAL '2 hours' AND NOW() - created_at < INTERVAL '8 hours')::int AS bucket_2h_8h,
+          COUNT(*) FILTER (WHERE NOW() - created_at >= INTERVAL '8 hours' AND NOW() - created_at < INTERVAL '24 hours')::int AS bucket_8h_24h,
+          COUNT(*) FILTER (WHERE NOW() - created_at >= INTERVAL '24 hours')::int AS bucket_24h_plus
+        FROM tickets
+        WHERE status NOT IN ('resolved','closed')
+        GROUP BY priority
+        """
+    )
+
+    priorities = ["critical", "high", "medium", "low"]
+    heat_index = {row["priority"]: row for row in heat_rows}
+    age_buckets = [
+        {"key": "bucket_0_30m", "label": "<30m"},
+        {"key": "bucket_30m_2h", "label": "30m-2h"},
+        {"key": "bucket_2h_8h", "label": "2h-8h"},
+        {"key": "bucket_8h_24h", "label": "8h-24h"},
+        {"key": "bucket_24h_plus", "label": "24h+"},
+    ]
+    sla_heatmap = []
+    for priority in priorities:
+        row = heat_index.get(priority)
+        cells = []
+        for bucket in age_buckets:
+            cells.append(
+                {
+                    "bucket": bucket["label"],
+                    "count": int((row[bucket["key"]] if row else 0) or 0),
+                }
+            )
+        sla_heatmap.append({"priority": priority, "cells": cells})
+
+    last_six = throughput[-6:] if len(throughput) >= 6 else throughput
+    avg_net = 0.0
+    if last_six:
+        avg_net = sum((point["resolved"] - point["created"]) for point in last_six) / len(last_six)
+    forecast_hours = round(open_count / avg_net, 1) if avg_net > 0 else None
+
+    automation = int(ops_row["automated_in_window"] or 0)
+    escalated = int(ops_row["escalated_in_window"] or 0)
+    automation_total = automation + escalated
+
+    return {
+        "generated_at": time.time(),
+        "summary": {
+            "open_tickets": int(open_count),
+            "tickets_created_in_window": int(ops_row["created_in_window"] or 0),
+            "tickets_resolved_in_window": int(ops_row["resolved_in_window"] or 0),
+            "queue_depth": int(queue_row["enqueued"] or 0),
+            "queue_running": int(queue_row["running"] or 0),
+            "queue_failed": int(queue_row["failed"] or 0),
+            "queue_done": int(queue_row["done"] or 0),
+            "retry_count": int(queue_row["retries"] or 0),
+            "sla_risk_open": int(ops_row["sla_risk_open"] or 0),
+            "automation_success": automation,
+            "human_escalations": escalated,
+            "automation_ratio": round((automation / automation_total) * 100, 1) if automation_total else None,
+            "forecast_hours_to_clear": forecast_hours,
+        },
+        "throughput": throughput,
+        "backlog": backlog_points,
+        "agent_performance": agent_performance,
+        "slow_tickets": slow_tickets,
+        "failing_agents": [row for row in agent_performance if (row.get("failures") or 0) > 0],
+        "sla_heatmap": sla_heatmap,
+        "age_buckets": [bucket["label"] for bucket in age_buckets],
+    }
 
 
 # ── integrations ──────────────────────────────────────────────────────────────
@@ -357,7 +679,7 @@ async def list_integrations(conn: Conn) -> list[dict[str, Any]]:
 
 async def update_integration(conn: Conn, integration_id: str, updates: dict[str, Any]) -> None:
     _ALLOWED = {"name", "type", "config", "secret", "status", "last_sync_at", "sync_error", "event_count"}
-    safe = {k: v for k, v in updates.items() if k in _ALLOWED}
+    safe = {k: _normalize_db_value(v) for k, v in updates.items() if k in _ALLOWED}
     if not safe:
         return
     if "config" in safe and isinstance(safe["config"], dict):
@@ -384,11 +706,21 @@ async def record_integration_event(
     error: Optional[str] = None,
 ) -> None:
     payload_size = len(json.dumps(payload)) if payload else None
-    async with (conn if isinstance(conn, asyncpg.Connection) else conn.acquire()) as c:
-        if isinstance(conn, asyncpg.Pool):
-            pass  # c is the acquired connection
-        else:
-            c = conn
+    if isinstance(conn, asyncpg.Connection):
+        await conn.execute(
+            """
+            INSERT INTO integration_events(integration_id, direction, status, payload_size, ticket_id, error)
+            VALUES($1,$2,$3,$4,$5,$6)
+            """,
+            integration_id, direction, status, payload_size, ticket_id, error,
+        )
+        await conn.execute(
+            "UPDATE integrations SET event_count=event_count+1, updated_at=NOW() WHERE id=$1",
+            integration_id,
+        )
+        return
+
+    async with conn.acquire() as c:
         await c.execute(
             """
             INSERT INTO integration_events(integration_id, direction, status, payload_size, ticket_id, error)

@@ -10,7 +10,7 @@ from services import ticket_service
 router = APIRouter(prefix="/api/tickets", tags=["tickets"])
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_200_OK)
 async def create_ticket(
     body: CreateTicketRequest,
     request: Request,

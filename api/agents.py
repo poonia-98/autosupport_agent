@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 
 from core.security import require_auth
 from db import store
@@ -39,7 +39,9 @@ async def get_agent_stats(
 @router.get("/events")
 async def recent_events(
     request:  Request,
+    limit:    int = Query(default=50, ge=1, le=200),
+    ticket_id: str | None = Query(default=None),
     identity: dict = Depends(require_auth),
 ) -> list[dict[str, Any]]:
     pool = request.app.state.pool
-    return await store.get_recent_events(pool, limit=50)
+    return await store.get_recent_events(pool, limit=limit, ticket_id=ticket_id)
