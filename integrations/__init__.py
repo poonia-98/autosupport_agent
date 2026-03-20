@@ -1,5 +1,6 @@
 from integrations.base import BaseIntegration
-from integrations.webhook import WebhookIntegration, webhook_integration
+from integrations.webhook import WebhookIntegration as WebhookIntegration
+from integrations.webhook import webhook_integration
 
 _REGISTRY: dict[str, BaseIntegration] = {
     "webhook": webhook_integration,

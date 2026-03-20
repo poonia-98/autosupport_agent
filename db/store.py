@@ -1,12 +1,12 @@
 import json
 import time
 from datetime import datetime, timezone
-from typing import Any, Union
+from typing import Any
 
 import asyncpg
 
 # Type alias — both Pool and Connection support fetchrow/execute
-Conn = Union[asyncpg.Pool, asyncpg.Connection]
+Conn = asyncpg.Pool | asyncpg.Connection
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────

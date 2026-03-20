@@ -73,10 +73,11 @@ exclude = [
 
 [tool.ruff]
 line-length = 180
-target-version = "py311"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
+ignore = ["UP017", "UP042"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
