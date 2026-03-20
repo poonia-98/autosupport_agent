@@ -6,5 +6,5 @@ class AgentPlugin(ABC):
     name: str = ""
 
     @abstractmethod
-    def run(self, ticket_data: dict, context: dict) -> Any:
-        ...
+    def run(self, ticket_data: dict, context: dict) -> Any: ...
+

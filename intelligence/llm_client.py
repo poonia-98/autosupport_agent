@@ -84,10 +84,10 @@ async def classify(ticket_id: str, title: str, description: str) -> dict[str, An
             text = parts[1].lstrip("json").strip() if len(parts) > 1 else text
         data = json.loads(text)
         result: dict[str, Any] = {
-            "category":       str(data.get("category", "general")),
-            "priority":       str(data.get("priority", "medium")),
+            "category": str(data.get("category", "general")),
+            "priority": str(data.get("priority", "medium")),
             "should_escalate": bool(data.get("should_escalate", False)),
-            "confidence":     float(min(1.0, max(0.0, data.get("confidence", 0.7)))),
+            "confidence": float(min(1.0, max(0.0, data.get("confidence", 0.7)))),
         }
     except (KeyError, ValueError, TypeError, json.JSONDecodeError) as exc:
         logger.warning("llm.parse_error", ticket_id=ticket_id, error=str(exc))
@@ -104,3 +104,4 @@ async def classify(ticket_id: str, title: str, description: str) -> dict[str, An
 
     logger.info("llm.classified", ticket_id=ticket_id, category=result["category"])
     return result
+

@@ -15,13 +15,16 @@ async def list_users(request: Request, identity: dict = Depends(require_admin)):
 
 @router.post("", status_code=status.HTTP_200_OK)
 async def create_user(
-    body:     CreateUserRequest,
-    request:  Request,
+    body: CreateUserRequest,
+    request: Request,
     identity: dict = Depends(require_admin),
 ):
     return await user_service.create_user(
         request.app.state.pool,
-        body.email, body.name, body.role, body.password,
+        body.email,
+        body.name,
+        body.role,
+        body.password,
         identity,
     )
 
@@ -39,9 +42,9 @@ async def get_user(user_id: str, request: Request, identity: dict = Depends(requ
 
 @router.patch("/{user_id}")
 async def update_user(
-    user_id:  str,
-    body:     UpdateUserRequest,
-    request:  Request,
+    user_id: str,
+    body: UpdateUserRequest,
+    request: Request,
     identity: dict = Depends(require_admin),
 ):
     user = await store.get_user_by_id(request.app.state.pool, user_id)
@@ -53,8 +56,12 @@ async def update_user(
         await store.update_user(request.app.state.pool, user_id, updates)
         await store.audit(
             request.app.state.pool,
-            identity["sub"], identity["email"],
-            "user.update", "user", user_id, updates,
+            identity["sub"],
+            identity["email"],
+            "user.update",
+            "user",
+            user_id,
+            updates,
         )
 
     updated = await store.get_user_by_id(request.app.state.pool, user_id)
@@ -62,3 +69,4 @@ async def update_user(
     u.pop("password_hash", None)
     u.pop("token_version", None)
     return u
+

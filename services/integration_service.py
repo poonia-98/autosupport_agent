@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import asyncpg
@@ -38,11 +38,15 @@ async def test(pool: asyncpg.Pool, integration_id: str) -> dict[str, Any]:
     if not row:
         raise IntegrationError(f"Integration not found: {integration_id}")
     adapter = get_adapter(row["type"])
-    result  = await adapter.test_connection(row["config"] or {}, row.get("secret"))
-    await store.update_integration(pool, integration_id, {
-        "status":     "active" if result["ok"] else "error",
-        "sync_error": None if result["ok"] else result.get("message"),
-    })
+    result = await adapter.test_connection(row["config"] or {}, row.get("secret"))
+    await store.update_integration(
+        pool,
+        integration_id,
+        {
+            "status": "active" if result["ok"] else "error",
+            "sync_error": None if result["ok"] else result.get("message"),
+        },
+    )
     return result
 
 
@@ -58,7 +62,7 @@ async def ingest(
     if row.get("status") != "active":
         raise IntegrationError(f"Integration {integration_id!r} is not active")
 
-    adapter     = get_adapter(row["type"])
+    adapter = get_adapter(row["type"])
     ticket_data = adapter.parse_inbound(payload, row.get("secret"))
 
     if ticket_data is None:
@@ -66,12 +70,17 @@ async def ingest(
         return None
 
     from services.ticket_service import create as create_ticket
+
     actor = {"sub": "system", "email": "system@autosupport.internal"}
     ticket = await create_ticket(pool, arq, ticket_data, actor)
     ticket_id = ticket["id"]
 
     await store.record_integration_event(pool, integration_id, "inbound", "ok", ticket_id=ticket_id)
-    await store.update_integration(pool, integration_id, {"last_sync_at": datetime.now(UTC)})
+    await store.update_integration(
+        pool,
+        integration_id,
+        {"last_sync_at": datetime.now(timezone.utc)},
+    )
     logger.info("integration.ingested", integration_id=integration_id, ticket_id=ticket_id)
     return ticket_id
 
@@ -81,3 +90,4 @@ async def delete(pool: asyncpg.Pool, integration_id: str, actor: dict) -> None:
         raise IntegrationError(f"Integration not found: {integration_id}")
     await store.delete_integration(pool, integration_id)
     await store.audit(pool, actor["sub"], actor["email"], "integration.delete", "integration", integration_id)
+

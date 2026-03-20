@@ -11,12 +11,12 @@ async def test_full_pipeline_general_ticket():
     from workflows.engine import run_pipeline
 
     ticket = {
-        "id":          "test-001",
-        "title":       "I have a billing question",
+        "id": "test-001",
+        "title": "I have a billing question",
         "description": "My invoice seems incorrect for this month.",
-        "priority":    "medium",
-        "category":    "general",
-        "status":      "open",
+        "priority": "medium",
+        "category": "general",
+        "status": "open",
         "response_sla_breached": False,
     }
 
@@ -47,12 +47,12 @@ async def test_full_pipeline_critical_outage():
     from workflows.engine import run_pipeline
 
     ticket = {
-        "id":          "test-002",
-        "title":       "production down — complete outage",
+        "id": "test-002",
+        "title": "production down — complete outage",
         "description": "All users cannot log in. The entire platform is offline.",
-        "priority":    "critical",
-        "category":    "technical",
-        "status":      "open",
+        "priority": "critical",
+        "category": "technical",
+        "status": "open",
         "response_sla_breached": False,
     }
 
@@ -69,12 +69,12 @@ async def test_pipeline_sla_breached_ticket():
     from workflows.engine import run_pipeline
 
     ticket = {
-        "id":          "test-003",
-        "title":       "login issue",
+        "id": "test-003",
+        "title": "login issue",
         "description": "Cannot log in",
-        "priority":    "high",
-        "category":    "technical",
-        "status":      "sla_breached",
+        "priority": "high",
+        "category": "technical",
+        "status": "sla_breached",
         "response_sla_breached": True,
     }
 
@@ -90,12 +90,12 @@ async def test_pipeline_llm_disabled_still_works():
     from workflows.engine import run_pipeline
 
     ticket = {
-        "id":          "test-004",
-        "title":       "feature request: dark mode",
+        "id": "test-004",
+        "title": "feature request: dark mode",
         "description": "Would love a dark theme for the dashboard.",
-        "priority":    "low",
-        "category":    "feature_request",
-        "status":      "open",
+        "priority": "low",
+        "category": "feature_request",
+        "status": "open",
         "response_sla_breached": False,
     }
 
@@ -116,11 +116,13 @@ async def test_bus_events_emitted():
     bus.subscribe(TicketClassified, lambda e: received.append(e))
 
     ticket = {
-        "id":    "test-005",
+        "id": "test-005",
         "title": "API returns 500",
         "description": "The /v1/data endpoint crashes",
-        "priority": "high", "category": "bug",
-        "status": "open", "response_sla_breached": False,
+        "priority": "high",
+        "category": "bug",
+        "status": "open",
+        "response_sla_breached": False,
     }
 
     await run_pipeline(ticket, correlation_id="corr-005")
@@ -128,3 +130,4 @@ async def test_bus_events_emitted():
     matching = [e for e in received if e.ticket_id == "test-005"]
     assert len(matching) >= 1
     assert matching[0].correlation_id == "corr-005"
+

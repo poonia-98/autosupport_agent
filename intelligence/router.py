@@ -2,17 +2,17 @@ import re
 from typing import Any
 
 _CATEGORY_KEYWORDS: dict[str, list[str]] = {
-    "billing":         ["billing", "invoice", "refund", "charge", "payment", "fee", "cost", "subscription", "price"],
-    "technical":       ["password", "login", "2fa", "access", "account", "api", "integration", "error", "crash", "timeout"],
+    "billing": ["billing", "invoice", "refund", "charge", "payment", "fee", "cost", "subscription", "price"],
+    "technical": ["password", "login", "2fa", "access", "account", "api", "integration", "error", "crash", "timeout"],
     "feature_request": ["feature", "request", "suggest", "improvement", "idea", "new"],
-    "bug":             ["broken", "fail", "error", "bug", "issue", "crash", "not working", "incorrect", "wrong"],
+    "bug": ["broken", "fail", "error", "bug", "issue", "crash", "not working", "incorrect", "wrong"],
 }
 
 _PRIORITY_KEYWORDS: dict[str, list[str]] = {
     "critical": ["down", "outage", "emergency", "urgent", "production", "blocked", "critical"],
-    "high":     ["important", "asap", "priority", "severe", "major"],
-    "medium":   ["help", "question", "issue", "minor"],
-    "low":      ["feedback", "info", "thanks"],
+    "high": ["important", "asap", "priority", "severe", "major"],
+    "medium": ["help", "question", "issue", "minor"],
+    "low": ["feedback", "info", "thanks"],
 }
 
 
@@ -46,7 +46,8 @@ def route_ticket(title: str, description: str) -> dict[str, Any]:
         pri_conf = min(0.9, pri_scores[best_pri] / total + 0.3)
 
     return {
-        "category":   best_cat,
-        "priority":   best_pri,
+        "category": best_cat,
+        "priority": best_pri,
         "confidence": round((cat_conf + pri_conf) / 2.0, 3),
     }
+

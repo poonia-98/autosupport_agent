@@ -35,9 +35,7 @@ def configure_logging() -> None:
     logging.basicConfig(format="%(message)s", stream=sys.stdout, level=level)
 
     for noisy in ("uvicorn.access", "uvicorn.error", "asyncpg"):
-        logging.getLogger(noisy).setLevel(
-            logging.DEBUG if settings.debug else logging.WARNING
-        )
+        logging.getLogger(noisy).setLevel(logging.DEBUG if settings.debug else logging.WARNING)
 
 
 def get_logger(name: str) -> structlog.BoundLogger:
@@ -63,3 +61,4 @@ def bind_job_context(job_id: str, correlation_id: str, task: str) -> None:
 
 def clear_context() -> None:
     structlog.contextvars.clear_contextvars()
+

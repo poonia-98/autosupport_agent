@@ -4,7 +4,7 @@ import hashlib
 import hmac
 import os
 import time
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 import jwt
 from fastapi import Depends, HTTPException, Request, status
@@ -72,7 +72,7 @@ def clear_login_attempts(email: str) -> None:
 
 def create_token(user_id: str, email: str, role: str, token_version: int = 0) -> str:
     settings = get_settings()
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     payload = {
         "sub": user_id,
         "email": email,
@@ -114,6 +114,7 @@ async def require_auth(
     # token_version check — invalidates all tokens issued before password change
     from db.pool import get_pool
     from db.store import get_user_by_id
+
     pool = getattr(request.app.state, "pool", None) or get_pool()
     user = await get_user_by_id(pool, payload["sub"])
     if not user or not user.get("active"):
@@ -136,3 +137,4 @@ async def require_operator(identity: dict = Depends(require_auth)) -> dict:
     if identity.get("role") not in ("admin", "operator"):
         raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Operator access required")
     return identity
+

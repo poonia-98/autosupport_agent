@@ -33,3 +33,4 @@ class EventBus:
 
 # module singleton — handlers wired in main.py lifespan
 bus = EventBus()
+

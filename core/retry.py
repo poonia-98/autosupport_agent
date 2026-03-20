@@ -22,9 +22,12 @@ def with_retry(
                 except exceptions as exc:
                     last_exc = exc
                     if attempt < max_attempts - 1:
-                        wait = delay * (backoff ** attempt)
+                        wait = delay * (backoff**attempt)
                         logger.warning("retry", extra={"fn": fn.__name__, "attempt": attempt + 1, "wait": wait})
                         await asyncio.sleep(wait)
             raise last_exc
+
         return wrapper
+
     return decorator
+

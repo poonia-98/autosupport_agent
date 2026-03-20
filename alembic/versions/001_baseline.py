@@ -1,3 +1,5 @@
+from alembic import op
+
 """baseline schema
 
 Revision ID: 001
@@ -9,9 +11,6 @@ revision = "001"
 down_revision = None
 branch_labels = None
 depends_on = None
-
-
-from alembic import op
 
 
 def upgrade() -> None:
@@ -175,3 +174,4 @@ def downgrade() -> None:
     op.execute("DROP FUNCTION IF EXISTS tickets_search_vector_update()")
     op.execute("DROP TABLE IF EXISTS tickets CASCADE")
     op.execute("DROP TABLE IF EXISTS users CASCADE")
+

@@ -58,6 +58,7 @@ async def create_user(
     existing = await store.get_user_by_email(pool, email)
     if existing:
         from fastapi import HTTPException, status
+
         raise HTTPException(
             status.HTTP_409_CONFLICT,
             detail=f"Email {email!r} already registered.",
@@ -118,11 +119,7 @@ async def seed_admin(pool: asyncpg.Pool) -> None:
     existing = await store.get_user_by_email(pool, settings.admin_email)
 
     if existing:
-        needs_refresh = (
-            existing.get("role") != "admin"
-            or not existing.get("active", True)
-            or not await verify_password(settings.admin_password, existing["password_hash"])
-        )
+        needs_refresh = existing.get("role") != "admin" or not existing.get("active", True) or not await verify_password(settings.admin_password, existing["password_hash"])
         if settings.environment != "production" and needs_refresh:
             async with pool.acquire() as conn:
                 async with conn.transaction():
@@ -159,3 +156,4 @@ async def seed_admin(pool: asyncpg.Pool) -> None:
     admin = await store.get_user_by_email(pool, settings.admin_email)
     if admin:
         logger.info("user.admin_seeded", email=settings.admin_email)
+

@@ -34,3 +34,4 @@ async def change_password(
     except AuthenticationError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc))
     return {"ok": True}
+

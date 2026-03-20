@@ -13,8 +13,8 @@ router = APIRouter(prefix="/api/integrations", tags=["integrations"])
 
 
 class CreateIntegrationRequest(BaseModel):
-    name:   str
-    type:   str
+    name: str
+    type: str
     config: dict[str, Any] = {}
     secret: str | None = None
 
@@ -31,14 +31,12 @@ async def get_supported_types(identity: dict = Depends(require_auth)):
 
 @router.post("", status_code=status.HTTP_200_OK)
 async def create_integration(
-    body:     CreateIntegrationRequest,
-    request:  Request,
+    body: CreateIntegrationRequest,
+    request: Request,
     identity: dict = Depends(require_operator),
 ):
     try:
-        return await integration_service.create(
-            request.app.state.pool, body.name, body.type, body.config, body.secret, identity
-        )
+        return await integration_service.create(request.app.state.pool, body.name, body.type, body.config, body.secret, identity)
     except IntegrationError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
@@ -46,8 +44,8 @@ async def create_integration(
 @router.get("/{integration_id}")
 async def get_integration(
     integration_id: str,
-    request:        Request,
-    identity:       dict = Depends(require_auth),
+    request: Request,
+    identity: dict = Depends(require_auth),
 ):
     row = await store.get_integration(request.app.state.pool, integration_id)
     if not row:
@@ -59,8 +57,8 @@ async def get_integration(
 @router.post("/{integration_id}/test")
 async def test_integration(
     integration_id: str,
-    request:        Request,
-    identity:       dict = Depends(require_operator),
+    request: Request,
+    identity: dict = Depends(require_operator),
 ):
     try:
         return await integration_service.test(request.app.state.pool, integration_id)
@@ -71,14 +69,12 @@ async def test_integration(
 @router.post("/{integration_id}/ingest", status_code=status.HTTP_200_OK)
 async def ingest(
     integration_id: str,
-    payload:        dict[str, Any],
-    request:        Request,
+    payload: dict[str, Any],
+    request: Request,
 ):
     """Inbound webhook — no auth required, protected by HMAC via adapter."""
     try:
-        ticket_id = await integration_service.ingest(
-            request.app.state.pool, request.app.state.arq, integration_id, payload
-        )
+        ticket_id = await integration_service.ingest(request.app.state.pool, request.app.state.arq, integration_id, payload)
     except IntegrationError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(exc))
     return {"ticket_id": ticket_id, "accepted": True}
@@ -87,8 +83,8 @@ async def ingest(
 @router.get("/{integration_id}/events")
 async def integration_events(
     integration_id: str,
-    request:        Request,
-    identity:       dict = Depends(require_auth),
+    request: Request,
+    identity: dict = Depends(require_auth),
 ):
     return await store.get_integration_events(request.app.state.pool, integration_id)
 
@@ -96,11 +92,12 @@ async def integration_events(
 @router.delete("/{integration_id}", status_code=status.HTTP_200_OK)
 async def delete_integration(
     integration_id: str,
-    request:        Request,
-    identity:       dict = Depends(require_operator),
+    request: Request,
+    identity: dict = Depends(require_operator),
 ):
     try:
         await integration_service.delete(request.app.state.pool, integration_id, identity)
     except IntegrationError as exc:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(exc))
     return {"ok": True}
+

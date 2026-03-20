@@ -1,4 +1,3 @@
-
 import asyncpg
 
 from core.config import get_settings
@@ -49,3 +48,4 @@ async def init_worker_pool() -> asyncpg.Pool:
         server_settings={"application_name": "autosupport-worker"},
     )
     return _pool
+

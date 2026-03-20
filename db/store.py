@@ -1,6 +1,6 @@
 import json
 import time
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any, Union
 
 import asyncpg
@@ -10,6 +10,7 @@ Conn = Union[asyncpg.Pool, asyncpg.Connection]
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
+
 
 def _to_dict(row: asyncpg.Record | None) -> dict[str, Any] | None:
     if row is None:
@@ -28,16 +29,21 @@ def _rows(rows) -> list[dict[str, Any]]:
 
 def _normalize_db_value(value: Any) -> Any:
     if isinstance(value, str) and value.upper() == "NOW()":
-        return datetime.now(UTC)
+        return datetime.now(timezone.utc)
     return value
 
 
 # ── users ─────────────────────────────────────────────────────────────────────
 
+
 async def insert_user(conn: Conn, user_id: str, email: str, name: str, role: str, password_hash: str) -> None:
     await conn.execute(
         "INSERT INTO users(id, email, name, role, password_hash) VALUES($1,$2,$3,$4,$5)",
-        user_id, email, name, role, password_hash,
+        user_id,
+        email,
+        name,
+        role,
+        password_hash,
     )
 
 
@@ -52,9 +58,7 @@ async def get_user_by_id(conn: Conn, user_id: str) -> dict[str, Any] | None:
 
 
 async def list_users(conn: Conn) -> list[dict[str, Any]]:
-    rows = await conn.fetch(
-        "SELECT id,email,name,role,active,created_at FROM users ORDER BY created_at"
-    )
+    rows = await conn.fetch("SELECT id,email,name,role,active,created_at FROM users ORDER BY created_at")
     return _rows(rows)
 
 
@@ -63,11 +67,12 @@ async def update_user(conn: Conn, user_id: str, updates: dict[str, Any]) -> None
     safe = {k: _normalize_db_value(v) for k, v in updates.items() if k in _ALLOWED}
     if not safe:
         return
-    safe["updated_at"] = datetime.now(UTC)
-    cols = ", ".join(f"{k}=${i+2}" for i, k in enumerate(safe))
+    safe["updated_at"] = datetime.now(timezone.utc)
+    cols = ", ".join(f"{k}=${i + 2}" for i, k in enumerate(safe))
     await conn.execute(
         f"UPDATE users SET {cols} WHERE id=$1",
-        user_id, *safe.values(),
+        user_id,
+        *safe.values(),
     )
 
 
@@ -84,6 +89,7 @@ async def user_exists(conn: Conn) -> bool:
 
 
 # ── tickets ───────────────────────────────────────────────────────────────────
+
 
 async def insert_ticket(conn: Conn, ticket_id: str, data: dict[str, Any]) -> None:
     await conn.execute(
@@ -119,18 +125,27 @@ async def get_ticket_by_idempotency_key(conn: Conn, key: str) -> dict[str, Any] 
 
 async def update_ticket(conn: Conn, ticket_id: str, updates: dict[str, Any]) -> None:
     _ALLOWED = {
-        "title", "description", "priority", "category", "status",
-        "assigned_team", "assigned_to", "suggested_response",
-        "response_sla_breached", "first_response_at", "resolved_at",
+        "title",
+        "description",
+        "priority",
+        "category",
+        "status",
+        "assigned_team",
+        "assigned_to",
+        "suggested_response",
+        "response_sla_breached",
+        "first_response_at",
+        "resolved_at",
     }
     safe = {k: _normalize_db_value(v) for k, v in updates.items() if k in _ALLOWED}
     if not safe:
         return
-    safe["updated_at"] = datetime.now(UTC)
-    cols = ", ".join(f"{k}=${i+2}" for i, k in enumerate(safe))
+    safe["updated_at"] = datetime.now(timezone.utc)
+    cols = ", ".join(f"{k}=${i + 2}" for i, k in enumerate(safe))
     await conn.execute(
         f"UPDATE tickets SET {cols} WHERE id=$1",
-        ticket_id, *safe.values(),
+        ticket_id,
+        *safe.values(),
     )
 
 
@@ -143,7 +158,9 @@ async def transition_ticket_status(
     """Atomic CAS-style status update. Returns False if ticket was not in expected state."""
     result = await conn.execute(
         "UPDATE tickets SET status=$1, updated_at=NOW() WHERE id=$2 AND status=$3",
-        to_status, ticket_id, from_status,
+        to_status,
+        ticket_id,
+        from_status,
     )
     return result == "UPDATE 1"
 
@@ -171,14 +188,21 @@ async def get_tickets_page(
     idx = 1
 
     if status:
-        clauses.append(f"status=${idx}"); params.append(status); idx += 1
+        clauses.append(f"status=${idx}")
+        params.append(status)
+        idx += 1
     if priority:
-        clauses.append(f"priority=${idx}"); params.append(priority); idx += 1
+        clauses.append(f"priority=${idx}")
+        params.append(priority)
+        idx += 1
     if category:
-        clauses.append(f"category=${idx}"); params.append(category); idx += 1
+        clauses.append(f"category=${idx}")
+        params.append(category)
+        idx += 1
     if search:
         clauses.append(f"search_vector @@ plainto_tsquery('english', ${idx})")
-        params.append(search); idx += 1
+        params.append(search)
+        idx += 1
 
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
 
@@ -188,9 +212,11 @@ async def get_tickets_page(
         FROM tickets
         {where}
         ORDER BY created_at DESC
-        LIMIT ${idx} OFFSET ${idx+1}
+        LIMIT ${idx} OFFSET ${idx + 1}
         """,
-        *params, min(limit, 200), offset,
+        *params,
+        min(limit, 200),
+        offset,
     )
 
     if not rows:
@@ -219,9 +245,7 @@ async def bulk_close_tickets(conn: asyncpg.Connection, ticket_ids: list[str]) ->
         )
         closed = int(result.split()[-1])
 
-        existing = await conn.fetch(
-            "SELECT id FROM tickets WHERE id = ANY($1::text[])", ticket_ids
-        )
+        existing = await conn.fetch("SELECT id FROM tickets WHERE id = ANY($1::text[])", ticket_ids)
         existing_ids = {r["id"] for r in existing}
         missing = [tid for tid in ticket_ids if tid not in existing_ids]
 
@@ -231,6 +255,7 @@ async def bulk_close_tickets(conn: asyncpg.Connection, ticket_ids: list[str]) ->
 # ── task queue ────────────────────────────────────────────────────────────────
 # The primary queue is ARQ/Redis. This table tracks job status for visibility
 # and allows manual retry from the dashboard.
+
 
 async def upsert_job_status(
     conn: Conn,
@@ -253,7 +278,11 @@ async def upsert_job_status(
               END,
               updated_at=NOW()
         """,
-        job_id, ticket_id, status, error, attempts,
+        job_id,
+        ticket_id,
+        status,
+        error,
+        attempts,
     )
 
 
@@ -279,13 +308,15 @@ async def list_job_log(
 
 # ── agent events ──────────────────────────────────────────────────────────────
 
-async def record_agent_event(
-    conn: Conn, ticket_id: str, agent: str, result: dict[str, Any], duration_ms: int
-) -> None:
+
+async def record_agent_event(conn: Conn, ticket_id: str, agent: str, result: dict[str, Any], duration_ms: int) -> None:
     normalized_duration = max(int(duration_ms or 0), 1)
     await conn.execute(
         "INSERT INTO agent_events(ticket_id, agent, result, duration_ms) VALUES($1,$2,$3,$4)",
-        ticket_id, agent, json.dumps(result), normalized_duration,
+        ticket_id,
+        agent,
+        json.dumps(result),
+        normalized_duration,
     )
 
 
@@ -353,9 +384,7 @@ async def get_operational_insights(
     hours: int = 24,
     agent_window_minutes: int = 60,
 ) -> dict[str, Any]:
-    open_count = await conn.fetchval(
-        "SELECT COUNT(*) FROM tickets WHERE status NOT IN ('resolved','closed')"
-    ) or 0
+    open_count = await conn.fetchval("SELECT COUNT(*) FROM tickets WHERE status NOT IN ('resolved','closed')") or 0
 
     queue_row = await conn.fetchrow(
         """
@@ -638,13 +667,22 @@ async def get_operational_insights(
 
 # ── integrations ──────────────────────────────────────────────────────────────
 
+
 async def insert_integration(
-    conn: Conn, integration_id: str, name: str, int_type: str,
-    config: dict, secret: str | None = None,
+    conn: Conn,
+    integration_id: str,
+    name: str,
+    int_type: str,
+    config: dict,
+    secret: str | None = None,
 ) -> None:
     await conn.execute(
         "INSERT INTO integrations(id,name,type,config,secret) VALUES($1,$2,$3,$4,$5)",
-        integration_id, name, int_type, json.dumps(config), secret,
+        integration_id,
+        name,
+        int_type,
+        json.dumps(config),
+        secret,
     )
 
 
@@ -684,11 +722,12 @@ async def update_integration(conn: Conn, integration_id: str, updates: dict[str,
         return
     if "config" in safe and isinstance(safe["config"], dict):
         safe["config"] = json.dumps(safe["config"])
-    safe["updated_at"] = datetime.now(UTC)
-    cols = ", ".join(f"{k}=${i+2}" for i, k in enumerate(safe))
+    safe["updated_at"] = datetime.now(timezone.utc)
+    cols = ", ".join(f"{k}=${i + 2}" for i, k in enumerate(safe))
     await conn.execute(
         f"UPDATE integrations SET {cols} WHERE id=$1",
-        integration_id, *safe.values(),
+        integration_id,
+        *safe.values(),
     )
 
 
@@ -712,7 +751,12 @@ async def record_integration_event(
             INSERT INTO integration_events(integration_id, direction, status, payload_size, ticket_id, error)
             VALUES($1,$2,$3,$4,$5,$6)
             """,
-            integration_id, direction, status, payload_size, ticket_id, error,
+            integration_id,
+            direction,
+            status,
+            payload_size,
+            ticket_id,
+            error,
         )
         await conn.execute(
             "UPDATE integrations SET event_count=event_count+1, updated_at=NOW() WHERE id=$1",
@@ -726,7 +770,12 @@ async def record_integration_event(
             INSERT INTO integration_events(integration_id, direction, status, payload_size, ticket_id, error)
             VALUES($1,$2,$3,$4,$5,$6)
             """,
-            integration_id, direction, status, payload_size, ticket_id, error,
+            integration_id,
+            direction,
+            status,
+            payload_size,
+            ticket_id,
+            error,
         )
         await c.execute(
             "UPDATE integrations SET event_count=event_count+1, updated_at=NOW() WHERE id=$1",
@@ -743,12 +792,14 @@ async def get_integration_events(conn: Conn, integration_id: str, limit: int = 5
         WHERE ie.integration_id=$1
         ORDER BY ie.ts DESC LIMIT $2
         """,
-        integration_id, limit,
+        integration_id,
+        limit,
     )
     return _rows(rows)
 
 
 # ── audit + system log ────────────────────────────────────────────────────────
+
 
 async def audit(
     conn: Conn,
@@ -764,7 +815,11 @@ async def audit(
         INSERT INTO audit_log(user_id, user_email, action, resource_type, resource_id, meta)
         VALUES($1,$2,$3,$4,$5,$6)
         """,
-        user_id, user_email, action, resource_type, resource_id,
+        user_id,
+        user_email,
+        action,
+        resource_type,
+        resource_id,
         json.dumps(meta) if meta else None,
     )
 
@@ -772,7 +827,8 @@ async def audit(
 async def get_audit_log(conn: Conn, limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
     rows = await conn.fetch(
         "SELECT * FROM audit_log ORDER BY ts DESC LIMIT $1 OFFSET $2",
-        limit, offset,
+        limit,
+        offset,
     )
     result = []
     for r in rows:
@@ -789,7 +845,9 @@ async def get_audit_log(conn: Conn, limit: int = 100, offset: int = 0) -> list[d
 async def syslog(conn: Conn, level: str, source: str, message: str) -> None:
     await conn.execute(
         "INSERT INTO system_log(level, source, message) VALUES($1,$2,$3)",
-        level, source, message[:500],
+        level,
+        source,
+        message[:500],
     )
 
 
@@ -797,12 +855,11 @@ async def get_log_tail(conn: Conn, limit: int = 60, level: str | None = None) ->
     if level:
         rows = await conn.fetch(
             "SELECT * FROM system_log WHERE level=$1 ORDER BY ts DESC LIMIT $2",
-            level, limit,
+            level,
+            limit,
         )
     else:
-        rows = await conn.fetch(
-            "SELECT * FROM system_log ORDER BY ts DESC LIMIT $1", limit
-        )
+        rows = await conn.fetch("SELECT * FROM system_log ORDER BY ts DESC LIMIT $1", limit)
     return _rows(rows)
 
 
@@ -819,38 +876,27 @@ async def prune_logs(conn: Conn, system_log_days: int = 7, audit_log_days: int =
 
 # ── analytics ─────────────────────────────────────────────────────────────────
 
+
 async def get_analytics(conn: Conn) -> dict[str, Any]:
-    total       = await conn.fetchval("SELECT COUNT(*) FROM tickets")
-    open_count  = await conn.fetchval(
-        "SELECT COUNT(*) FROM tickets WHERE status NOT IN ('resolved','closed')"
-    )
-    resolved_today = await conn.fetchval(
-        "SELECT COUNT(*) FROM tickets WHERE status='resolved' AND resolved_at >= CURRENT_DATE"
-    )
-    pending     = await conn.fetchval("SELECT COUNT(*) FROM job_log WHERE status='enqueued'")
-    failed      = await conn.fetchval("SELECT COUNT(*) FROM job_log WHERE status='failed'")
-    sla_at_risk = await conn.fetchval(
-        "SELECT COUNT(*) FROM tickets WHERE response_sla_breached=true AND status NOT IN ('resolved','closed')"
-    )
-    by_priority = {r["priority"]: r["cnt"] for r in await conn.fetch(
-        "SELECT COALESCE(priority,'unknown') AS priority, COUNT(*) AS cnt FROM tickets GROUP BY priority"
-    )}
-    by_category = {r["category"]: r["cnt"] for r in await conn.fetch(
-        "SELECT COALESCE(category,'unknown') AS category, COUNT(*) AS cnt FROM tickets GROUP BY category"
-    )}
-    by_status   = {r["status"]: r["cnt"] for r in await conn.fetch(
-        "SELECT COALESCE(status,'unknown') AS status, COUNT(*) AS cnt FROM tickets GROUP BY status"
-    )}
+    total = await conn.fetchval("SELECT COUNT(*) FROM tickets")
+    open_count = await conn.fetchval("SELECT COUNT(*) FROM tickets WHERE status NOT IN ('resolved','closed')")
+    resolved_today = await conn.fetchval("SELECT COUNT(*) FROM tickets WHERE status='resolved' AND resolved_at >= CURRENT_DATE")
+    pending = await conn.fetchval("SELECT COUNT(*) FROM job_log WHERE status='enqueued'")
+    failed = await conn.fetchval("SELECT COUNT(*) FROM job_log WHERE status='failed'")
+    sla_at_risk = await conn.fetchval("SELECT COUNT(*) FROM tickets WHERE response_sla_breached=true AND status NOT IN ('resolved','closed')")
+    by_priority = {r["priority"]: r["cnt"] for r in await conn.fetch("SELECT COALESCE(priority,'unknown') AS priority, COUNT(*) AS cnt FROM tickets GROUP BY priority")}
+    by_category = {r["category"]: r["cnt"] for r in await conn.fetch("SELECT COALESCE(category,'unknown') AS category, COUNT(*) AS cnt FROM tickets GROUP BY category")}
+    by_status = {r["status"]: r["cnt"] for r in await conn.fetch("SELECT COALESCE(status,'unknown') AS status, COUNT(*) AS cnt FROM tickets GROUP BY status")}
     return {
-        "total_tickets":   total or 0,
-        "open_tickets":    open_count or 0,
-        "resolved_today":  resolved_today or 0,
-        "failed_jobs":     failed or 0,
-        "pending_jobs":    pending or 0,
-        "sla_at_risk":     sla_at_risk or 0,
-        "by_priority":     by_priority,
-        "by_category":     by_category,
-        "by_status":       by_status,
+        "total_tickets": total or 0,
+        "open_tickets": open_count or 0,
+        "resolved_today": resolved_today or 0,
+        "failed_jobs": failed or 0,
+        "pending_jobs": pending or 0,
+        "sla_at_risk": sla_at_risk or 0,
+        "by_priority": by_priority,
+        "by_category": by_category,
+        "by_status": by_status,
     }
 
 
@@ -883,7 +929,7 @@ async def get_sla_compliance(conn: Conn, days: int = 30) -> dict[str, Any]:
         """,
         str(days),
     )
-    total    = row["total"] or 0
+    total = row["total"] or 0
     breached = row["breached"] or 0
     compliant = total - breached
     rate = round(compliant / total * 100, 1) if total > 0 else 100.0
@@ -899,18 +945,18 @@ async def get_sla_compliance(conn: Conn, days: int = 30) -> dict[str, Any]:
 # ── engineer round-robin (in-process state, acceptable for single-node) ───────
 
 _TEAM_ROSTER: dict[str, list[str]] = {
-    "sre_team":      ["alice.chen", "bob.okafor"],
-    "backend_team":  ["carol.smith", "dan.patel"],
-    "billing_team":  ["frank.li", "grace.kim"],
-    "product_team":  ["iris.costa"],
+    "sre_team": ["alice.chen", "bob.okafor"],
+    "backend_team": ["carol.smith", "dan.patel"],
+    "billing_team": ["frank.li", "grace.kim"],
+    "product_team": ["iris.costa"],
     "tier1_support": ["jack.mueller", "karen.santos", "liam.nguyen"],
 }
 
 _TEAM_SKILLS: dict[str, list[str]] = {
-    "sre_team":      ["infrastructure", "incidents", "kubernetes"],
-    "backend_team":  ["api", "database", "performance", "bugs"],
-    "billing_team":  ["payments", "subscriptions", "refunds"],
-    "product_team":  ["features", "roadmap"],
+    "sre_team": ["infrastructure", "incidents", "kubernetes"],
+    "backend_team": ["api", "database", "performance", "bugs"],
+    "billing_team": ["payments", "subscriptions", "refunds"],
+    "product_team": ["features", "roadmap"],
     "tier1_support": ["general", "documentation"],
 }
 
@@ -927,3 +973,4 @@ def get_available_engineer(skills: list[str]) -> str | None:
             _round_robin[team] = idx + 1
             return members[idx]
     return None
+

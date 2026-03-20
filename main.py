@@ -40,6 +40,7 @@ async def lifespan(app: FastAPI):
 
     # Seed admin
     from services.user_service import seed_admin
+
     await seed_admin(app.state.pool)
 
     logger.info("startup.ready", environment=settings.environment, version=settings.version)
@@ -94,6 +95,7 @@ app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
+
     s = get_settings()
     uvicorn.run(
         "main:app",
@@ -103,3 +105,4 @@ if __name__ == "__main__":
         workers=1,
         log_config=None,
     )
+

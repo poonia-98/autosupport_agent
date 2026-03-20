@@ -19,3 +19,4 @@ class BaseIntegration(ABC):
     def parse_inbound(self, payload: dict[str, Any], secret: str | None) -> dict[str, Any] | None:
         """Normalise inbound payload to ticket dict. Return None to ignore."""
         ...
+

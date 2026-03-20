@@ -21,3 +21,4 @@ def build_router() -> APIRouter:
     root.include_router(users_router)
     root.include_router(system_router)
     return root
+

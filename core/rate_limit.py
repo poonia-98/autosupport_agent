@@ -38,3 +38,4 @@ async def rate_limit_remaining(
     await redis.zremrangebyscore(full_key, 0, window_start)
     count = await redis.zcard(full_key)
     return max(0, limit - count)
+

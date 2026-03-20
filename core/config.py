@@ -28,9 +28,7 @@ class Settings(BaseSettings):
     admin_password: str = Field(default="changeme123")
 
     # postgresql+asyncpg://user:pass@host:port/db
-    database_url: str = Field(
-        default="postgresql+asyncpg://autosupport:autosupport@localhost:5433/autosupport"
-    )
+    database_url: str = Field(default="postgresql+asyncpg://autosupport:autosupport@localhost:5433/autosupport")
 
     redis_url: str = Field(default="redis://localhost:6379/0")
 
@@ -94,10 +92,7 @@ class Settings(BaseSettings):
     def _production_guards(self) -> "Settings":
         if self.environment == "production":
             if self.secret_key == "dev-secret-change-me":
-                raise ValueError(
-                    "SECRET_KEY must be set in production. "
-                    "Run: python -c \"import secrets; print(secrets.token_hex(32))\""
-                )
+                raise ValueError('SECRET_KEY must be set in production. Run: python -c "import secrets; print(secrets.token_hex(32))"')
             if self.admin_password == "changeme123":
                 raise ValueError("ADMIN_PASSWORD must be changed before production deployment.")
             if self.cors_origins == "*":
@@ -108,3 +103,4 @@ class Settings(BaseSettings):
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     return Settings()
+

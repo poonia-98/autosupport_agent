@@ -44,17 +44,20 @@ class TestTicketStateMachine:
 class TestRulesEngine:
     def test_billing_keyword_in_title(self):
         from intelligence.rules_engine import apply_rules
+
         result = apply_rules({"title": "Invoice not received", "description": ""})
         assert result.get("category") == "billing"
 
     def test_production_down_escalates(self):
         from intelligence.rules_engine import apply_rules
+
         result = apply_rules({"title": "production down", "description": "site is offline"})
         assert result.get("priority") == "critical"
         assert result.get("should_escalate") is True
 
     def test_no_match_returns_empty(self):
         from intelligence.rules_engine import apply_rules
+
         result = apply_rules({"title": "Hello world", "description": "I have a question"})
         assert result == {}
 
@@ -62,11 +65,13 @@ class TestRulesEngine:
 class TestRouter:
     def test_billing_keyword_routes_billing(self):
         from intelligence.router import route_ticket
+
         out = route_ticket("billing invoice problem", "my subscription charge is wrong")
         assert out["category"] == "billing"
 
     def test_empty_input_defaults_to_general(self):
         from intelligence.router import route_ticket
+
         out = route_ticket("", "")
         assert out["category"] == "general"
         assert out["priority"] == "low"
@@ -74,6 +79,7 @@ class TestRouter:
 
     def test_confidence_is_bounded(self):
         from intelligence.router import route_ticket
+
         out = route_ticket("API crash critical production outage", "everything is down")
         assert 0.0 <= out["confidence"] <= 1.0
 
@@ -81,20 +87,23 @@ class TestRouter:
 class TestSecurity:
     def test_hash_and_verify(self):
         from core.security import _verify_password_sync, hash_password
-        pw   = "S3cur3P@ss!"
-        h    = hash_password(pw)
+
+        pw = "S3cur3P@ss!"
+        h = hash_password(pw)
         assert _verify_password_sync(pw, h)
         assert not _verify_password_sync("wrong", h)
 
     def test_hashes_are_unique(self):
         from core.security import hash_password
+
         h1 = hash_password("same")
         h2 = hash_password("same")
         assert h1 != h2  # different salts
 
     def test_token_roundtrip(self):
         from core.security import create_token, decode_token
-        token   = create_token("uid-1", "user@test.com", "admin", token_version=3)
+
+        token = create_token("uid-1", "user@test.com", "admin", token_version=3)
         payload = decode_token(token)
         assert payload["sub"] == "uid-1"
         assert payload["email"] == "user@test.com"
@@ -103,6 +112,7 @@ class TestSecurity:
 
     def test_brute_force_tracking(self):
         from core.security import _login_attempts, check_login_rate, record_failed_login
+
         email = "brutetest@example.com"
         _login_attempts.pop(email, None)
         for _ in range(10):
@@ -111,6 +121,7 @@ class TestSecurity:
 
     def test_clear_login_attempts(self):
         from core.security import _login_attempts, clear_login_attempts, record_failed_login
+
         email = "cleartest@example.com"
         _login_attempts.pop(email, None)
         for _ in range(5):
@@ -122,11 +133,13 @@ class TestSecurity:
 class TestSLAThresholds:
     def test_critical_response_window(self):
         from models.sla import DEFAULT_SLA, SLASeverity
+
         t = DEFAULT_SLA[SLASeverity.CRITICAL]
         assert t.first_response_seconds == 900  # 15 min
 
     def test_low_response_window(self):
         from models.sla import DEFAULT_SLA, SLASeverity
+
         t = DEFAULT_SLA[SLASeverity.LOW]
         assert t.first_response_seconds == 86_400  # 24h
 
@@ -135,9 +148,8 @@ class TestEscalationDetector:
     @pytest.mark.asyncio
     async def test_rule_override_triggers_immediate(self):
         from support_agents.escalation_detector import escalation_detector
-        result = await escalation_detector.run(
-            {}, {"rule_escalation": True, "intent": "general", "urgency_score": 0.0}, {}
-        )
+
+        result = await escalation_detector.run({}, {"rule_escalation": True, "intent": "general", "urgency_score": 0.0}, {})
         assert result["should_escalate"] is True
         assert result["immediate"] is True
         assert result["escalation_level"] == 2
@@ -145,9 +157,8 @@ class TestEscalationDetector:
     @pytest.mark.asyncio
     async def test_low_urgency_no_escalation(self):
         from support_agents.escalation_detector import escalation_detector
-        result = await escalation_detector.run(
-            {}, {"rule_escalation": False, "intent": "general", "urgency_score": 0.0, "suggested_priority": "low"}, {}
-        )
+
+        result = await escalation_detector.run({}, {"rule_escalation": False, "intent": "general", "urgency_score": 0.0, "suggested_priority": "low"}, {})
         assert result["should_escalate"] is False
 
 
@@ -155,6 +166,7 @@ class TestPriorityPredictor:
     @pytest.mark.asyncio
     async def test_critical_technical_intent_predicts_critical(self):
         from support_agents.priority_predictor import priority_predictor
+
         result = await priority_predictor.run(
             {},
             {"intent": "technical", "suggested_priority": "critical", "urgency_score": 0.5},
@@ -166,6 +178,7 @@ class TestPriorityPredictor:
     @pytest.mark.asyncio
     async def test_no_signals_returns_low(self):
         from support_agents.priority_predictor import priority_predictor
+
         result = await priority_predictor.run(
             {},
             {"intent": "general", "suggested_priority": "low", "urgency_score": 0.0},
@@ -178,6 +191,7 @@ class TestAutoRouter:
     @pytest.mark.asyncio
     async def test_critical_technical_routes_to_sre(self):
         from support_agents.auto_router import auto_router
+
         result = await auto_router.run(
             {},
             {"intent": "technical", "suggested_priority": "critical"},
@@ -189,6 +203,7 @@ class TestAutoRouter:
     @pytest.mark.asyncio
     async def test_billing_routes_to_billing_team(self):
         from support_agents.auto_router import auto_router
+
         result = await auto_router.run(
             {},
             {"intent": "billing", "suggested_priority": "medium"},
@@ -199,9 +214,11 @@ class TestAutoRouter:
     @pytest.mark.asyncio
     async def test_immediate_escalation_sets_priority_1(self):
         from support_agents.auto_router import auto_router
+
         result = await auto_router.run(
             {},
             {"intent": "general", "suggested_priority": "low"},
             {"should_escalate": True, "immediate": True},
         )
         assert result["queue_priority"] == 1
+

@@ -9,7 +9,7 @@ router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
 @router.get("")
 async def get_analytics(
-    request:  Request,
+    request: Request,
     identity: dict = Depends(require_auth),
 ):
     pool = request.app.state.pool
@@ -18,8 +18,8 @@ async def get_analytics(
 
 @router.get("/time-series")
 async def time_series(
-    request:  Request,
-    days:     int  = Query(default=7, ge=1, le=90),
+    request: Request,
+    days: int = Query(default=7, ge=1, le=90),
     identity: dict = Depends(require_auth),
 ):
     pool = request.app.state.pool
@@ -28,8 +28,8 @@ async def time_series(
 
 @router.get("/sla")
 async def sla_compliance(
-    request:  Request,
-    days:     int  = Query(default=30, ge=1, le=365),
+    request: Request,
+    days: int = Query(default=30, ge=1, le=365),
     identity: dict = Depends(require_auth),
 ):
     pool = request.app.state.pool
@@ -50,12 +50,14 @@ async def operational_intelligence(
 @router.get("/sla/{ticket_id}")
 async def ticket_sla(
     ticket_id: str,
-    request:   Request,
-    identity:  dict = Depends(require_auth),
+    request: Request,
+    identity: dict = Depends(require_auth),
 ):
     from fastapi import HTTPException, status
-    pool   = request.app.state.pool
+
+    pool = request.app.state.pool
     ticket = await store.get_ticket(pool, ticket_id)
     if not ticket:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Ticket not found")
     return await sla_metrics(ticket)
+

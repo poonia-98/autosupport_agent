@@ -39,10 +39,13 @@ async def test_health(client):
 
 @pytest.mark.asyncio
 async def test_login_and_me(client):
-    r = await client.post("/api/auth/login", json={
-        "email": os.getenv("ADMIN_EMAIL", "admin@example.com"),
-        "password": os.getenv("ADMIN_PASSWORD", "changeme123"),
-    })
+    r = await client.post(
+        "/api/auth/login",
+        json={
+            "email": os.getenv("ADMIN_EMAIL", "admin@example.com"),
+            "password": os.getenv("ADMIN_PASSWORD", "changeme123"),
+        },
+    )
     assert r.status_code == 200
     token = r.json()["access_token"]
 
@@ -65,18 +68,25 @@ async def test_unauthenticated_access(client):
 
 @pytest.mark.asyncio
 async def test_create_and_get_ticket(client):
-    login = await client.post("/api/auth/login", json={
-        "email": os.getenv("ADMIN_EMAIL", "admin@example.com"),
-        "password": os.getenv("ADMIN_PASSWORD", "changeme123"),
-    })
+    login = await client.post(
+        "/api/auth/login",
+        json={
+            "email": os.getenv("ADMIN_EMAIL", "admin@example.com"),
+            "password": os.getenv("ADMIN_PASSWORD", "changeme123"),
+        },
+    )
     token = login.json()["access_token"]
-    auth  = {"Authorization": f"Bearer {token}"}
+    auth = {"Authorization": f"Bearer {token}"}
 
-    r = await client.post("/api/tickets", json={
-        "title":       "Test ticket from pytest",
-        "description": "This is a test description.",
-        "priority":    "medium",
-    }, headers=auth)
+    r = await client.post(
+        "/api/tickets",
+        json={
+            "title": "Test ticket from pytest",
+            "description": "This is a test description.",
+            "priority": "medium",
+        },
+        headers=auth,
+    )
     assert r.status_code == 200
     ticket_id = r.json()["id"]
     assert ticket_id
@@ -88,12 +98,15 @@ async def test_create_and_get_ticket(client):
 
 @pytest.mark.asyncio
 async def test_idempotency_key(client):
-    login = await client.post("/api/auth/login", json={
-        "email": os.getenv("ADMIN_EMAIL", "admin@example.com"),
-        "password": os.getenv("ADMIN_PASSWORD", "changeme123"),
-    })
+    login = await client.post(
+        "/api/auth/login",
+        json={
+            "email": os.getenv("ADMIN_EMAIL", "admin@example.com"),
+            "password": os.getenv("ADMIN_PASSWORD", "changeme123"),
+        },
+    )
     token = login.json()["access_token"]
-    auth  = {"Authorization": f"Bearer {token}"}
+    auth = {"Authorization": f"Bearer {token}"}
 
     payload = {"title": "Idempotent ticket", "idempotency_key": "pytest-idem-001"}
 
@@ -106,12 +119,15 @@ async def test_idempotency_key(client):
 
 @pytest.mark.asyncio
 async def test_invalid_search_query_returns_400(client):
-    login = await client.post("/api/auth/login", json={
-        "email": os.getenv("ADMIN_EMAIL", "admin@example.com"),
-        "password": os.getenv("ADMIN_PASSWORD", "changeme123"),
-    })
+    login = await client.post(
+        "/api/auth/login",
+        json={
+            "email": os.getenv("ADMIN_EMAIL", "admin@example.com"),
+            "password": os.getenv("ADMIN_PASSWORD", "changeme123"),
+        },
+    )
     token = login.json()["access_token"]
-    auth  = {"Authorization": f"Bearer {token}"}
+    auth = {"Authorization": f"Bearer {token}"}
 
     r = await client.get("/api/tickets?search=OR+OR", headers=auth)
     assert r.status_code == 400
@@ -119,12 +135,15 @@ async def test_invalid_search_query_returns_400(client):
 
 @pytest.mark.asyncio
 async def test_analytics_endpoint(client):
-    login = await client.post("/api/auth/login", json={
-        "email": os.getenv("ADMIN_EMAIL", "admin@example.com"),
-        "password": os.getenv("ADMIN_PASSWORD", "changeme123"),
-    })
+    login = await client.post(
+        "/api/auth/login",
+        json={
+            "email": os.getenv("ADMIN_EMAIL", "admin@example.com"),
+            "password": os.getenv("ADMIN_PASSWORD", "changeme123"),
+        },
+    )
     token = login.json()["access_token"]
-    auth  = {"Authorization": f"Bearer {token}"}
+    auth = {"Authorization": f"Bearer {token}"}
 
     r = await client.get("/api/analytics", headers=auth)
     assert r.status_code == 200
@@ -135,12 +154,15 @@ async def test_analytics_endpoint(client):
 
 @pytest.mark.asyncio
 async def test_operational_intelligence_endpoint(client):
-    login = await client.post("/api/auth/login", json={
-        "email": os.getenv("ADMIN_EMAIL", "admin@example.com"),
-        "password": os.getenv("ADMIN_PASSWORD", "changeme123"),
-    })
+    login = await client.post(
+        "/api/auth/login",
+        json={
+            "email": os.getenv("ADMIN_EMAIL", "admin@example.com"),
+            "password": os.getenv("ADMIN_PASSWORD", "changeme123"),
+        },
+    )
     token = login.json()["access_token"]
-    auth  = {"Authorization": f"Bearer {token}"}
+    auth = {"Authorization": f"Bearer {token}"}
 
     r = await client.get("/api/analytics/ops?hours=24&agent_window_minutes=60", headers=auth)
     assert r.status_code == 200
@@ -154,12 +176,15 @@ async def test_operational_intelligence_endpoint(client):
 
 @pytest.mark.asyncio
 async def test_bulk_close(client):
-    login = await client.post("/api/auth/login", json={
-        "email": os.getenv("ADMIN_EMAIL", "admin@example.com"),
-        "password": os.getenv("ADMIN_PASSWORD", "changeme123"),
-    })
+    login = await client.post(
+        "/api/auth/login",
+        json={
+            "email": os.getenv("ADMIN_EMAIL", "admin@example.com"),
+            "password": os.getenv("ADMIN_PASSWORD", "changeme123"),
+        },
+    )
     token = login.json()["access_token"]
-    auth  = {"Authorization": f"Bearer {token}"}
+    auth = {"Authorization": f"Bearer {token}"}
 
     # create 3 tickets
     ids = []
@@ -172,3 +197,4 @@ async def test_bulk_close(client):
     data = r.json()
     assert data["closed"] == 3
     assert "nonexistent-xyz" in data["not_found"]
+

@@ -31,9 +31,9 @@ async def classify_ticket(
     correlation = correlation_id or str(uuid.uuid4())
     clear_context()
     bind_job_context(
-        job_id         = ctx.get("job_id", "unknown"),
-        correlation_id = correlation,
-        task           = "classify_ticket",
+        job_id=ctx.get("job_id", "unknown"),
+        correlation_id=correlation,
+        task="classify_ticket",
     )
 
     pool = ctx["pool"]
@@ -103,9 +103,10 @@ async def classify_ticket(
 
     logger.info(
         "classify.done",
-        ticket_id = ticket_id,
-        category  = result.get("intent"),
-        priority  = result.get("predicted_priority"),
-        team      = result.get("assigned_team"),
+        ticket_id=ticket_id,
+        category=result.get("intent"),
+        priority=result.get("predicted_priority"),
+        team=result.get("assigned_team"),
     )
     return {"ok": True, "ticket_id": ticket_id}
+

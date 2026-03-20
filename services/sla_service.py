@@ -43,7 +43,7 @@ async def run_sla_sweep(pool: asyncpg.Pool) -> int:
         if ticket.get("response_sla_breached"):
             continue
 
-        priority   = ticket.get("priority", "medium")
+        priority = ticket.get("priority", "medium")
         thresholds = _thresholds(priority)
         created_at = ticket.get("created_at")
         if not created_at:
@@ -60,7 +60,7 @@ async def run_sla_sweep(pool: asyncpg.Pool) -> int:
 
 
 async def compute_metrics(ticket: dict[str, Any]) -> dict[str, Any]:
-    priority   = ticket.get("priority", "medium")
+    priority = ticket.get("priority", "medium")
     thresholds = _thresholds(priority)
     created_at = ticket.get("created_at") or 0.0
     if not isinstance(created_at, float):
@@ -70,7 +70,6 @@ async def compute_metrics(ticket: dict[str, Any]) -> dict[str, Any]:
     age = now - created_at
 
     response_remaining = thresholds.first_response_seconds - age
-    resolution_remaining = thresholds.resolution_seconds - age
 
     resolved_at = ticket.get("resolved_at")
     resolution_secs = None
@@ -79,10 +78,11 @@ async def compute_metrics(ticket: dict[str, Any]) -> dict[str, Any]:
         resolution_secs = int(rt - created_at)
 
     return {
-        "ticket_id":                       ticket["id"],
-        "priority":                        priority,
-        "response_sla_breached":           bool(ticket.get("response_sla_breached")),
-        "resolution_sla_breached":         bool(resolved_at and (now - created_at) > thresholds.resolution_seconds),
+        "ticket_id": ticket["id"],
+        "priority": priority,
+        "response_sla_breached": bool(ticket.get("response_sla_breached")),
+        "resolution_sla_breached": bool(resolved_at and (now - created_at) > thresholds.resolution_seconds),
         "response_time_remaining_seconds": int(response_remaining) if response_remaining > 0 else 0,
-        "resolution_seconds":              resolution_secs,
+        "resolution_seconds": resolution_secs,
     }
+

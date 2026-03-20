@@ -1,11 +1,11 @@
 from typing import Any
 
 _INTENT_TO_TEMPLATE = {
-    "billing":         "billing_dispute",
-    "technical":       "service_outage",
-    "bug":             "bug_report",
+    "billing": "billing_dispute",
+    "technical": "service_outage",
+    "bug": "bug_report",
     "feature_request": "feature_request",
-    "general":         "general_inquiry",
+    "general": "general_inquiry",
 }
 
 _TEMPLATES: dict[str, list[str]] = {
@@ -36,11 +36,11 @@ class ResponseSuggester:
     name = "response_suggester"
 
     async def run(self, ticket_data: dict, classification: dict, escalation: dict) -> dict[str, Any]:
-        intent       = classification.get("intent", "general")
+        intent = classification.get("intent", "general")
         template_key = _INTENT_TO_TEMPLATE.get(intent, "general_inquiry")
-        templates    = _TEMPLATES[template_key]
+        templates = _TEMPLATES[template_key]
 
-        idx        = 1 if classification.get("urgency_score", 0) >= 0.5 and len(templates) > 1 else 0
+        idx = 1 if classification.get("urgency_score", 0) >= 0.5 and len(templates) > 1 else 0
         suggestion = templates[idx]
 
         if escalation.get("should_escalate"):
@@ -50,8 +50,8 @@ class ResponseSuggester:
 
         return {
             "suggested_response": suggestion,
-            "intent":             intent,
-            "actions":            self._build_actions(classification, escalation, ticket_data),
+            "intent": intent,
+            "actions": self._build_actions(classification, escalation, ticket_data),
         }
 
     @staticmethod
@@ -76,3 +76,4 @@ class ResponseSuggester:
 
 
 response_suggester = ResponseSuggester()
+

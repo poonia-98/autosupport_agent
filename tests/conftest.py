@@ -20,6 +20,7 @@ os.environ.setdefault("ADMIN_PASSWORD", "TestPass123!")
 @pytest.fixture(scope="session")
 def settings():
     from core.config import get_settings
+
     return get_settings()
 
 
@@ -44,7 +45,8 @@ def mock_pool(mocker):
     pool = mocker.AsyncMock()
     pool.fetchrow = mocker.AsyncMock(return_value=None)
     pool.fetchval = mocker.AsyncMock(return_value=0)
-    pool.fetch    = mocker.AsyncMock(return_value=[])
-    pool.execute  = mocker.AsyncMock(return_value="UPDATE 0")
-    pool.acquire  = mocker.MagicMock(return_value=mocker.AsyncMock(__aenter__=mocker.AsyncMock(return_value=pool), __aexit__=mocker.AsyncMock(return_value=False)))
+    pool.fetch = mocker.AsyncMock(return_value=[])
+    pool.execute = mocker.AsyncMock(return_value="UPDATE 0")
+    pool.acquire = mocker.MagicMock(return_value=mocker.AsyncMock(__aenter__=mocker.AsyncMock(return_value=pool), __aexit__=mocker.AsyncMock(return_value=False)))
     return pool
+

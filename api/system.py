@@ -26,10 +26,10 @@ async def health(request: Request):
         redis_ok = False
 
     return {
-        "status":   "ok" if (db_ok and redis_ok) else "degraded",
-        "db":       "ok" if db_ok else "error",
-        "redis":    "ok" if redis_ok else "error",
-        "version":  get_settings().version,
+        "status": "ok" if (db_ok and redis_ok) else "degraded",
+        "db": "ok" if db_ok else "error",
+        "redis": "ok" if redis_ok else "error",
+        "version": get_settings().version,
     }
 
 
@@ -43,9 +43,9 @@ async def prometheus_metrics():
 
 @router.get("/api/audit")
 async def audit_log(
-    request:  Request,
-    limit:    int  = Query(default=100, ge=1, le=500),
-    offset:   int  = Query(default=0, ge=0),
+    request: Request,
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
     identity: dict = Depends(require_admin),
 ):
     pool = request.app.state.pool
@@ -54,10 +54,11 @@ async def audit_log(
 
 @router.get("/api/system/log")
 async def system_log(
-    request:  Request,
-    limit:    int          = Query(default=60, ge=1, le=200),
-    level:    str | None   = Query(default=None),
-    identity: dict         = Depends(require_auth),
+    request: Request,
+    limit: int = Query(default=60, ge=1, le=200),
+    level: str | None = Query(default=None),
+    identity: dict = Depends(require_auth),
 ):
     pool = request.app.state.pool
     return await store.get_log_tail(pool, limit=limit, level=level)
+

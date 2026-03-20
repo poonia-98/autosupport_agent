@@ -25,7 +25,7 @@ class TicketClassified:
 @dataclass(frozen=True)
 class TicketEscalated:
     ticket_id: str
-    level: int          # 1=notify, 2=page
+    level: int  # 1=notify, 2=page
     reason: str
     correlation_id: str
     ts: float = field(default_factory=time.time)
@@ -53,3 +53,4 @@ class SLABreached:
     breached_at: float
     correlation_id: str
     ts: float = field(default_factory=time.time)
+

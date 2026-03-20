@@ -48,11 +48,11 @@ class WebhookIntegration(BaseIntegration):
             category = "general"
 
         return {
-            "title":           title[:255],
-            "description":     str(payload.get("description") or payload.get("body") or "")[:4000],
-            "priority":        priority,
-            "category":        category,
-            "source":          "webhook",
+            "title": title[:255],
+            "description": str(payload.get("description") or payload.get("body") or "")[:4000],
+            "priority": priority,
+            "category": category,
+            "source": "webhook",
             "integration_ref": str(payload.get("source_id") or payload.get("id") or "")[:64],
         }
 
@@ -64,12 +64,12 @@ class WebhookIntegration(BaseIntegration):
         secret: str | None = None,
     ) -> bool:
         body = {
-            "event":     event,
+            "event": event,
             "ticket_id": ticket.get("id"),
-            "title":     ticket.get("title"),
-            "priority":  ticket.get("priority"),
-            "status":    ticket.get("status"),
-            "team":      ticket.get("assigned_team"),
+            "title": ticket.get("title"),
+            "priority": ticket.get("priority"),
+            "status": ticket.get("status"),
+            "team": ticket.get("assigned_team"),
         }
         headers = {"Content-Type": "application/json"}
         if secret:
@@ -86,3 +86,4 @@ class WebhookIntegration(BaseIntegration):
 
 
 webhook_integration = WebhookIntegration()
+

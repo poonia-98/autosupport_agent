@@ -9,9 +9,9 @@ class SignalAuditPlugin(AgentPlugin):
         pri = context.get("priority", {})
         esc = context.get("escalation", {})
 
-        intent_conf   = cls.get("intent_confidence", 0.0)
+        intent_conf = cls.get("intent_confidence", 0.0)
         priority_conf = pri.get("confidence", 0.0)
-        esc_score     = esc.get("escalation_score", 0)
+        esc_score = esc.get("escalation_score", 0)
 
         overall = float(min(1.0, (intent_conf + priority_conf + (esc_score / 100)) / 3.0))
 
@@ -25,9 +25,10 @@ class SignalAuditPlugin(AgentPlugin):
 
         return {
             "overall_confidence": overall,
-            "flags":              flags,
-            "audit_passed":       len(flags) == 0,
+            "flags": flags,
+            "audit_passed": len(flags) == 0,
         }
 
 
 plugin = SignalAuditPlugin()
+
